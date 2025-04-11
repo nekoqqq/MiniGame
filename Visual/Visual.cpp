@@ -1,8 +1,13 @@
 ﻿// Visual.cpp : 定义应用程序的入口点。
 //
 
+
 #include "GameLib/Framework.h"
 #include<iostream>
+
+
+
+
 using namespace std;
 namespace GameLib {
 	void Framework::update() {
@@ -15,6 +20,8 @@ namespace GameLib {
 		vram[y * w + x] = color;
 	}
 }
+
+
 
 int main() {
 	GameLib::Framework framework = GameLib::Framework::instance();
