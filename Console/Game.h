@@ -8,9 +8,10 @@ using namespace std;
 
 
 // 地图来源，自定义或者从文件中
-enum class MAPSOURCE {
+enum class MapSource {
     PREDEFINED, // 程序内部预定义
-    FILE // 文件内
+    FILE, // 文件内
+    VISUAL // 窗口大小
 };
 
 
@@ -22,6 +23,8 @@ public:
         TARGET = '.',
         BOUNDARY = '#',
         BLANK = ' ',
+        BOX_READY = 'O', // 箱子正好在要推的地方
+        PLAYER_HIT = 'P',  // 人站在要推的地方上
     };
 
     enum DIRECTION {
@@ -32,7 +35,7 @@ public:
     };
     Game();
 
-    virtual void init(MAPSOURCE) = 0; // 初始化游戏中的各种状态
+    void init(MapSource); // 初始化游戏中的各种状态
     virtual void update(string&) = 0; // 更新游戏状态，当前主要功能为处理输入
     virtual void draw() = 0; // 画图
 
@@ -53,7 +56,6 @@ protected:
 
 class ConsoleGame :public Game {
 public:
-    virtual void init(MAPSOURCE) override;
     virtual void update(string&) override;
     virtual void draw() override;
 };

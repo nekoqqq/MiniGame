@@ -45,7 +45,7 @@ struct DDSD { // DirectX格式图片
 int main() {
     cout << "Welcome to my game, please press keyboard W|A|S|D for UP|LEFT|RIGHT|DOWN." << endl;
     Game *gameState = new ConsoleGame();
-    MAPSOURCE mapSource = MAPSOURCE::PREDEFINED;
+    MapSource mapSource = MapSource::FILE;
     gameState->init(mapSource);
     gameState->draw();
     string input;

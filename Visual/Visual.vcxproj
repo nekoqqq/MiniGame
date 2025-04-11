@@ -82,8 +82,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\colorful\Documents\GameLib\2DGraphics1\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>GameLib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\colorful\source\repos\MiniGame\Console\Debug;C:\Users\colorful\Documents\GameLib\2DGraphics1\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>GameLib_d.lib;Game.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -118,8 +118,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\colorful\Documents\GameLib\2DGraphics1\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>GameLib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\colorful\source\repos\MiniGame\Console\Debug;C:\Users\colorful\Documents\GameLib\2DGraphics1\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>GameLib_d.lib;Game.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

@@ -7,65 +7,64 @@ bool Game::valid(pair<int, int>& pos) const{
     return false;
 }
 void Game::_update_objects(pair<int, int>& new_pos, int direction) {
-    pair<int, int> box_target_pos;
+    pair<int, int> one_step_pos, two_steps_pos;
+    int dx = 0, dy = 0;
     if (direction == UP) // W
-    {
-        new_pos.first -= 1;
-        box_target_pos = make_pair(new_pos.first - 1, new_pos.second);
-    }
+        dx = -1;
     else if (direction == LEFT) // A
-    {
-        new_pos.second -= 1;
-        box_target_pos = make_pair(new_pos.first, new_pos.second - 1);
-    }
+        dy = -1;
     else if (direction == RIGHT) // S
-    {
-        new_pos.first += 1;
-        box_target_pos = make_pair(new_pos.first + 1, new_pos.second);
-    }
+        dx = 1;
     else if (direction == DOWN) // D
-    {
-        new_pos.second += 1;
-        box_target_pos = make_pair(new_pos.first, new_pos.second + 1);
-    }
+        dy = 1;
     else
         throw exception();
 
-    bool should_restore = false;
-    if (valid(new_pos)) {
-        if (grid_[new_pos.first][new_pos.second] == 'o') {
-            if (valid(box_target_pos) && grid_[box_target_pos.first][box_target_pos.second] != BOX) { // 判断当前推的是否是箱子，如果是箱子继续往前推
-                grid_[box_target_pos.first][box_target_pos.second] = BOX;
-            }
-            else // 无法往前走
-                should_restore = true;
-        }
-    }
-    else
-        should_restore = true;
+    one_step_pos = make_pair(new_pos.first + dx, new_pos.second + dy);
+    two_steps_pos = make_pair(one_step_pos.first + dx, one_step_pos.second + dy);
+    if (!valid(one_step_pos))
+        return;
 
-    if (should_restore)
-        if (direction == 0) // W
-            new_pos.first += 1;
-        else if (direction == 1) // A
-            new_pos.second += 1;
-        else if (direction == 2) // S
-            new_pos.first -= 1;
-        else if (direction == 3) // D
-            new_pos.second -= 1;
-    return;
+    char one_step_obj = grid_[one_step_pos.first][one_step_pos.second];
+    char two_steps_obj = grid_[two_steps_pos.first][two_steps_pos.second];
+    if (one_step_obj == BOX || one_step_obj == BOX_READY) { 
+        if (!valid(two_steps_pos) || two_steps_obj == BOX || two_steps_obj == BOX_READY) // 两个箱子推不动了
+            return;
+        if (two_steps_obj == TARGET) // 正好可以箱子就绪
+            grid_[two_steps_pos.first][two_steps_pos.second] = BOX_READY;
+        else // 普通的位置
+            grid_[two_steps_pos.first][two_steps_pos.second] = BOX;
+    }
+
+    // 更新玩家位置,这里没有办法只能遍历判断初始的是空的还是目标
+    steps_++;
+    for (auto& t : target_pos_)
+        if (new_pos.first == t.first && new_pos.second == t.second) {
+            grid_[new_pos.first][new_pos.second] = Game::OBJECT::TARGET;
+            break;
+        }
+        else
+            grid_[new_pos.first][new_pos.second] = Game::OBJECT::BLANK;
+
+    new_pos.first += dx;
+    new_pos.second += dy;
+
+    // 根据玩家站的位置确定状态
+    if (one_step_obj == TARGET)
+        grid_[new_pos.first][new_pos.second] = PLAYER_HIT;
+    else
+        grid_[new_pos.first][new_pos.second] = PLAYER;
 }
 bool Game::win()const{
     int succeed = 0;
     for (auto& t : target_pos_)
-        if (grid_[t.first][t.second] == BOX)
+        if (grid_[t.first][t.second] == BOX_READY)
             succeed += 1;
 
     return succeed >= box_pos_.size();
 }
-
-void ConsoleGame::init(MAPSOURCE mapSource){
-    if (mapSource == MAPSOURCE::PREDEFINED) {
+void Game::init(MapSource mapSource){
+    if (mapSource == MapSource::PREDEFINED) {
         height_ = 5;
         width_ = 8;
         box_pos_ = { {2,2},{2,5} };
@@ -97,8 +96,8 @@ void ConsoleGame::init(MAPSOURCE mapSource){
         // set player
         grid_[player_pos_.first][player_pos_.second] = PLAYER;
     }
-    else if (mapSource == MAPSOURCE::FILE) {
-        ifstream fin("map.txt", ios_base::in);
+    else if (mapSource == MapSource::FILE) {
+        ifstream fin("C:/Users/colorful/source/repos/MiniGame/Console/map.txt", ios_base::in);
         if (!fin.is_open()) {
             cout << "打开失败" << endl;
             exit(-1);
@@ -114,6 +113,7 @@ void ConsoleGame::init(MAPSOURCE mapSource){
 
         height_ = grid_.size();
 
+        // TODO：暂时不支持非等长等宽的形状
         for (int i = 0; i < grid_.size(); i++) {
             for (int j = 0; j < grid_[i].size(); j++) {
                 if (grid_[i][j] == BOX) {
@@ -127,55 +127,40 @@ void ConsoleGame::init(MAPSOURCE mapSource){
             }
             width_ = max(width_, (int)grid_[i].size());
         }
-
-
     }
 }
+
 void ConsoleGame::update(string& input) {
-    pair<int, int> new_pos{ player_pos_ };
-    pair<int, int> old_pos{ player_pos_ };
+    int direction;
     for (int i = 0; i < input.size(); i++) {
         switch (input[i]) {
         case 'w':
         case 'W':
-            _update_objects(new_pos, 0);
+            direction = 0;
             break;
         case 'a':
         case 'A':
-            _update_objects(new_pos, 1);
+            direction = 1;
             break;
         case 's':
         case 'S':
-            _update_objects(new_pos, 2);
+            direction = 2;
             break;
         case 'd':
         case 'D':
-            _update_objects(new_pos, 3);
+            direction = 3;
             break;
         default:
             break;
         }
-        if (new_pos != old_pos) {
-            // 更新玩家位置
-            steps_++;
-            grid_[new_pos.first][new_pos.second] = 'p';
-            for (auto& t : target_pos_)
-                if (old_pos.first == t.first && old_pos.second == t.second) {
-                    grid_[old_pos.first][old_pos.second] = Game::OBJECT::TARGET;
-                    break;
-                }
-                else
-                    grid_[old_pos.first][old_pos.second] = Game::OBJECT::BLANK;
-        }
+        _update_objects(player_pos_, direction);
         if (win())
         {
             draw();
             cout << "YOU WIN! Total steps(exculude invalid steps): " << steps_ << "." << endl;
             exit(0);
         }
-        old_pos = new_pos;
     }
-    player_pos_ = new_pos;
 }
 void ConsoleGame::draw() {
     for (int i = 0; i < grid_.size(); i++, cout << endl)
