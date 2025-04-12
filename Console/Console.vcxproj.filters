@@ -32,4 +32,27 @@
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="player.dds">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="blank.dds">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="box.dds">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="box_ready.dds">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="player_hit.dds">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="target.dds">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="boundary.dds">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

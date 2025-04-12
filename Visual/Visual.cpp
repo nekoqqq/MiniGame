@@ -39,40 +39,22 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 	unsigned* p_vram = Framework::instance().videoMemory();
 	unsigned color = 0u;
 	int window_width = Framework::instance().width();
+
+	auto draw_cell = [&](int src_x,int src_y,OBJECT object) {
+		unsigned* p_img = get_image_data(object);
+		int img_width = get_image_width(object);
+		int img_height = get_image_height(object);
+		for (int i = 0; i < img_height; i++)
+			for (int j = 0; j < img_width; j++)
+				p_vram[(src_x+i) * window_width + src_y+j] = p_img[i * img_width + j];
+
+	};
+
 	for (int i = 0; i < height_; i++, GameLib::cout << endl)
 		for (int j = 0; j < width_; j++)
 		{
-			switch (grid_[i][j]) {
-			case BOX:
-				color = 0xff0000; // 红色
-				break;
-			case BOX_READY:
-				color = 0xff0080; // 红紫
-				break;
-			case PLAYER:
-				color = 0x0000ff; // 蓝色
-				break;
-			case PLAYER_HIT:
-				color = 0x0080ff; // 浅蓝色
-				break;
-			case TARGET:
-				color = 0x00ff00; // 绿色
-				break;
-			case BOUNDARY:
-				color = 0xff6699; // 某种洋色
-				break;
-			case BLANK:
-				color = 0xffffff; // 白色
-				break;
-			}
-
-			int scale = 32;
-			for(int k=0;k< scale;k++)
-				for (int w = 0; w < scale; w++)
-				{
-					p_vram[(i* window_width +j)* scale + k* window_width +w] = color;
-					
-				}
+			OBJECT object = static_cast<OBJECT>(grid_[i][j]);
+			draw_cell(i*48, j*48, object);
 			GameLib::cout << grid_[i][j];
 		}
 	GameLib::cout << endl;
@@ -104,6 +86,7 @@ namespace GameLib {
 			delete p_visualGame;
 			p_visualGame = nullptr;
 			GameLib::cout << "Goodbye!" << GameLib::endl;
+			exit(0); // 临时处理，防止按了Q之后再按其他的按键会造成指针访问错误
 		}
 	}
 }

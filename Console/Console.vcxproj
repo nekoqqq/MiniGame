@@ -140,6 +140,15 @@
   <ItemGroup>
     <ClInclude Include="Game.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="blank.dds" />
+    <Image Include="boundary.dds" />
+    <Image Include="box.dds" />
+    <Image Include="box_ready.dds" />
+    <Image Include="player.dds" />
+    <Image Include="player_hit.dds" />
+    <Image Include="target.dds" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

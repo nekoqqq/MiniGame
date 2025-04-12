@@ -14,6 +14,61 @@ enum class MapSource {
     VISUAL // 窗口大小
 };
 
+struct DDS { // DirectX格式图片
+    using DWORD = unsigned;
+    using BYTE = unsigned char;
+
+    const char dMagic[4] = { 'D','D','S',' ' }; // 文件头，固定为"DDS "
+    DWORD dSize = 124; // 结构体大小，固定为124字节
+    DWORD dFlags; // 标志位信息
+    DWORD dHeight; // 图片高度，位于12开始的4字节
+    DWORD dWidth; // 图片宽度，位于16开始的4字节
+    DWORD dPitchOrLinearSize; // 一行的字节数
+    DWORD dDepth; // 3D纹理深度
+    DWORD dMipMapCount; // MipMap的数量
+    DWORD dReserved1[11]; // 其他信息
+    DWORD dReserved2; // 未使用信息
+    DWORD* dData; // 图片数据
+
+
+    DDS(const char* file_name) {
+        ifstream file(file_name, ios_base::binary);
+        if (!file.is_open()) {
+            std::cout <<file_name<<" "<< "文件打开失败" << endl;
+            file.close();
+            throw exception();
+        }
+        // 读取文件元信息
+        file.seekg(sizeof(dMagic) + sizeof(dSize) + sizeof(dFlags), ios_base::beg); //跳过前面的字节
+        auto read_dword = [&file]() mutable {
+            char s[sizeof(DWORD)];
+            file.read(s, sizeof(DWORD));
+            unsigned res = 0;
+            for (int i = 0; i < sizeof(DWORD); i++)
+                res |= s[i] << (i * 8);
+            return res;
+            }; // 读取unsigned
+        dHeight = read_dword();
+        dWidth = read_dword();
+        std::cout << file_name<<" "<<"读取的文件大小为: " << dHeight << "x" << dWidth << endl;
+        // 读取图片数据
+        file.seekg(sizeof(dMagic) + dSize, ios_base::beg);
+        dData = new DWORD[dWidth * dHeight];
+        for (int i = 0; i < dWidth * dHeight; i++)
+            dData[i] = read_dword();
+        file.close();
+    }
+    ~DDS() {
+        if (dData) {
+            delete[] dData;
+            dData = nullptr;
+        }
+    }
+
+    DWORD& operator[](int i) { // 允许修改元素    
+        return dData[i];
+    }
+};
 
 class Game {
 public:
@@ -34,12 +89,17 @@ public:
         DOWN = 3
     };
     Game();
+    ~Game();
 
     void init(MapSource); // 初始化游戏中的各种状态
     virtual void update(string&) = 0; // 更新游戏状态，当前主要功能为处理输入
     virtual void draw() = 0; // 画图
     bool is_finished()const; // 判断当前游戏是否已经结束
     int steps_; // 总共用的步数
+    DDS::DWORD* get_image_data(OBJECT);
+    DDS::DWORD get_image_width(OBJECT)const;
+    DDS::DWORD get_image_height(OBJECT)const;
+    
 
 protected:
     // 地图大小
@@ -51,6 +111,8 @@ protected:
     pair<int, int> player_pos_; // 玩家的位置
     bool _valid(pair<int, int>&)const; // 判断当前是否是有效的位置
     void _update_objects(pair<int, int>& new_pos, int direction);
+private:
+    DDS* p_dds; // 各种图片素材
 };
 
 class ConsoleGame :public Game {

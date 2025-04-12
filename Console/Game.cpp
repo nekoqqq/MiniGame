@@ -1,6 +1,7 @@
 #include"Game.h"
 
 Game::Game() :height_(0), width_(0), steps_(0) {}
+Game::~Game() { delete []p_dds; p_dds = nullptr; }
 bool Game::_valid(pair<int, int>& pos) const{
     if (pos.first >= 0 && pos.first < height_ && pos.second >= 0 && pos.second < width_ && grid_[pos.first][pos.second] != BOUNDARY)
         return true;
@@ -62,6 +63,96 @@ bool Game::is_finished()const{
             succeed += 1;
 
     return succeed >= box_pos_.size();
+}
+DDS::DWORD* Game::get_image_data(OBJECT object)
+{
+    DDS::DWORD offset = 0;
+    switch (object) {
+        case PLAYER:
+            offset = 0;
+            break;
+        case PLAYER_HIT:
+            offset = 1;
+            break;
+        case BOX:
+            offset = 2;
+            break;
+        case BOX_READY:
+            offset = 3;
+            break;
+        case TARGET:
+            offset = 4;
+            break;
+        case BOUNDARY:
+            offset = 5;
+            break;
+        case BLANK:
+            offset = 6;
+            break;
+        default:
+            break;
+    }
+    return p_dds[offset].dData;
+}
+DDS::DWORD Game::get_image_width(OBJECT object) const
+{
+    DDS::DWORD offset = 0;
+    switch (object) {
+    case PLAYER:
+        offset = 0;
+        break;
+    case PLAYER_HIT:
+        offset = 1;
+        break;
+    case BOX:
+        offset = 2;
+        break;
+    case BOX_READY:
+        offset = 3;
+        break;
+    case TARGET:
+        offset = 4;
+        break;
+    case BOUNDARY:
+        offset = 5;
+        break;
+    case BLANK:
+        offset = 6;
+        break;
+    default:
+        break;
+    }
+    return p_dds[offset].dWidth;
+}
+DDS::DWORD Game::get_image_height(OBJECT object) const
+{
+    DDS::DWORD offset = 0;
+    switch (object) {
+    case PLAYER:
+        offset = 0;
+        break;
+    case PLAYER_HIT:
+        offset = 1;
+        break;
+    case BOX:
+        offset = 2;
+        break;
+    case BOX_READY:
+        offset = 3;
+        break;
+    case TARGET:
+        offset = 4;
+        break;
+    case BOUNDARY:
+        offset = 5;
+        break;
+    case BLANK:
+        offset = 6;
+        break;
+    default:
+        break;
+    }
+    return p_dds[offset].dHeight;
 }
 void Game::init(MapSource mapSource){
     if (mapSource == MapSource::PREDEFINED) {
@@ -128,6 +219,14 @@ void Game::init(MapSource mapSource){
             width_ = max(width_, (int)grid_[i].size());
         }
     }
+    p_dds = new DDS[7]{ "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player.dds" , 
+        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player_hit.dds",
+        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box.dds",
+        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box_ready.dds",
+        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\target.dds",
+        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\boundary.dds",
+        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\blank.dds",
+    };
 }
 
 void ConsoleGame::update(string& input) {
