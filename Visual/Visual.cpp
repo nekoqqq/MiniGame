@@ -9,24 +9,27 @@ void VisualGame::update(string& input) {
 	int direction;
 	for (int i = 0; i < input.size(); i++) {
 		switch (input[i]) {
-		case 'w':
-		case 'W':
-			direction = 0;
-			break;
-		case 'a':
-		case 'A':
-			direction = 1;
-			break;
-		case 's':
-		case 'S':
-			direction = 2;
-			break;
-		case 'd':
-		case 'D':
-			direction = 3;
-			break;
-		default:
-			break;
+			case 'w':
+			case 'W':
+				direction = 0;
+				break;
+			case 'a':
+			case 'A':
+				direction = 1;
+				break;
+			case 's':
+			case 'S':
+				direction = 2;
+				break;
+			case 'd':
+			case 'D':
+				direction = 3;
+				break;
+			case 'q':
+			case 'Q':
+				return;
+			default:
+				break;
 		}
 		_update_objects(player_pos_, direction);
 	}
@@ -95,7 +98,12 @@ namespace GameLib {
 		if (p_visualGame-> is_finished())
 		{
 			GameLib::cout << "YOU WIN! Total steps(exculude invalid steps): " << p_visualGame->steps_ << "." << GameLib::endl;
-			exit(0);
+			requestEnd();
+		}
+		if (isEndRequested() || input == "q" || input == "Q") {
+			delete p_visualGame;
+			p_visualGame = nullptr;
+			GameLib::cout << "Goodbye!" << GameLib::endl;
 		}
 	}
 }
