@@ -5,7 +5,6 @@
 
 class VisualGame :public Game {
 public:
-	virtual void update(string& string);
-	virtual void draw() override;
-
+	void update(string&);
+	virtual void draw();
 };

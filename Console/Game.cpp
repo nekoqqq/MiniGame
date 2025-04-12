@@ -1,7 +1,7 @@
 #include"Game.h"
 
 Game::Game() :height_(0), width_(0), steps_(0) {}
-bool Game::valid(pair<int, int>& pos) const{
+bool Game::_valid(pair<int, int>& pos) const{
     if (pos.first >= 0 && pos.first < height_ && pos.second >= 0 && pos.second < width_ && grid_[pos.first][pos.second] != BOUNDARY)
         return true;
     return false;
@@ -22,13 +22,13 @@ void Game::_update_objects(pair<int, int>& new_pos, int direction) {
 
     one_step_pos = make_pair(new_pos.first + dx, new_pos.second + dy);
     two_steps_pos = make_pair(one_step_pos.first + dx, one_step_pos.second + dy);
-    if (!valid(one_step_pos))
+    if (!_valid(one_step_pos))
         return;
 
     char one_step_obj = grid_[one_step_pos.first][one_step_pos.second];
     char two_steps_obj = grid_[two_steps_pos.first][two_steps_pos.second];
     if (one_step_obj == BOX || one_step_obj == BOX_READY) { 
-        if (!valid(two_steps_pos) || two_steps_obj == BOX || two_steps_obj == BOX_READY) // 两个箱子推不动了
+        if (!_valid(two_steps_pos) || two_steps_obj == BOX || two_steps_obj == BOX_READY) // 两个箱子推不动了
             return;
         if (two_steps_obj == TARGET) // 正好可以箱子就绪
             grid_[two_steps_pos.first][two_steps_pos.second] = BOX_READY;
@@ -50,12 +50,12 @@ void Game::_update_objects(pair<int, int>& new_pos, int direction) {
     new_pos.second += dy;
 
     // 根据玩家站的位置确定状态
-    if (one_step_obj == TARGET)
+    if (one_step_obj == TARGET || one_step_obj == BOX_READY) // 修复一个bug，玩家当前面对的是就绪的箱子或者目标位置，都应该设置为人物在箱子上面
         grid_[new_pos.first][new_pos.second] = PLAYER_HIT;
     else
         grid_[new_pos.first][new_pos.second] = PLAYER;
 }
-bool Game::win()const{
+bool Game::is_finished()const{
     int succeed = 0;
     for (auto& t : target_pos_)
         if (grid_[t.first][t.second] == BOX_READY)
@@ -154,7 +154,7 @@ void ConsoleGame::update(string& input) {
             break;
         }
         _update_objects(player_pos_, direction);
-        if (win())
+        if (is_finished())
         {
             draw();
             cout << "YOU WIN! Total steps(exculude invalid steps): " << steps_ << "." << endl;
