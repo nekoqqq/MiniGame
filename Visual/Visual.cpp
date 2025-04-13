@@ -40,14 +40,39 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 	unsigned color = 0u;
 	int window_width = Framework::instance().width();
 
-	auto draw_cell = [&](int src_x,int src_y,OBJECT object) {
+	auto draw_cell = [&](int src_x, int src_y, OBJECT object) {
 		unsigned* p_img = get_image_data(object);
 		int img_width = get_image_width(object);
 		int img_height = get_image_height(object);
-		for (int i = 0; i < img_height; i++)
-			for (int j = 0; j < img_width; j++)
-				p_vram[(src_x+i) * window_width + src_y+j] = p_img[i * img_width + j];
+		// TODO 这里的混合有问题，最终总是画面偏黄
+		// 线性混合,z = a*x+(1-a)*y = y + a*(x-y) 
+		auto alpha_mix = [&](unsigned src_data,unsigned dst_data) {	
+			unsigned src_data_A = (src_data & 0xff000000) >> 24;			
+			unsigned src_data_R = (src_data & 0x00ff0000);
+			unsigned src_data_G = (src_data & 0x0000ff00);
+			unsigned src_data_B = (src_data & 0x000000ff);
+	
+			unsigned dst_data_A = (dst_data&& 0xff000000) >> 24;
+			unsigned dst_data_R = (dst_data & 0x00ff0000);
+			unsigned dst_data_G = (dst_data & 0x0000ff00);
+			unsigned dst_data_B = (dst_data & 0x000000ff);
 
+			unsigned r = dst_data_R + dst_data_A / 255.f * (src_data_R - dst_data_R);
+			unsigned g = dst_data_G + dst_data_A / 255.f * (src_data_G - dst_data_G);
+			unsigned b = dst_data_B + dst_data_A / 255.f * (src_data_B - dst_data_B);
+			return b | (g & 0x00ff00) | (r & 0xff0000);
+		};
+
+		for (int i = 0; i < img_height; i++)
+			for (int j = 0; j < img_width; j++) {
+				int src_index = (src_x + i) * window_width + src_y + j;
+				int dst_index = i * img_width + j;
+				unsigned src_data = p_vram[src_index];
+				unsigned dst_data = p_img[dst_index];
+				unsigned mix_data = alpha_mix(src_data, dst_data);
+				p_vram[src_index] = mix_data;
+
+			}
 	};
 
 	for (int i = 0; i < height_; i++, GameLib::cout << endl)

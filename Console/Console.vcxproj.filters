@@ -36,9 +36,6 @@
     <Image Include="player.dds">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="blank.dds">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="box.dds">
       <Filter>资源文件</Filter>
     </Image>
@@ -52,6 +49,9 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="boundary.dds">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="blank.dds">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
