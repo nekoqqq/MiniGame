@@ -5,6 +5,7 @@
 
 class VisualGame :public Game {
 public:
-	void update(string&);
+	virtual void update(string&);
+	virtual void update();
 	virtual void draw();
 };

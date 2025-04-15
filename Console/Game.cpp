@@ -1,4 +1,4 @@
-#include"Game.h"
+﻿#include"Game.h"
 
 Game::Game() :height_(0), width_(0), steps_(0) {}
 Game::~Game() { delete []p_dds; p_dds = nullptr; }
@@ -229,6 +229,7 @@ void Game::init(MapSource mapSource){
     };
 }
 
+void ConsoleGame::update(){}
 void ConsoleGame::update(string& input) {
     int direction;
     for (int i = 0; i < input.size(); i++) {

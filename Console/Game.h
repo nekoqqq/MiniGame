@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include<iostream>
 #include<string>
 #include<utility>
@@ -93,6 +93,7 @@ public:
 
     void init(MapSource); // 初始化游戏中的各种状态
     virtual void update(string&) = 0; // 更新游戏状态，当前主要功能为处理输入
+    virtual void update() = 0; // 实时输入
     virtual void draw() = 0; // 画图
     bool is_finished()const; // 判断当前游戏是否已经结束
     int steps_; // 总共用的步数
@@ -118,5 +119,6 @@ private:
 class ConsoleGame :public Game {
 public:
     virtual void update(string&) override;
+    virtual void update();
     virtual void draw() override;
 };
