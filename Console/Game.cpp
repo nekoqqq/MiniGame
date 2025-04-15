@@ -18,8 +18,6 @@ void Game::_update_objects(pair<int, int>& new_pos, int direction) {
         dx = 1;
     else if (direction == DOWN) // D
         dy = 1;
-    else
-        throw exception();
 
     one_step_pos = make_pair(new_pos.first + dx, new_pos.second + dy);
     two_steps_pos = make_pair(one_step_pos.first + dx, one_step_pos.second + dy);
