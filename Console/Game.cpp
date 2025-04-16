@@ -18,6 +18,8 @@ void Game::_update_objects(pair<int, int>& new_pos, int direction) {
         dx = 1;
     else if (direction == DOWN) // D
         dy = 1;
+    else
+        return;
 
     one_step_pos = make_pair(new_pos.first + dx, new_pos.second + dy);
     two_steps_pos = make_pair(one_step_pos.first + dx, one_step_pos.second + dy);
@@ -36,7 +38,13 @@ void Game::_update_objects(pair<int, int>& new_pos, int direction) {
     }
 
     // 更新玩家位置,这里没有办法只能遍历判断初始的是空的还是目标
+
+
+    move_count = 1;
+    move_dx = dx;
+    move_dy = dy;
     steps_++;
+
     for (auto& t : target_pos_)
         if (new_pos.first == t.first && new_pos.second == t.second) {
             grid_[new_pos.first][new_pos.second] = Game::OBJECT::TARGET;
@@ -62,6 +70,7 @@ bool Game::is_finished()const{
 
     return succeed >= box_pos_.size();
 }
+
 DDS::DWORD* Game::get_image_data(OBJECT object)
 {
     DDS::DWORD offset = 0;

@@ -12,6 +12,18 @@ void VisualGame::update() {
 	static bool previous_key_on_s = false;
 	static bool previous_key_on_d = false;
 
+	if (move_count == 48) {
+		move_count = 0;
+		move_dx = 0;
+		move_dy = 0;
+		return;
+	}
+
+	if (move_count > 0) {
+		move_count++;
+		return;
+	}
+
 	int direction=5;
 	Framework framework = Framework::instance();
 
@@ -82,12 +94,16 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 		for (int j = 0; j < width_; j++)
 		{
 			OBJECT object = static_cast<OBJECT>(grid_[i][j]);
-			draw_cell(i*48, j*48, object);
+			if(object==PLAYER) // 只有玩家移动
+				draw_cell(i * 48 - (48 - move_count) * move_dx, j * 48 - (48-move_count)*move_dy, object);
+			else
+				draw_cell(i * 48 , j * 48, object);
+
 			GameLib::cout << grid_[i][j];
 		}
 	GameLib::cout << endl;
 }
-
+ 
 
 namespace GameLib {
 	VisualGame* p_visualGame = nullptr;

@@ -112,6 +112,9 @@ protected:
     pair<int, int> player_pos_; // 玩家的位置
     bool _valid(pair<int, int>&)const; // 判断当前是否是有效的位置
     void _update_objects(pair<int, int>& new_pos, int direction);
+    int move_count;
+    int move_dx;
+    int move_dy;
 private:
     DDS* p_dds; // 各种图片素材
 };
