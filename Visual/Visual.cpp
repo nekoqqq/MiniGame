@@ -14,8 +14,10 @@ void VisualGame::update() {
 
 	if (move_count == 48) {
 		move_count = 0;
-		move_dx = 0;
-		move_dy = 0;
+		for(int i =0;i<height_;i++)
+			for (int j = 0; j < width_; j++) {
+				grid_obj[i][j].reset_move();
+			}
 		return;
 	}
 
@@ -55,10 +57,10 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 	unsigned color = 0u;
 	int window_width = Framework::instance().width();
 
-	auto draw_cell = [&](int src_x, int src_y, OBJECT object) {
-		unsigned* p_img = get_image_data(object);
-		int img_width = get_image_width(object);
-		int img_height = get_image_height(object);
+	auto draw_cell = [&](int src_x, int src_y, GameObject &go) {
+		unsigned* p_img = go.get_image_data(p_dds);
+		int img_width = go.get_image_width(p_dds);
+		int img_height = go.get_image_height(p_dds);
 		// TODO 这里的混合有问题，最终总是画面偏黄
 		// 线性混合,z = a*x+(1-a)*y = y + a*(x-y) 
 		auto alpha_mix = [&](unsigned src_data,unsigned dst_data) {	
@@ -93,13 +95,15 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 	for (int i = 0; i < height_; i++, GameLib::cout << endl)
 		for (int j = 0; j < width_; j++)
 		{
-			OBJECT object = static_cast<OBJECT>(grid_[i][j]);
-			if(object==PLAYER) // 只有玩家移动
-				draw_cell(i * 48 - (48 - move_count) * move_dx, j * 48 - (48-move_count)*move_dy, object);
-			else
-				draw_cell(i * 48 , j * 48, object);
+			GameObject &go = grid_obj[i][j];
+			GameObject::Type go_type = go.getType();
+			
+			int move_dx = 0, move_dy = 0;
 
-			GameLib::cout << grid_[i][j];
+			if (go_type == GameObject::BOUNDARY && go_type != GameObject::BLANK) // 玩家或者箱子移动
+				move_dx = go.get_move().first,move_dy = go.get_move().second;
+			draw_cell(i * 48 - (48 - move_count) * move_dx, j * 48 - (48 - move_count) * move_dy, go);
+			GameLib::cout << static_cast<char>(grid_obj[i][j]);
 		}
 	GameLib::cout << endl;
 }

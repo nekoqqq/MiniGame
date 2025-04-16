@@ -34,7 +34,7 @@ struct DDS { // DirectX格式图片
     DDS(const char* file_name) {
         ifstream file(file_name, ios_base::binary);
         if (!file.is_open()) {
-            std::cout <<file_name<<" "<< "文件打开失败" << endl;
+            std::cout << file_name << " " << "文件打开失败" << endl;
             file.close();
             throw exception();
         }
@@ -50,7 +50,7 @@ struct DDS { // DirectX格式图片
             }; // 读取unsigned
         dHeight = read_dword();
         dWidth = read_dword();
-        std::cout << file_name<<" "<<"读取的文件大小为: " << dHeight << "x" << dWidth << endl;
+        std::cout << file_name << " " << "读取的文件大小为: " << dHeight << "x" << dWidth << endl;
         // 读取图片数据
         file.seekg(sizeof(dMagic) + dSize, ios_base::beg);
         dData = new DWORD[dWidth * dHeight];
@@ -70,9 +70,9 @@ struct DDS { // DirectX格式图片
     }
 };
 
-class Game {
+class GameObject {
 public:
-    enum OBJECT {
+    enum Type {
         BOX = 'o',
         PLAYER = 'p',
         TARGET = '.',
@@ -81,7 +81,44 @@ public:
         BOX_READY = 'O', // 箱子正好在要推的地方
         PLAYER_HIT = 'P',  // 人站在要推的地方上
     };
+    Type getType()const;
 
+    void set_type(Type);
+
+    DDS::DWORD* get_image_data(DDS *p_dds);
+    DDS::DWORD get_image_width(DDS* p_dds)const;
+    DDS::DWORD get_image_height(DDS* p_dds)const;
+    void reset_move() {
+        move_dx = 0;
+        move_dy = 0;
+    }
+    pair<int, int> get_move() {
+        return { move_dx,move_dy };
+    }
+
+    bool operator==(const GameObject&)const;
+    bool operator!=(const GameObject&)const;
+
+    bool operator == (Type)const;
+    bool operator !=(Type) const;
+
+    GameObject& operator=(Type);
+    GameObject& operator=(char);
+
+    // 方便输出
+    explicit operator char()const;  // 显示类型转换   
+    friend ostream& operator<<(ostream & out,const GameObject &);
+private:
+    Type type;
+    // DDS* p_dds; // 各种图片素材 TODO 加在每个对象里面
+    // 从某个方向移动过来
+    int move_dx; 
+    int move_dy;
+};
+
+
+class Game {
+public:
     enum DIRECTION {
         UP = 0,
         LEFT = 1,
@@ -97,26 +134,21 @@ public:
     virtual void draw() = 0; // 画图
     bool is_finished()const; // 判断当前游戏是否已经结束
     int steps_; // 总共用的步数
-    DDS::DWORD* get_image_data(OBJECT);
-    DDS::DWORD get_image_width(OBJECT)const;
-    DDS::DWORD get_image_height(OBJECT)const;
-    
 
 protected:
     // 地图大小
     int height_;
     int width_;
+    vector<vector<GameObject>> grid_obj;
     vector<vector<char>> grid_;
     vector<pair<int, int>> box_pos_; // 箱子位置
     vector<pair<int, int>> target_pos_; // 箱子的目标位置
     pair<int, int> player_pos_; // 玩家的位置
     bool _valid(pair<int, int>&)const; // 判断当前是否是有效的位置
     void _update_objects(pair<int, int>& new_pos, int direction);
-    int move_count;
-    int move_dx;
-    int move_dy;
-private:
     DDS* p_dds; // 各种图片素材
+private:
+    int move_count;
 };
 
 class ConsoleGame :public Game {

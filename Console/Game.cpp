@@ -3,7 +3,7 @@
 Game::Game() :height_(0), width_(0), steps_(0) {}
 Game::~Game() { delete []p_dds; p_dds = nullptr; }
 bool Game::_valid(pair<int, int>& pos) const{
-    if (pos.first >= 0 && pos.first < height_ && pos.second >= 0 && pos.second < width_ && grid_[pos.first][pos.second] != BOUNDARY)
+    if (pos.first >= 0 && pos.first < height_ && pos.second >= 0 && pos.second < width_ && grid_obj[pos.first][pos.second].getType() != GameObject::BOUNDARY)
         return true;
     return false;
 }
@@ -26,55 +26,98 @@ void Game::_update_objects(pair<int, int>& new_pos, int direction) {
     if (!_valid(one_step_pos))
         return;
 
-    char one_step_obj = grid_[one_step_pos.first][one_step_pos.second];
-    char two_steps_obj = grid_[two_steps_pos.first][two_steps_pos.second];
-    if (one_step_obj == BOX || one_step_obj == BOX_READY) { 
-        if (!_valid(two_steps_pos) || two_steps_obj == BOX || two_steps_obj == BOX_READY) // 两个箱子推不动了
+    GameObject one_step_obj = grid_obj[one_step_pos.first][one_step_pos.second];
+    GameObject two_steps_obj = grid_obj[two_steps_pos.first][two_steps_pos.second];
+
+    if (one_step_obj == GameObject::BOX || one_step_obj == GameObject::BOX_READY) { 
+        if (!_valid(two_steps_pos) || two_steps_obj == GameObject::BOX || two_steps_obj == GameObject::BOX_READY) // 两个箱子推不动了
             return;
-        if (two_steps_obj == TARGET) // 正好可以箱子就绪
-            grid_[two_steps_pos.first][two_steps_pos.second] = BOX_READY;
+        if (two_steps_obj == GameObject::TARGET) // 正好可以箱子就绪
+            grid_obj[two_steps_pos.first][two_steps_pos.second] = GameObject::BOX_READY;
         else // 普通的位置
-            grid_[two_steps_pos.first][two_steps_pos.second] = BOX;
+            grid_obj[two_steps_pos.first][two_steps_pos.second] = GameObject::BOX;
+
     }
 
     // 更新玩家位置,这里没有办法只能遍历判断初始的是空的还是目标
-
-
     move_count = 1;
-    move_dx = dx;
-    move_dy = dy;
+    //move_dx = dx;
+    //move_dy = dy;
     steps_++;
 
     for (auto& t : target_pos_)
         if (new_pos.first == t.first && new_pos.second == t.second) {
-            grid_[new_pos.first][new_pos.second] = Game::OBJECT::TARGET;
+            grid_obj[new_pos.first][new_pos.second] = GameObject::TARGET;
             break;
         }
         else
-            grid_[new_pos.first][new_pos.second] = Game::OBJECT::BLANK;
+            grid_obj[new_pos.first][new_pos.second] = GameObject::BLANK;
 
     new_pos.first += dx;
     new_pos.second += dy;
 
     // 根据玩家站的位置确定状态
-    if (one_step_obj == TARGET || one_step_obj == BOX_READY) // 修复一个bug，玩家当前面对的是就绪的箱子或者目标位置，都应该设置为人物在箱子上面
-        grid_[new_pos.first][new_pos.second] = PLAYER_HIT;
+    if (one_step_obj == GameObject::TARGET || one_step_obj == GameObject::BOX_READY) // 修复一个bug，玩家当前面对的是就绪的箱子或者目标位置，都应该设置为人物在箱子上面
+        grid_obj[new_pos.first][new_pos.second] = GameObject::PLAYER_HIT;
     else
-        grid_[new_pos.first][new_pos.second] = PLAYER;
+        grid_obj[new_pos.first][new_pos.second] = GameObject::PLAYER;
 }
 bool Game::is_finished()const{
     int succeed = 0;
     for (auto& t : target_pos_)
-        if (grid_[t.first][t.second] == BOX_READY)
+        if (grid_obj[t.first][t.second] == GameObject::BOX_READY)
             succeed += 1;
 
     return succeed >= box_pos_.size();
 }
 
-DDS::DWORD* Game::get_image_data(OBJECT object)
+
+void GameObject::set_type(Type type) {
+    this->type = type;
+}
+
+
+GameObject::Type GameObject::getType()const { return type; }
+
+bool GameObject::operator==(const GameObject &other)const {
+    return this->type == other.getType() && this->move_dx == other.move_dx && this->move_dy == other.move_dy;
+}
+
+bool GameObject::operator!=(const GameObject& other)const {
+    return !(*this == other);
+}
+
+bool GameObject::operator==(Type type)const {
+    return this->type == type;
+}
+
+bool GameObject::operator!=(Type type)const {
+    return !(*this == type);
+}
+
+GameObject& GameObject::operator=(Type type) {
+    this->type = type;
+    return *this;
+}
+
+GameObject& GameObject::operator=(char c)
+{
+    this->type = static_cast<Type> (c);
+    return *this;
+}
+
+GameObject::operator char()const {
+    return this->type;
+}
+
+ostream& operator<<(ostream& out, const GameObject&go) {
+    return out << (char)go.getType();
+}
+
+DDS::DWORD* GameObject::get_image_data(DDS*p_dds)
 {
     DDS::DWORD offset = 0;
-    switch (object) {
+    switch (type) {
         case PLAYER:
             offset = 0;
             break;
@@ -101,10 +144,10 @@ DDS::DWORD* Game::get_image_data(OBJECT object)
     }
     return p_dds[offset].dData;
 }
-DDS::DWORD Game::get_image_width(OBJECT object) const
+DDS::DWORD GameObject::get_image_width(DDS* p_dds) const
 {
     DDS::DWORD offset = 0;
-    switch (object) {
+    switch (type) {
     case PLAYER:
         offset = 0;
         break;
@@ -131,10 +174,10 @@ DDS::DWORD Game::get_image_width(OBJECT object) const
     }
     return p_dds[offset].dWidth;
 }
-DDS::DWORD Game::get_image_height(OBJECT object) const
+DDS::DWORD GameObject::get_image_height(DDS* p_dds) const
 {
     DDS::DWORD offset = 0;
-    switch (object) {
+    switch (type) {
     case PLAYER:
         offset = 0;
         break;
@@ -161,6 +204,8 @@ DDS::DWORD Game::get_image_height(OBJECT object) const
     }
     return p_dds[offset].dHeight;
 }
+
+
 void Game::init(MapSource mapSource){
     if (mapSource == MapSource::PREDEFINED) {
         height_ = 5;
@@ -169,30 +214,30 @@ void Game::init(MapSource mapSource){
         target_pos_ = { {1,2},{1,3},{3,5} };
         player_pos_ = { 1,5 };
 
-        grid_.resize(height_);
-        for (int i = 0; i < grid_.size(); i++)
-            grid_[i].resize(width_);
+        grid_obj.resize(height_);
+        for (int i = 0; i < grid_obj.size(); i++)
+            grid_obj[i].resize(width_);
 
         for (int i = 0; i < height_; i++) {
             for (int j = 0; j < width_; j++) {
                 if (i == 0 || j == 0 || i == height_ - 1 || j == width_ - 1)
-                    grid_[i][j] = BOUNDARY;
+                    grid_obj[i][j] = GameObject::BOUNDARY;
                 else
-                    grid_[i][j] = BLANK;
+                    grid_obj[i][j] = GameObject::BLANK;
             }
         }
 
         // set box
         for (auto& pos : box_pos_)
-            grid_[pos.first][pos.second] = BOX;
+            grid_obj[pos.first][pos.second] = GameObject::BOX;
 
         // set target
         for (auto& pos : target_pos_)
-            grid_[pos.first][pos.second] = TARGET;
+            grid_obj[pos.first][pos.second] = GameObject::TARGET;
 
 
         // set player
-        grid_[player_pos_.first][player_pos_.second] = PLAYER;
+        grid_obj[player_pos_.first][player_pos_.second] = GameObject::PLAYER;
     }
     else if (mapSource == MapSource::FILE) {
         ifstream fin("C:/Users/colorful/source/repos/MiniGame/Console/map.txt", ios_base::in);
@@ -203,27 +248,27 @@ void Game::init(MapSource mapSource){
         string line;
         int i = 0;
         while (getline(fin, line)) {
-            grid_.push_back(vector<char>(line.size()));
+            grid_obj.push_back(vector<GameObject>(line.size()));
             for (int j = 0; j < line.size(); j++)
-                grid_[i][j] = line[j];
+                grid_obj[i][j] = line[j];
             i++;
         }
 
-        height_ = grid_.size();
+        height_ = grid_obj.size();
 
         // TODO：暂时不支持非等长等宽的形状
-        for (int i = 0; i < grid_.size(); i++) {
-            for (int j = 0; j < grid_[i].size(); j++) {
-                if (grid_[i][j] == BOX) {
+        for (int i = 0; i < grid_obj.size(); i++) {
+            for (int j = 0; j < grid_obj[i].size(); j++) {
+                if (grid_obj[i][j] == GameObject::BOX) {
                     box_pos_.push_back({ i,j });
                 }
-                else if (grid_[i][j] == PLAYER)
+                else if (grid_obj[i][j] == GameObject::PLAYER)
                     player_pos_ = { i,j };
-                else if (grid_[i][j] == TARGET)
+                else if (grid_obj[i][j] == GameObject::TARGET)
                     target_pos_.push_back({ i,j });
 
             }
-            width_ = max(width_, (int)grid_[i].size());
+            width_ = max(width_, (int)grid_obj[i].size());
         }
     }
     p_dds = new DDS[7]{ "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player.dds" , 
@@ -270,7 +315,7 @@ void ConsoleGame::update(string& input) {
     }
 }
 void ConsoleGame::draw() {
-    for (int i = 0; i < grid_.size(); i++, cout << endl)
-        for (int j = 0; j < grid_[i].size(); j++)
-            cout << grid_[i][j];
+    for (int i = 0; i < grid_obj.size(); i++, cout << endl)
+        for (int j = 0; j < grid_obj[i].size(); j++)
+            cout << grid_obj[i][j];
 }
