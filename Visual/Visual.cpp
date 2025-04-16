@@ -16,7 +16,7 @@ void VisualGame::update() {
 		move_count = 0;
 		for(int i =0;i<height_;i++)
 			for (int j = 0; j < width_; j++) {
-				grid_obj[i][j].reset_move();
+				grid_obj[i][j].set_move(0,0);
 			}
 		return;
 	}
@@ -48,7 +48,7 @@ void VisualGame::update() {
 	previous_key_on_a = cur_key_on_a;
 	previous_key_on_s = cur_key_on_s;
 	previous_key_on_d = cur_key_on_d;
-	_update_objects(player_pos_, direction);
+	_update_objects(direction);
 }
 void VisualGame::update(string&){}
 void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台是用来debug的
@@ -92,18 +92,21 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 			}
 	};
 	GameLib::cout << "第" <<count++<< "次更新";
+
 	for (int i = 0; i < height_; i++, GameLib::cout << endl)
 		for (int j = 0; j < width_; j++)
 		{
 			GameObject &go = grid_obj[i][j];
-			GameObject::Type go_type = go.getType();
-			
-			int move_dx = 0, move_dy = 0;
+			if (go != GameObject::BOUNDARY && go != GameObject::BLANK) // 玩家或者箱子移动
+			{
+				int move_dx = go.get_move().first, move_dy = go.get_move().second;
+				draw_cell(i * 48 - (48 - move_count) * move_dx, j * 48 - (48 - move_count) * move_dy, go);
+			}
+			else {
+				draw_cell(i * 48 , j * 48, go);
+			}
 
-			if (go_type == GameObject::BOUNDARY && go_type != GameObject::BLANK) // 玩家或者箱子移动
-				move_dx = go.get_move().first,move_dy = go.get_move().second;
-			draw_cell(i * 48 - (48 - move_count) * move_dx, j * 48 - (48 - move_count) * move_dy, go);
-			GameLib::cout << static_cast<char>(grid_obj[i][j]);
+			GameLib::cout << static_cast<char>(go);
 		}
 	GameLib::cout << endl;
 }

@@ -88,13 +88,9 @@ public:
     DDS::DWORD* get_image_data(DDS *p_dds);
     DDS::DWORD get_image_width(DDS* p_dds)const;
     DDS::DWORD get_image_height(DDS* p_dds)const;
-    void reset_move() {
-        move_dx = 0;
-        move_dy = 0;
-    }
-    pair<int, int> get_move() {
-        return { move_dx,move_dy };
-    }
+
+    void set_move(int dx, int dy);
+    pair<int, int> get_move();
 
     bool operator==(const GameObject&)const;
     bool operator!=(const GameObject&)const;
@@ -145,9 +141,8 @@ protected:
     vector<pair<int, int>> target_pos_; // 箱子的目标位置
     pair<int, int> player_pos_; // 玩家的位置
     bool _valid(pair<int, int>&)const; // 判断当前是否是有效的位置
-    void _update_objects(pair<int, int>& new_pos, int direction);
+    void _update_objects(int direction);
     DDS* p_dds; // 各种图片素材
-private:
     int move_count;
 };
 

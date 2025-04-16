@@ -7,7 +7,7 @@ bool Game::_valid(pair<int, int>& pos) const{
         return true;
     return false;
 }
-void Game::_update_objects(pair<int, int>& new_pos, int direction) {
+void Game::_update_objects(int direction) {
     pair<int, int> one_step_pos, two_steps_pos;
     int dx = 0, dy = 0;
     if (direction == UP) // W
@@ -21,46 +21,47 @@ void Game::_update_objects(pair<int, int>& new_pos, int direction) {
     else
         return;
 
-    one_step_pos = make_pair(new_pos.first + dx, new_pos.second + dy);
+
+    one_step_pos = make_pair(player_pos_.first + dx, player_pos_.second + dy);
     two_steps_pos = make_pair(one_step_pos.first + dx, one_step_pos.second + dy);
     if (!_valid(one_step_pos))
         return;
 
-    GameObject one_step_obj = grid_obj[one_step_pos.first][one_step_pos.second];
-    GameObject two_steps_obj = grid_obj[two_steps_pos.first][two_steps_pos.second];
+    GameObject & one_step_obj = grid_obj[one_step_pos.first][one_step_pos.second];
+    GameObject & two_steps_obj = grid_obj[two_steps_pos.first][two_steps_pos.second];
 
     if (one_step_obj == GameObject::BOX || one_step_obj == GameObject::BOX_READY) { 
         if (!_valid(two_steps_pos) || two_steps_obj == GameObject::BOX || two_steps_obj == GameObject::BOX_READY) // 两个箱子推不动了
             return;
         if (two_steps_obj == GameObject::TARGET) // 正好可以箱子就绪
             grid_obj[two_steps_pos.first][two_steps_pos.second] = GameObject::BOX_READY;
+
         else // 普通的位置
             grid_obj[two_steps_pos.first][two_steps_pos.second] = GameObject::BOX;
-
+        two_steps_obj.set_move(dx, dy); // 箱子动画
     }
 
     // 更新玩家位置,这里没有办法只能遍历判断初始的是空的还是目标
     move_count = 1;
-    //move_dx = dx;
-    //move_dy = dy;
+    one_step_obj.set_move(dx, dy); // 人物动画
     steps_++;
 
     for (auto& t : target_pos_)
-        if (new_pos.first == t.first && new_pos.second == t.second) {
-            grid_obj[new_pos.first][new_pos.second] = GameObject::TARGET;
+        if (player_pos_.first == t.first && player_pos_.second == t.second) {
+            grid_obj[player_pos_.first][player_pos_.second] = GameObject::TARGET;
             break;
         }
         else
-            grid_obj[new_pos.first][new_pos.second] = GameObject::BLANK;
+            grid_obj[player_pos_.first][player_pos_.second] = GameObject::BLANK;
 
-    new_pos.first += dx;
-    new_pos.second += dy;
+    player_pos_.first += dx;
+    player_pos_.second += dy;
 
     // 根据玩家站的位置确定状态
     if (one_step_obj == GameObject::TARGET || one_step_obj == GameObject::BOX_READY) // 修复一个bug，玩家当前面对的是就绪的箱子或者目标位置，都应该设置为人物在箱子上面
-        grid_obj[new_pos.first][new_pos.second] = GameObject::PLAYER_HIT;
+        grid_obj[player_pos_.first][player_pos_.second] = GameObject::PLAYER_HIT;
     else
-        grid_obj[new_pos.first][new_pos.second] = GameObject::PLAYER;
+        grid_obj[player_pos_.first][player_pos_.second] = GameObject::PLAYER;
 }
 bool Game::is_finished()const{
     int succeed = 0;
@@ -76,6 +77,14 @@ void GameObject::set_type(Type type) {
     this->type = type;
 }
 
+void GameObject::set_move(int dx, int dy) {
+    move_dx = dx;
+    move_dy = dy;
+}
+
+pair<int,int> GameObject::get_move() {
+    return { move_dx,move_dy };
+}
 
 GameObject::Type GameObject::getType()const { return type; }
 
@@ -107,7 +116,7 @@ GameObject& GameObject::operator=(char c)
 }
 
 GameObject::operator char()const {
-    return this->type;
+    return (char)this->type;
 }
 
 ostream& operator<<(ostream& out, const GameObject&go) {
@@ -305,7 +314,7 @@ void ConsoleGame::update(string& input) {
         default:
             break;
         }
-        _update_objects(player_pos_, direction);
+        _update_objects(direction);
         if (is_finished())
         {
             draw();
