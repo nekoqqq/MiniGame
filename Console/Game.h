@@ -131,6 +131,8 @@ public:
     bool is_finished()const; // 判断当前游戏是否已经结束
     int steps_; // 总共用的步数
 
+    friend ostream& operator<<(ostream& out, Game& g);
+
 protected:
     // 地图大小
     int height_;

@@ -123,6 +123,15 @@ ostream& operator<<(ostream& out, const GameObject&go) {
     return out << (char)go.getType();
 }
 
+ostream& operator<<(ostream& out, Game& g)
+{
+    for (int i = 0; i < g.grid_obj.size(); i++,out<<endl)
+        for (int j = 0; j < g.grid_obj[i].size(); j++)
+            out << g.grid_obj[i][j] ;
+    out << endl;
+    return out;
+}
+
 DDS::DWORD* GameObject::get_image_data(DDS*p_dds)
 {
     DDS::DWORD offset = 0;
@@ -324,7 +333,5 @@ void ConsoleGame::update(string& input) {
     }
 }
 void ConsoleGame::draw() {
-    for (int i = 0; i < grid_obj.size(); i++, cout << endl)
-        for (int j = 0; j < grid_obj[i].size(); j++)
-            cout << grid_obj[i][j];
+    cout << *this;
 }

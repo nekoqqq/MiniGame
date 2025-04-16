@@ -91,22 +91,31 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 
 			}
 	};
-	GameLib::cout << "第" <<count++<< "次更新";
+	GameLib::cout << "第" <<count++<< "次更新"<<endl;
 
-	for (int i = 0; i < height_; i++, GameLib::cout << endl)
+	// 先绘制背景
+	for(int i =0;i<height_;i++)
+		for (int j = 0; j < width_; j++) {
+			if(grid_obj[i][j]==GameObject::BLANK || grid_obj[i][j]==GameObject::BOUNDARY||grid_obj[i][j]==GameObject::TARGET)
+				draw_cell(i * 48, j * 48, grid_obj[i][j]);
+		}
+
+	// 再绘制前景，用于修复从下往上，因为先在上面的格子绘制了人物，后在下面的给子绘制了背景，导致人物的下半身没有了的问题
+	for (int i = 0; i < height_; i++)
 		for (int j = 0; j < width_; j++)
 		{
 			GameObject &go = grid_obj[i][j];
-			if (go != GameObject::BOUNDARY && go != GameObject::BLANK) // 玩家或者箱子移动
+			if (!(go == GameObject::BLANK || go == GameObject::BOUNDARY || go == GameObject::TARGET)) // 玩家或者箱子移动
 			{
 				int move_dx = go.get_move().first, move_dy = go.get_move().second;
-				draw_cell(i * 48 - (48 - move_count) * move_dx, j * 48 - (48 - move_count) * move_dy, go);
+				draw_cell(i * 48 - (48-move_count) * move_dx, j * 48 - (48-move_count) * move_dy, go);
 			}
-			else {
-				draw_cell(i * 48 , j * 48, go);
-			}
+		}
 
-			GameLib::cout << static_cast<char>(go);
+	// STD debug out
+	for (int i = 0; i < height_; i++, GameLib::cout << endl)
+		for (int j = 0; j < width_; j++) {
+			GameLib::cout << static_cast<char>(grid_obj[i][j]);
 		}
 	GameLib::cout << endl;
 }
