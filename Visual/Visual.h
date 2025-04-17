@@ -8,4 +8,5 @@ public:
 	virtual void update(string&);
 	virtual void update();
 	virtual void draw();
+	void drawFPS();
 };

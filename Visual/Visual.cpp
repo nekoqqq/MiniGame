@@ -6,6 +6,7 @@
 using namespace std;
 using namespace GameLib;
 void VisualGame::update() {
+
 	// 上一次各个按键是否被按下
 	static bool previous_key_on_w = false;
 	static bool previous_key_on_a = false;
@@ -52,11 +53,9 @@ void VisualGame::update() {
 }
 void VisualGame::update(string&){}
 void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台是用来debug的
-	static int count = 0;
 	unsigned* p_vram = Framework::instance().videoMemory();
 	unsigned color = 0u;
 	int window_width = Framework::instance().width();
-
 	auto draw_cell = [&](int src_x, int src_y, GameObject &go) {
 		unsigned* p_img = go.get_image_data(p_dds);
 		int img_width = go.get_image_width(p_dds);
@@ -91,7 +90,6 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 
 			}
 	};
-	GameLib::cout << "第" <<count++<< "次更新"<<endl;
 
 	// 先绘制背景
 	for(int i =0;i<height_;i++)
@@ -119,18 +117,25 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 		}
 	GameLib::cout << endl;
 }
- 
+void VisualGame::drawFPS() {
+	// TODO 绘制文字那一章再增加实现
+}
 
 namespace GameLib {
 	VisualGame* p_visualGame = nullptr;
+	const int FPS = 60; // 
 	void Framework::update() {
+		static unsigned previous_time[FPS]; // 前一次的时间戳
+		static int counter = 0; // 游戏循环次数
 		static bool initialized = false;
+
 		if (!initialized) {
 			p_visualGame = new VisualGame();
 			p_visualGame->init(MapSource::FILE);
 			initialized = true;
 			GameLib::cout << "Welcome to my game, please press keyboard W|A|S|D for UP|LEFT|RIGHT|DOWN." << GameLib::endl;
 		}
+		GameLib::cout << "第" << ++counter << "次更新" << endl;
 		p_visualGame->update();
 		p_visualGame->draw();
 		if (p_visualGame-> is_finished())
@@ -144,5 +149,18 @@ namespace GameLib {
 			GameLib::cout << "Goodbye!" << GameLib::endl;
 			exit(0); // 临时处理，防止按了Q之后再按其他的按键会造成指针访问错误
 		}
+
+
+		GameLib::cout << "当前FPS耗时: " << Framework::time() - previous_time[FPS-1] << "ms" << GameLib::endl;
+		int interval = Framework::time() - previous_time[0];
+		if (counter % FPS == 0)
+			GameLib::cout << "实际FPS: " << 1000*FPS / interval << GameLib::endl;
+
+		// 补FPS
+		while (Framework::time() - previous_time[FPS-1] < 1.0 / FPS)
+			Framework::sleep(1);
+		for (int i = 0; i < FPS-1; i++)
+			previous_time[i] = previous_time[i + 1];
+		previous_time[FPS-1] = Framework::time();
 	}
 }
