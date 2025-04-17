@@ -21,7 +21,6 @@ void Game::_update_objects(int direction) {
     else
         return;
 
-
     one_step_pos = make_pair(player_pos_.first + dx, player_pos_.second + dy);
     two_steps_pos = make_pair(one_step_pos.first + dx, one_step_pos.second + dy);
     if (!_valid(one_step_pos))
@@ -43,6 +42,7 @@ void Game::_update_objects(int direction) {
 
     // 更新玩家位置,这里没有办法只能遍历判断初始的是空的还是目标
     move_count = 1;
+    var_move_count = 1;
     one_step_obj.set_move(dx, dy); // 人物动画
     steps_++;
 
@@ -71,58 +71,121 @@ bool Game::is_finished()const{
 
     return succeed >= box_pos_.size();
 }
+void Game::init(MapSource mapSource,bool var_fps) {
+    if (mapSource == MapSource::PREDEFINED) {
+        height_ = 5;
+        width_ = 8;
+        box_pos_ = { {2,2},{2,5} };
+        target_pos_ = { {1,2},{1,3},{3,5} };
+        player_pos_ = { 1,5 };
+
+        grid_obj.resize(height_);
+        for (int i = 0; i < grid_obj.size(); i++)
+            grid_obj[i].resize(width_);
+
+        for (int i = 0; i < height_; i++) {
+            for (int j = 0; j < width_; j++) {
+                if (i == 0 || j == 0 || i == height_ - 1 || j == width_ - 1)
+                    grid_obj[i][j] = GameObject::BOUNDARY;
+                else
+                    grid_obj[i][j] = GameObject::BLANK;
+            }
+        }
+
+        // set box
+        for (auto& pos : box_pos_)
+            grid_obj[pos.first][pos.second] = GameObject::BOX;
+
+        // set target
+        for (auto& pos : target_pos_)
+            grid_obj[pos.first][pos.second] = GameObject::TARGET;
+
+
+        // set player
+        grid_obj[player_pos_.first][player_pos_.second] = GameObject::PLAYER;
+    }
+    else if (mapSource == MapSource::FILE) {
+        ifstream fin("C:/Users/colorful/source/repos/MiniGame/Console/map.txt", ios_base::in);
+        if (!fin.is_open()) {
+            cout << "打开失败" << endl;
+            exit(-1);
+        }
+        string line;
+        int i = 0;
+        while (getline(fin, line)) {
+            grid_obj.push_back(vector<GameObject>(line.size()));
+            for (int j = 0; j < line.size(); j++)
+                grid_obj[i][j] = line[j];
+            i++;
+        }
+
+        height_ = grid_obj.size();
+
+        // TODO：暂时不支持非等长等宽的形状
+        for (int i = 0; i < grid_obj.size(); i++) {
+            for (int j = 0; j < grid_obj[i].size(); j++) {
+                if (grid_obj[i][j] == GameObject::BOX) {
+                    box_pos_.push_back({ i,j });
+                }
+                else if (grid_obj[i][j] == GameObject::PLAYER)
+                    player_pos_ = { i,j };
+                else if (grid_obj[i][j] == GameObject::TARGET)
+                    target_pos_.push_back({ i,j });
+
+            }
+            width_ = max(width_, (int)grid_obj[i].size());
+        }
+    }
+    this->var_fps = var_fps;
+    p_dds = new DDS[7]{ "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player.dds" ,
+        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player_hit.dds",
+        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box.dds",
+        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box_ready.dds",
+        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\target.dds",
+        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\boundary.dds",
+        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\blank.dds",
+    };
+}
 
 
 void GameObject::set_type(Type type) {
     this->type = type;
 }
-
 void GameObject::set_move(int dx, int dy) {
     move_dx = dx;
     move_dy = dy;
 }
-
 pair<int,int> GameObject::get_move() {
     return { move_dx,move_dy };
 }
-
 GameObject::Type GameObject::getType()const { return type; }
-
 bool GameObject::operator==(const GameObject &other)const {
     return this->type == other.getType() && this->move_dx == other.move_dx && this->move_dy == other.move_dy;
 }
-
 bool GameObject::operator!=(const GameObject& other)const {
     return !(*this == other);
 }
-
 bool GameObject::operator==(Type type)const {
     return this->type == type;
 }
-
 bool GameObject::operator!=(Type type)const {
     return !(*this == type);
 }
-
 GameObject& GameObject::operator=(Type type) {
     this->type = type;
     return *this;
 }
-
 GameObject& GameObject::operator=(char c)
 {
     this->type = static_cast<Type> (c);
     return *this;
 }
-
 GameObject::operator char()const {
     return (char)this->type;
 }
-
 ostream& operator<<(ostream& out, const GameObject&go) {
     return out << (char)go.getType();
 }
-
 ostream& operator<<(ostream& out, Game& g)
 {
     for (int i = 0; i < g.grid_obj.size(); i++,out<<endl)
@@ -131,6 +194,7 @@ ostream& operator<<(ostream& out, Game& g)
     out << endl;
     return out;
 }
+
 
 DDS::DWORD* GameObject::get_image_data(DDS*p_dds)
 {
@@ -223,81 +287,6 @@ DDS::DWORD GameObject::get_image_height(DDS* p_dds) const
     return p_dds[offset].dHeight;
 }
 
-
-void Game::init(MapSource mapSource){
-    if (mapSource == MapSource::PREDEFINED) {
-        height_ = 5;
-        width_ = 8;
-        box_pos_ = { {2,2},{2,5} };
-        target_pos_ = { {1,2},{1,3},{3,5} };
-        player_pos_ = { 1,5 };
-
-        grid_obj.resize(height_);
-        for (int i = 0; i < grid_obj.size(); i++)
-            grid_obj[i].resize(width_);
-
-        for (int i = 0; i < height_; i++) {
-            for (int j = 0; j < width_; j++) {
-                if (i == 0 || j == 0 || i == height_ - 1 || j == width_ - 1)
-                    grid_obj[i][j] = GameObject::BOUNDARY;
-                else
-                    grid_obj[i][j] = GameObject::BLANK;
-            }
-        }
-
-        // set box
-        for (auto& pos : box_pos_)
-            grid_obj[pos.first][pos.second] = GameObject::BOX;
-
-        // set target
-        for (auto& pos : target_pos_)
-            grid_obj[pos.first][pos.second] = GameObject::TARGET;
-
-
-        // set player
-        grid_obj[player_pos_.first][player_pos_.second] = GameObject::PLAYER;
-    }
-    else if (mapSource == MapSource::FILE) {
-        ifstream fin("C:/Users/colorful/source/repos/MiniGame/Console/map.txt", ios_base::in);
-        if (!fin.is_open()) {
-            cout << "打开失败" << endl;
-            exit(-1);
-        }
-        string line;
-        int i = 0;
-        while (getline(fin, line)) {
-            grid_obj.push_back(vector<GameObject>(line.size()));
-            for (int j = 0; j < line.size(); j++)
-                grid_obj[i][j] = line[j];
-            i++;
-        }
-
-        height_ = grid_obj.size();
-
-        // TODO：暂时不支持非等长等宽的形状
-        for (int i = 0; i < grid_obj.size(); i++) {
-            for (int j = 0; j < grid_obj[i].size(); j++) {
-                if (grid_obj[i][j] == GameObject::BOX) {
-                    box_pos_.push_back({ i,j });
-                }
-                else if (grid_obj[i][j] == GameObject::PLAYER)
-                    player_pos_ = { i,j };
-                else if (grid_obj[i][j] == GameObject::TARGET)
-                    target_pos_.push_back({ i,j });
-
-            }
-            width_ = max(width_, (int)grid_obj[i].size());
-        }
-    }
-    p_dds = new DDS[7]{ "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player.dds" , 
-        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player_hit.dds",
-        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box.dds",
-        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box_ready.dds",
-        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\target.dds",
-        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\boundary.dds",
-        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\blank.dds",
-    };
-}
 
 void ConsoleGame::update(){}
 void ConsoleGame::update(string& input) {

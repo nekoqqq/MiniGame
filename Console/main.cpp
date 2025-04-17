@@ -11,7 +11,7 @@ int main() {
     cout << "Welcome to my game, please press keyboard W|A|S|D for UP|LEFT|RIGHT|DOWN." << endl;
     Game *gameState = new ConsoleGame();
     MapSource mapSource = MapSource::FILE;
-    gameState->init(mapSource);
+    gameState->init(mapSource,false);
     gameState->draw();
     string input;
     while (cin >> input) {
