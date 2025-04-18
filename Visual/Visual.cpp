@@ -28,14 +28,17 @@ void VisualGame::update() {
 	bool cur_key_on_a = (framework.isKeyTriggered('a') || framework.isKeyTriggered('A'));
 	bool cur_key_on_s = (framework.isKeyTriggered('s') || framework.isKeyTriggered('S'));
 	bool cur_key_on_d = (framework.isKeyTriggered('d') || framework.isKeyTriggered('D'));
-	if ( cur_key_on_w)
+	bool cur_key_on_esc = framework.isKeyTriggered('b');
+	if (cur_key_on_w)
 		direction = 0;
-	else if ( cur_key_on_a)
+	else if (cur_key_on_a)
 		direction = 1;
-	else if ( cur_key_on_s)
+	else if (cur_key_on_s)
 		direction = 2;
 	else if (cur_key_on_d)
 		direction = 3;
+	else if (cur_key_on_esc)
+		should_draw_theme = !should_draw_theme;
 	// 这里不可以直接return,否则previous_key无法置为当前的输入,就无法响应连续的同一个按键的输入
 	_update_objects(direction);
 }
@@ -179,6 +182,7 @@ namespace GameLib {
 	VisualGame* p_visualGame = nullptr;
 	const int FPS = 60; // 
 	bool var_fps = true;
+	bool should_draw_theme = false; // 是否绘制菜单
 	void Framework::update() {
 		static unsigned previous_time[FPS]{}; // 前一次的时间戳
 		static int counter = 0; // 游戏循环次数
@@ -195,7 +199,12 @@ namespace GameLib {
 			p_visualGame->update(Framework::time() - previous_time[FPS - 1]); // 这里最好睡眠一下
 		else
 			p_visualGame->update();
-		p_visualGame->draw();
+		if (Framework::isKeyTriggered('M') || Framework::isKeyTriggered('m'))
+			should_draw_theme = !should_draw_theme;
+		if (should_draw_theme)
+			p_visualGame->drawTheme();
+		else
+			p_visualGame->draw();
 		if (p_visualGame-> is_finished())
 		{
 			GameLib::cout << "YOU WIN! Total steps(exculude invalid steps): " << p_visualGame->steps_ << "." << GameLib::endl;
