@@ -145,6 +145,7 @@
     <Image Include="boundary.dds" />
     <Image Include="box.dds" />
     <Image Include="box_ready.dds" />
+    <Image Include="main_theme.dds" />
     <Image Include="player.dds" />
     <Image Include="player_hit.dds" />
     <Image Include="target.dds" />

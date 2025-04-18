@@ -85,49 +85,11 @@ void VisualGame::update(int t) {
 	_update_objects(direction);
 }
 void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台是用来debug的
-	unsigned* p_vram = Framework::instance().videoMemory();
-	unsigned color = 0u;
-	int window_width = Framework::instance().width();
-	auto draw_cell = [&](int src_x, int src_y, GameObject &go) {
-		unsigned* p_img = go.get_image_data(p_dds);
-		int img_width = go.get_image_width(p_dds);
-		int img_height = go.get_image_height(p_dds);
-		// TODO 这里的混合有问题，最终总是画面偏黄
-		// 线性混合,z = a*x+(1-a)*y = y + a*(x-y) 
-		auto alpha_mix = [&](unsigned src_data,unsigned dst_data) {	
-			unsigned src_data_A = (src_data & 0xff000000) >> 24;			
-			unsigned src_data_R = (src_data & 0x00ff0000);
-			unsigned src_data_G = (src_data & 0x0000ff00);
-			unsigned src_data_B = (src_data & 0x000000ff);
-	
-			unsigned dst_data_A = (dst_data&& 0xff000000) >> 24;
-			unsigned dst_data_R = (dst_data & 0x00ff0000);
-			unsigned dst_data_G = (dst_data & 0x0000ff00);
-			unsigned dst_data_B = (dst_data & 0x000000ff);
-
-			unsigned r = dst_data_R + dst_data_A / 255.f * (src_data_R - dst_data_R);
-			unsigned g = dst_data_G + dst_data_A / 255.f * (src_data_G - dst_data_G);
-			unsigned b = dst_data_B + dst_data_A / 255.f * (src_data_B - dst_data_B);
-			return b | (g & 0x00ff00) | (r & 0xff0000);
-		};
-
-		for (int i = 0; i < img_height; i++)
-			for (int j = 0; j < img_width; j++) {
-				int src_index = (src_x + i) * window_width + src_y + j;
-				int dst_index = i * img_width + j;
-				unsigned src_data = p_vram[src_index];
-				unsigned dst_data = p_img[dst_index];
-				unsigned mix_data = alpha_mix(src_data, dst_data);
-				p_vram[src_index] = mix_data;
-
-			}
-	};
-
 	// 先绘制背景
 	for(int i =0;i<height_;i++)
 		for (int j = 0; j < width_; j++) {
 			if(grid_obj[i][j]==GameObject::BLANK || grid_obj[i][j]==GameObject::BOUNDARY||grid_obj[i][j]==GameObject::TARGET)
-				draw_cell(i * 48, j * 48, grid_obj[i][j]);
+				drawCell(i * 48, j * 48, static_cast<DDS&>(grid_obj[i][j]));
 		}
 
 
@@ -141,7 +103,7 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 				if (!(go == GameObject::BLANK || go == GameObject::BOUNDARY || go == GameObject::TARGET)) // 玩家或者箱子移动
 				{
 					int move_dx = go.get_move().first, move_dy = go.get_move().second;
-					draw_cell(i * 48 - 48*(MAX_VAR_MOVE_COUNT - var_move_count)* move_dx / MAX_VAR_MOVE_COUNT, j * 48 - 48*(MAX_VAR_MOVE_COUNT - var_move_count) * move_dy / MAX_VAR_MOVE_COUNT, go);
+					drawCell(i * 48 - 48*(MAX_VAR_MOVE_COUNT - var_move_count)* move_dx / MAX_VAR_MOVE_COUNT, j * 48 - 48*(MAX_VAR_MOVE_COUNT - var_move_count) * move_dy / MAX_VAR_MOVE_COUNT, static_cast<DDS&>(go));
 				}
 			}
 	}
@@ -153,13 +115,11 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 				if (!(go == GameObject::BLANK || go == GameObject::BOUNDARY || go == GameObject::TARGET)) // 玩家或者箱子移动
 				{
 					int move_dx = go.get_move().first, move_dy = go.get_move().second;
-					draw_cell(i * 48 - (48 - move_count) * move_dx, j * 48 - (48 - move_count) * move_dy, go);
+					drawCell(i * 48 - (48 - move_count) * move_dx, j * 48 - (48 - move_count) * move_dy, static_cast<DDS&>(go));
 				}
 			}
 	}
 	
-
-
 	// STD debug out
 	for (int i = 0; i < height_; i++, GameLib::cout << endl)
 		for (int j = 0; j < width_; j++) {
@@ -169,6 +129,50 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 }
 void VisualGame::drawFPS() {
 	// TODO 绘制文字那一章再增加实现
+}
+
+void VisualGame::drawCell(int src_x, int src_y, DDS &dds)
+{
+	unsigned* p_vram = Framework::instance().videoMemory();
+	unsigned color = 0u;
+	int window_width = Framework::instance().width();
+	unsigned* p_img = dds.get_image_data();
+	int img_width = dds.get_image_width();
+	int img_height = dds.get_image_height();
+	// TODO 这里的混合有问题，最终总是画面偏黄
+	// 线性混合,z = a*x+(1-a)*y = y + a*(x-y) 
+	auto alpha_mix = [&](unsigned src_data, unsigned dst_data) {
+		unsigned src_data_A = (src_data & 0xff000000) >> 24;
+		unsigned src_data_R = (src_data & 0x00ff0000);
+		unsigned src_data_G = (src_data & 0x0000ff00);
+		unsigned src_data_B = (src_data & 0x000000ff);
+
+		unsigned dst_data_A = (dst_data && 0xff000000) >> 24;
+		unsigned dst_data_R = (dst_data & 0x00ff0000);
+		unsigned dst_data_G = (dst_data & 0x0000ff00);
+		unsigned dst_data_B = (dst_data & 0x000000ff);
+
+		unsigned r = dst_data_R + dst_data_A / 255.f * (src_data_R - dst_data_R);
+		unsigned g = dst_data_G + dst_data_A / 255.f * (src_data_G - dst_data_G);
+		unsigned b = dst_data_B + dst_data_A / 255.f * (src_data_B - dst_data_B);
+		return b | (g & 0x00ff00) | (r & 0xff0000);
+		};
+
+	for (int i = 0; i < img_height; i++)
+		for (int j = 0; j < img_width; j++) {
+			int src_index = (src_x + i) * window_width + src_y + j;
+			int dst_index = i * img_width + j;
+			unsigned src_data = p_vram[src_index];
+			unsigned dst_data = p_img[dst_index];
+			unsigned mix_data = alpha_mix(src_data, dst_data);
+			p_vram[src_index] = mix_data;
+
+		}
+}
+
+void VisualGame::drawTheme() {
+	DDS& img = Game::getImg(IMG_THEME);
+	drawCell(0, 0, img);
 }
 
 namespace GameLib {

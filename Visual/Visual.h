@@ -9,6 +9,8 @@ public:
 	virtual void update();
 	void update(int); //  可变FPS
 	virtual void draw();
+	void drawTheme();
 protected:
 	void drawFPS();
+	void drawCell(int,int,DDS&);
 };

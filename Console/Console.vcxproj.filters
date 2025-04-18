@@ -54,5 +54,8 @@
     <Image Include="blank.dds">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="main_theme.dds">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>

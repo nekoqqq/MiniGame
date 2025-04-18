@@ -13,6 +13,16 @@ enum class MapSource {
     FILE, // 文件内
     VISUAL // 窗口大小
 };
+enum IMG_TYPE {
+    IMG_BOX,
+    IMG_PLAYER,
+    IMG_TARGET,
+    IMG_BOUNDARY,
+    IMG_BLANK,
+    IMG_BOX_READY,
+    IMG_PLAYER_HIT,
+    IMG_THEME // 主题
+};
 
 struct DDS { // DirectX格式图片
     using DWORD = unsigned;
@@ -45,7 +55,8 @@ struct DDS { // DirectX格式图片
             file.read(s, sizeof(DWORD));
             unsigned res = 0;
             for (int i = 0; i < sizeof(DWORD); i++)
-                res |= s[i] << (i * 8);
+                res |= static_cast<unsigned char>(s[i]) << (i * 8);
+                
             return res;
             }; // 读取unsigned
         dHeight = read_dword();
@@ -64,6 +75,10 @@ struct DDS { // DirectX格式图片
             dData = nullptr;
         }
     }
+
+    DWORD* get_image_data();
+    DWORD get_image_width()const;
+    DWORD get_image_height()const;
 
     DWORD& operator[](int i) { // 允许修改元素    
         return dData[i];
@@ -84,10 +99,7 @@ public:
     Type getType()const;
 
     void set_type(Type);
-
-    DDS::DWORD* get_image_data(DDS *p_dds);
-    DDS::DWORD get_image_width(DDS* p_dds)const;
-    DDS::DWORD get_image_height(DDS* p_dds)const;
+        
 
     void set_move(int dx, int dy);
     pair<int, int> get_move();
@@ -103,6 +115,7 @@ public:
 
     // 方便输出
     explicit operator char()const;  // 显示类型转换   
+    explicit operator DDS&() const;
     friend ostream& operator<<(ostream & out,const GameObject &);
 private:
     Type type;
@@ -111,7 +124,6 @@ private:
     int move_dx; 
     int move_dy;
 };
-
 
 class Game {
 public:
@@ -130,7 +142,7 @@ public:
     virtual void draw() = 0; // 画图
     bool is_finished()const; // 判断当前游戏是否已经结束
     int steps_; // 总共用的步数
-
+    static DDS& getImg(IMG_TYPE);
     friend ostream& operator<<(ostream& out, Game& g);
 
 protected:
@@ -144,11 +156,14 @@ protected:
     pair<int, int> player_pos_; // 玩家的位置
     bool _valid(pair<int, int>&)const; // 判断当前是否是有效的位置
     void _update_objects(int direction);
-    DDS* p_dds; // 各种图片素材
+
     int move_count=0;
     int var_move_count=0; // 可变FPS计数器
     const int MAX_VAR_MOVE_COUNT = 50; // 50 ms 根据时间移动相应的像素,50ms移动32个像素, 则速度为640px/s
     bool var_fps; // 是否是可变刷新率的游戏
+
+private:
+   static DDS* p_dds; // 各种图片素材, 无需定义为static, 因为Game对象理论上全局只有一个
 };
 
 class ConsoleGame :public Game {

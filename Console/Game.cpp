@@ -1,5 +1,15 @@
 ﻿#include"Game.h"
 
+DDS* Game::p_dds = new DDS[8]{ 
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player.dds" ,
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\target.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\boundary.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\blank.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box_ready.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player_hit.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\main_theme.dds",
+};
 Game::Game() :height_(0), width_(0), steps_(0) {}
 Game::~Game() { delete []p_dds; p_dds = nullptr; }
 bool Game::_valid(pair<int, int>& pos) const{
@@ -71,6 +81,11 @@ bool Game::is_finished()const{
 
     return succeed >= box_pos_.size();
 }
+DDS& Game::getImg(IMG_TYPE img_type)
+{
+    int index = img_type;
+    return p_dds[index];
+}
 void Game::init(MapSource mapSource,bool var_fps) {
     if (mapSource == MapSource::PREDEFINED) {
         height_ = 5;
@@ -137,14 +152,7 @@ void Game::init(MapSource mapSource,bool var_fps) {
         }
     }
     this->var_fps = var_fps;
-    p_dds = new DDS[7]{ "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player.dds" ,
-        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player_hit.dds",
-        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box.dds",
-        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box_ready.dds",
-        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\target.dds",
-        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\boundary.dds",
-        "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\blank.dds",
-    };
+
 }
 
 
@@ -183,6 +191,36 @@ GameObject& GameObject::operator=(char c)
 GameObject::operator char()const {
     return (char)this->type;
 }
+GameObject::operator DDS&() const {
+    IMG_TYPE img_type = IMG_BLANK;
+    switch (this->type)
+    {
+    case BOX:
+        img_type = IMG_BOX;
+        break;
+    case PLAYER:
+        img_type = IMG_PLAYER;
+        break;
+    case TARGET:
+        img_type = IMG_TARGET;
+        break;
+    case BOUNDARY:
+        img_type = IMG_BOUNDARY;
+        break;
+    case BLANK:
+        img_type = IMG_BLANK;
+        break;
+    case BOX_READY:
+        img_type = IMG_BOX_READY;
+        break; 
+    case PLAYER_HIT:
+        img_type = IMG_PLAYER_HIT;
+        break;
+    default:
+        break;
+    }
+    return Game::getImg(img_type);
+}
 ostream& operator<<(ostream& out, const GameObject&go) {
     return out << (char)go.getType();
 }
@@ -194,99 +232,6 @@ ostream& operator<<(ostream& out, Game& g)
     out << endl;
     return out;
 }
-
-
-DDS::DWORD* GameObject::get_image_data(DDS*p_dds)
-{
-    DDS::DWORD offset = 0;
-    switch (type) {
-        case PLAYER:
-            offset = 0;
-            break;
-        case PLAYER_HIT:
-            offset = 1;
-            break;
-        case BOX:
-            offset = 2;
-            break;
-        case BOX_READY:
-            offset = 3;
-            break;
-        case TARGET:
-            offset = 4;
-            break;
-        case BOUNDARY:
-            offset = 5;
-            break;
-        case BLANK:
-            offset = 6;
-            break;
-        default:
-            break;
-    }
-    return p_dds[offset].dData;
-}
-DDS::DWORD GameObject::get_image_width(DDS* p_dds) const
-{
-    DDS::DWORD offset = 0;
-    switch (type) {
-    case PLAYER:
-        offset = 0;
-        break;
-    case PLAYER_HIT:
-        offset = 1;
-        break;
-    case BOX:
-        offset = 2;
-        break;
-    case BOX_READY:
-        offset = 3;
-        break;
-    case TARGET:
-        offset = 4;
-        break;
-    case BOUNDARY:
-        offset = 5;
-        break;
-    case BLANK:
-        offset = 6;
-        break;
-    default:
-        break;
-    }
-    return p_dds[offset].dWidth;
-}
-DDS::DWORD GameObject::get_image_height(DDS* p_dds) const
-{
-    DDS::DWORD offset = 0;
-    switch (type) {
-    case PLAYER:
-        offset = 0;
-        break;
-    case PLAYER_HIT:
-        offset = 1;
-        break;
-    case BOX:
-        offset = 2;
-        break;
-    case BOX_READY:
-        offset = 3;
-        break;
-    case TARGET:
-        offset = 4;
-        break;
-    case BOUNDARY:
-        offset = 5;
-        break;
-    case BLANK:
-        offset = 6;
-        break;
-    default:
-        break;
-    }
-    return p_dds[offset].dHeight;
-}
-
 
 void ConsoleGame::update(){}
 void ConsoleGame::update(string& input) {
@@ -323,4 +268,17 @@ void ConsoleGame::update(string& input) {
 }
 void ConsoleGame::draw() {
     cout << *this;
+}
+
+DDS::DWORD* DDS::get_image_data()
+{
+    return dData;
+}
+DDS::DWORD DDS::get_image_width() const
+{
+    return dWidth;
+}
+DDS::DWORD DDS::get_image_height() const
+{
+    return dHeight;
 }
