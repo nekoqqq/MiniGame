@@ -236,6 +236,8 @@ namespace GameLib {
 		p_visualGame->drawTheme();
 		if(Framework::instance().isKeyTriggered('m')|| Framework::instance().isKeyTriggered('M'))
 			should_draw_theme = !should_draw_theme;
+		if (Framework::instance().isKeyTriggered('q') || Framework::instance().isKeyTriggered('Q'))
+			Framework::instance().requestEnd();
 	}
 
 	// 框架循环

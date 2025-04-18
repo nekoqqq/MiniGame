@@ -13,5 +13,4 @@ public:
 protected:
 	void drawFPS();
 	void drawCell(int,int,DDS&);
-	
 };
