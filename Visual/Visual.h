@@ -12,5 +12,6 @@ public:
 	void drawTheme();
 protected:
 	void drawFPS();
-	void drawCell(int,int,DDS&);
+	static void drawCell(int,int,DDS&);
+	static void drawCell(IMG_TYPE);
 };

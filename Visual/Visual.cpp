@@ -173,28 +173,24 @@ void VisualGame::drawCell(int src_x, int src_y, DDS &dds)
 }
 
 void VisualGame::drawTheme() {
-	DDS& img = Game::getImg(IMG_THEME);
-	drawCell(0, 0, img);
+	drawCell(0, 0, p_dds[IMG_THEME]);
 }
 
 namespace GameLib {
 	VisualGame* p_visualGame = nullptr;
 	const int FPS = 60; // 16.66 ms 每一Frame
 	bool var_fps = true;
-	bool should_draw_theme = true; // 是否绘制菜单
 	GameState game_state;
 	
 	// 主循环
 	void mainLoop() { // 主游戏循环
 		static unsigned previous_time[FPS]{}; // 前一次的时间戳
 		static int counter = 0; // 游戏循环次数
-		static bool initialized = false;
 		Framework framework = Framework::instance();
 
-		if (!initialized) {
+		if (!p_visualGame) {
 			p_visualGame = new VisualGame();
 			p_visualGame->init(MapSource::FILE, var_fps);
-			initialized = true;
 			GameLib::cout << "Welcome to my game, please press keyboard W|A|S|D for UP|LEFT|RIGHT|DOWN." << GameLib::endl;
 		}
 		GameLib::cout << "第" << ++counter << "次更新" << endl;
@@ -207,14 +203,12 @@ namespace GameLib {
 		{
 			GameLib::cout << "YOU WIN! Total steps(exculude invalid steps): " << p_visualGame->steps_ << "." << GameLib::endl;
 			game_state = GameState::THEME;
-			p_visualGame->reset_game(MapSource::FILE,var_fps);
+			SAFE_DELETE(p_visualGame);
 		}
 		if(framework.isKeyTriggered('q')|| framework.isKeyTriggered('Q'))
 			framework.requestEnd();
 
 		if (framework.isEndRequested()) {
-			delete p_visualGame;
-			p_visualGame = nullptr;
 			GameLib::cout << "Goodbye!" << GameLib::endl;
 			exit(0); // 临时处理，防止按了Q之后再按其他的按键会造成指针访问错误
 		}

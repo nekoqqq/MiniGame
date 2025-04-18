@@ -166,9 +166,9 @@ protected:
     int var_move_count=0; // 可变FPS计数器
     const int MAX_VAR_MOVE_COUNT = 50; // 50 ms 根据时间移动相应的像素,50ms移动32个像素, 则速度为640px/s
     bool var_fps; // 是否是可变刷新率的游戏
+    static DDS* p_dds; // 各种图片素材, 无需定义为static, 因为Game对象理论上全局只有一个
 
 private:
-   static DDS* p_dds; // 各种图片素材, 无需定义为static, 因为Game对象理论上全局只有一个
    bool finished=false;
 };
 
