@@ -180,53 +180,70 @@ void VisualGame::drawTheme() {
 
 namespace GameLib {
 	VisualGame* p_visualGame = nullptr;
-	const int FPS = 60; // 
+	const int FPS = 60; // 16.66 ms 每一Frame
 	bool var_fps = true;
 	bool should_draw_theme = false; // 是否绘制菜单
-	void Framework::update() {
+	
+	// 主循环
+	void mainLoop() { // 主游戏循环
 		static unsigned previous_time[FPS]{}; // 前一次的时间戳
 		static int counter = 0; // 游戏循环次数
 		static bool initialized = false;
+		Framework framework = Framework::instance();
+
+		// 切换到title状态
+		if (Framework::instance().isKeyTriggered('m') || Framework::instance().isKeyTriggered('M'))
+			should_draw_theme = !should_draw_theme;
 
 		if (!initialized) {
 			p_visualGame = new VisualGame();
-			p_visualGame->init(MapSource::FILE,var_fps);
+			p_visualGame->init(MapSource::FILE, var_fps);
 			initialized = true;
 			GameLib::cout << "Welcome to my game, please press keyboard W|A|S|D for UP|LEFT|RIGHT|DOWN." << GameLib::endl;
 		}
 		GameLib::cout << "第" << ++counter << "次更新" << endl;
 		if (var_fps)
-			p_visualGame->update(Framework::time() - previous_time[FPS - 1]); // 这里最好睡眠一下
+			p_visualGame->update(framework.time() - previous_time[FPS - 1]); // 这里最好睡眠一下
 		else
 			p_visualGame->update();
-		if (Framework::isKeyTriggered('M') || Framework::isKeyTriggered('m'))
-			should_draw_theme = !should_draw_theme;
-		if (should_draw_theme)
-			p_visualGame->drawTheme();
-		else
-			p_visualGame->draw();
-		if (p_visualGame-> is_finished())
+		p_visualGame->draw();
+		if (p_visualGame->is_finished())
 		{
 			GameLib::cout << "YOU WIN! Total steps(exculude invalid steps): " << p_visualGame->steps_ << "." << GameLib::endl;
-			requestEnd();
+			framework.requestEnd();
 		}
-		if (isEndRequested()) {
+		if (framework.isEndRequested()) {
 			delete p_visualGame;
 			p_visualGame = nullptr;
 			GameLib::cout << "Goodbye!" << GameLib::endl;
 			exit(0); // 临时处理，防止按了Q之后再按其他的按键会造成指针访问错误
 		}
 
-		GameLib::cout << "当前FPS耗时: " << Framework::time() - previous_time[FPS - 1] << "ms" << GameLib::endl;
-		int interval = Framework::time() - previous_time[0];
+		GameLib::cout << "当前FPS耗时: " << framework.time() - previous_time[FPS - 1] << "ms" << GameLib::endl;
+		int interval = framework.time() - previous_time[0];
 		if (counter % FPS == 0)
 			GameLib::cout << "实际FPS: " << 1000 * FPS / interval << GameLib::endl;
 
 		// 补FPS
-		while (Framework::time() - previous_time[FPS - 1] < 1.0 / FPS)
-			Framework::sleep(1);
+		while (framework.time() - previous_time[FPS - 1] < 1.0 / FPS)
+			framework.sleep(1);
 		for (int i = 0; i < FPS - 1; i++)
 			previous_time[i] = previous_time[i + 1];
-		previous_time[FPS - 1] = Framework::time();
+		previous_time[FPS - 1] = framework.time();
+	} 
+	
+	// 菜单循环
+	void titleLoop() {
+		p_visualGame->drawTheme();
+		if(Framework::instance().isKeyTriggered('m')|| Framework::instance().isKeyTriggered('M'))
+			should_draw_theme = !should_draw_theme;
+	}
+
+	// 框架循环
+	void Framework::update() {
+		if (should_draw_theme)
+			titleLoop();
+		else
+			mainLoop();
 	}
 }
