@@ -28,7 +28,6 @@ void VisualGame::update() {
 	bool cur_key_on_a = (framework.isKeyTriggered('a') || framework.isKeyTriggered('A'));
 	bool cur_key_on_s = (framework.isKeyTriggered('s') || framework.isKeyTriggered('S'));
 	bool cur_key_on_d = (framework.isKeyTriggered('d') || framework.isKeyTriggered('D'));
-	bool cur_key_on_esc = framework.isKeyTriggered('b');
 	if (cur_key_on_w)
 		direction = 0;
 	else if (cur_key_on_a)
@@ -43,12 +42,6 @@ void VisualGame::update() {
 }
 void VisualGame::update(string&){}
 void VisualGame::update(int t) {
-	// 上一次各个按键是否被按下
-	static bool previous_key_on_w = false;
-	static bool previous_key_on_a = false;
-	static bool previous_key_on_s = false;
-	static bool previous_key_on_d = false;
-
 	if (var_move_count >= MAX_VAR_MOVE_COUNT) { 
 		var_move_count = 0;
 		for (int i = 0; i < height_; i++)
@@ -66,24 +59,20 @@ void VisualGame::update(int t) {
 	Framework framework = Framework::instance();
 
 	// 当前按键输入
-	bool cur_key_on_w = (framework.isKeyOn('w') || framework.isKeyOn('W'));
-	bool cur_key_on_a = (framework.isKeyOn('a') || framework.isKeyOn('A'));
-	bool cur_key_on_s = (framework.isKeyOn('s') || framework.isKeyOn('S'));
-	bool cur_key_on_d = (framework.isKeyOn('d') || framework.isKeyOn('D'));
-	if (!previous_key_on_w && cur_key_on_w)
+	bool cur_key_on_w = (framework.isKeyTriggered('w') || framework.isKeyTriggered('W'));
+	bool cur_key_on_a = (framework.isKeyTriggered('a') || framework.isKeyTriggered('A'));
+	bool cur_key_on_s = (framework.isKeyTriggered('s') || framework.isKeyTriggered('S'));
+	bool cur_key_on_d = (framework.isKeyTriggered('d') || framework.isKeyTriggered('D'));
+	if (cur_key_on_w)
 		direction = 0;
-	else if (!previous_key_on_a && cur_key_on_a)
+	else if (cur_key_on_a)
 		direction = 1;
-	else if (!previous_key_on_s && cur_key_on_s)
+	else if (cur_key_on_s)
 		direction = 2;
-	else if (!previous_key_on_d && cur_key_on_d)
+	else if (cur_key_on_d)
 		direction = 3;
 	// 这里不可以直接return,否则previous_key无法置为当前的输入,就无法响应连续的同一个按键的输入
 
-	previous_key_on_w = cur_key_on_w;
-	previous_key_on_a = cur_key_on_a;
-	previous_key_on_s = cur_key_on_s;
-	previous_key_on_d = cur_key_on_d;
 	_update_objects(direction);
 }
 void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台是用来debug的
@@ -172,8 +161,8 @@ void VisualGame::drawCell(int src_x, int src_y, DDS &dds)
 		}
 }
 
-void VisualGame::drawTheme() {
-	drawCell(0, 0, p_dds[IMG_THEME]);
+void VisualGame::drawTheme(DDS &theme_img) {
+	drawCell(0, 0, theme_img);
 }
 
 namespace GameLib {
@@ -181,6 +170,7 @@ namespace GameLib {
 	const int FPS = 60; // 16.66 ms 每一Frame
 	bool var_fps = true;
 	GameState game_state;
+	DDS* theme_img = nullptr;
 	
 	// 主循环
 	void mainLoop() { // 主游戏循环
@@ -228,7 +218,9 @@ namespace GameLib {
 	
 	// 菜单循环
 	void titleLoop() {
-		p_visualGame->drawTheme();
+		if (!theme_img)
+			theme_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\main_theme.dds");
+		p_visualGame->drawTheme(*theme_img);
 		if(Framework::instance().isKeyTriggered('m')|| Framework::instance().isKeyTriggered('M'))
 			game_state = GameState::GAME;
 		if (Framework::instance().isKeyTriggered('q') || Framework::instance().isKeyTriggered('Q'))

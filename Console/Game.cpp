@@ -1,17 +1,16 @@
 ﻿#include"Game.h"
 
-DDS* Game::p_dds = new DDS[8]{ 
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player.dds" ,
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\target.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\boundary.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\blank.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box_ready.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player_hit.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\main_theme.dds",
+DDS* Game::p_dds = new DDS[7]{
+"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box.dds",
+"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player.dds" ,
+"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\target.dds",
+"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\boundary.dds",
+"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\blank.dds",
+"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box_ready.dds",
+"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player_hit.dds"
 };
 Game::Game() :height_(0), width_(0), steps_(0) {}
-Game::~Game() { grid_obj.clear(); box_pos_.clear(); target_pos_.clear(); }
+Game::~Game() { delete[] p_dds; p_dds = nullptr; grid_obj.clear(); box_pos_.clear(); target_pos_.clear(); }
 bool Game::_valid(pair<int, int>& pos) const{
     if (pos.first >= 0 && pos.first < height_ && pos.second >= 0 && pos.second < width_ && grid_obj[pos.first][pos.second].getType() != GameObject::BOUNDARY)
         return true;
@@ -160,7 +159,16 @@ void Game::init(MapSource mapSource,bool var_fps) {
     this->finished = false;
     this->var_move_count = 0;
     this->move_count = 0;
-    
+
+    p_dds = new DDS[7]{
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player.dds" ,
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\target.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\boundary.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\blank.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box_ready.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player_hit.dds"
+    };
 }
 
 
