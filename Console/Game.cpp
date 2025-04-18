@@ -78,8 +78,13 @@ bool Game::is_finished()const{
     for (auto& t : target_pos_)
         if (grid_obj[t.first][t.second] == GameObject::BOX_READY)
             succeed += 1;
-
-    return succeed >= box_pos_.size();
+    bool finished = succeed >= box_pos_.size();
+    return finished;
+}
+void Game::reset_game(MapSource mapSource, bool var_fps)
+{
+    grid_obj.clear();
+    init(mapSource,var_fps);
 }
 DDS& Game::getImg(IMG_TYPE img_type)
 {
@@ -152,7 +157,9 @@ void Game::init(MapSource mapSource,bool var_fps) {
         }
     }
     this->var_fps = var_fps;
-
+    this->finished = false;
+    this->var_move_count = 0;
+    this->move_count = 0;
 }
 
 

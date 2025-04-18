@@ -10,7 +10,6 @@ public:
 	void update(int); //  可变FPS
 	virtual void draw();
 	void drawTheme();
-	bool should_draw_theme = false;
 protected:
 	void drawFPS();
 	void drawCell(int,int,DDS&);

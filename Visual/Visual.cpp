@@ -37,8 +37,7 @@ void VisualGame::update() {
 		direction = 2;
 	else if (cur_key_on_d)
 		direction = 3;
-	else if (cur_key_on_esc)
-		should_draw_theme = !should_draw_theme;
+
 	// 这里不可以直接return,否则previous_key无法置为当前的输入,就无法响应连续的同一个按键的输入
 	_update_objects(direction);
 }
@@ -182,7 +181,7 @@ namespace GameLib {
 	VisualGame* p_visualGame = nullptr;
 	const int FPS = 60; // 16.66 ms 每一Frame
 	bool var_fps = true;
-	bool should_draw_theme = false; // 是否绘制菜单
+	bool should_draw_theme = true; // 是否绘制菜单
 	
 	// 主循环
 	void mainLoop() { // 主游戏循环
@@ -190,10 +189,6 @@ namespace GameLib {
 		static int counter = 0; // 游戏循环次数
 		static bool initialized = false;
 		Framework framework = Framework::instance();
-
-		// 切换到title状态
-		if (Framework::instance().isKeyTriggered('m') || Framework::instance().isKeyTriggered('M'))
-			should_draw_theme = !should_draw_theme;
 
 		if (!initialized) {
 			p_visualGame = new VisualGame();
@@ -210,8 +205,12 @@ namespace GameLib {
 		if (p_visualGame->is_finished())
 		{
 			GameLib::cout << "YOU WIN! Total steps(exculude invalid steps): " << p_visualGame->steps_ << "." << GameLib::endl;
-			framework.requestEnd();
+			should_draw_theme = true;
+			p_visualGame->reset_game(MapSource::FILE,var_fps);
 		}
+		if(framework.isKeyTriggered('q')|| framework.isKeyTriggered('Q'))
+			framework.requestEnd();
+
 		if (framework.isEndRequested()) {
 			delete p_visualGame;
 			p_visualGame = nullptr;

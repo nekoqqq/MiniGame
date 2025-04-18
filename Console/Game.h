@@ -141,6 +141,7 @@ public:
     virtual void update() = 0; // 实时输入
     virtual void draw() = 0; // 画图
     bool is_finished()const; // 判断当前游戏是否已经结束
+    void reset_game(MapSource, bool);
     int steps_; // 总共用的步数
     static DDS& getImg(IMG_TYPE);
     friend ostream& operator<<(ostream& out, Game& g);
@@ -150,7 +151,6 @@ protected:
     int height_;
     int width_;
     vector<vector<GameObject>> grid_obj;
-    vector<vector<char>> grid_;
     vector<pair<int, int>> box_pos_; // 箱子位置
     vector<pair<int, int>> target_pos_; // 箱子的目标位置
     pair<int, int> player_pos_; // 玩家的位置
@@ -164,6 +164,7 @@ protected:
 
 private:
    static DDS* p_dds; // 各种图片素材, 无需定义为static, 因为Game对象理论上全局只有一个
+   bool finished=false;
 };
 
 class ConsoleGame :public Game {
