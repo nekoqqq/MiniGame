@@ -125,6 +125,11 @@ private:
     int move_dy;
 };
 
+enum class GameState {
+    THEME, // 主题界面
+    GAME, // 游戏界面
+};
+
 class Game {
 public:
     enum DIRECTION {

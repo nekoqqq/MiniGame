@@ -182,6 +182,7 @@ namespace GameLib {
 	const int FPS = 60; // 16.66 ms 每一Frame
 	bool var_fps = true;
 	bool should_draw_theme = true; // 是否绘制菜单
+	GameState game_state;
 	
 	// 主循环
 	void mainLoop() { // 主游戏循环
@@ -205,7 +206,7 @@ namespace GameLib {
 		if (p_visualGame->is_finished())
 		{
 			GameLib::cout << "YOU WIN! Total steps(exculude invalid steps): " << p_visualGame->steps_ << "." << GameLib::endl;
-			should_draw_theme = true;
+			game_state = GameState::THEME;
 			p_visualGame->reset_game(MapSource::FILE,var_fps);
 		}
 		if(framework.isKeyTriggered('q')|| framework.isKeyTriggered('Q'))
@@ -235,16 +236,21 @@ namespace GameLib {
 	void titleLoop() {
 		p_visualGame->drawTheme();
 		if(Framework::instance().isKeyTriggered('m')|| Framework::instance().isKeyTriggered('M'))
-			should_draw_theme = !should_draw_theme;
+			game_state = GameState::GAME;
 		if (Framework::instance().isKeyTriggered('q') || Framework::instance().isKeyTriggered('Q'))
 			Framework::instance().requestEnd();
 	}
 
 	// 框架循环
 	void Framework::update() {
-		if (should_draw_theme)
+		switch (game_state) {
+		case GameState::THEME:
 			titleLoop();
-		else
+			break;
+		case GameState::GAME:
 			mainLoop();
+			break;
+
+		}      
 	}
 }
