@@ -58,7 +58,7 @@ namespace GameLib {
 	void themeLoop() {
 		if (!theme_img)
 			theme_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\main_theme.dds");
-		p_visualGame->drawTheme(*theme_img);
+		p_visualGame->drawCell(0,0,*theme_img);
 		if (Framework::instance().isKeyTriggered(32)) // 替换成空格键开始
 		{
 			game_state = GameState::SELECTION;
@@ -72,7 +72,7 @@ namespace GameLib {
 	void selectionLoop() {
 		if (!selection_img)
 			selection_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\selection.dds");
-		p_visualGame->drawTheme(*selection_img);
+		p_visualGame->drawCell(0,0,*selection_img);
 		Framework f = Framework::instance(); // 为什么Framework &f = Framework::instance() 会失败？
 		for (char c : "123456789") {
 			if (f.isKeyTriggered(c)) {
@@ -84,12 +84,11 @@ namespace GameLib {
 	}
 
 	void loadingLoop() {
-		//static DDS* loading_img=nullptr;
 		if (!loading_img)
 			loading_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\loading.dds");
-		p_visualGame->drawTheme(*loading_img);
+		p_visualGame->drawCell(0,0,*loading_img);
 		Framework f = Framework::instance(); // 为什么Framework &f = Framework::instance() 会失败？
-		f.sleep(500);
+		f.sleep(1000);
 		game_state = GameState::GAME;
 		SAFE_DELETE(loading_img);
 	}

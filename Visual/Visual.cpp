@@ -55,12 +55,11 @@ void VisualGame::drawFPS() {
 void VisualGame::drawCell(int src_x, int src_y, DDS &dds)
 {
 	unsigned* p_vram = Framework::instance().videoMemory();
-	unsigned color = 0u;
 	int window_width = Framework::instance().width();
 	unsigned* p_img = dds.get_image_data();
 	int img_width = dds.get_image_width();
 	int img_height = dds.get_image_height();
-	// TODO 这里的混合有问题，最终总是画面偏黄
+	// TODO 这里的混合有问题，最终总是画面偏黄, 已经修复，是因为读取图片的API有问题
 	// 线性混合,z = a*x+(1-a)*y = y + a*(x-y) 
 	auto alpha_mix = [&](unsigned src_data, unsigned dst_data) {
 		unsigned src_data_A = (src_data & 0xff000000) >> 24;
@@ -87,12 +86,9 @@ void VisualGame::drawCell(int src_x, int src_y, DDS &dds)
 			unsigned dst_data = p_img[dst_index];
 			unsigned mix_data = alpha_mix(src_data, dst_data);
 			p_vram[src_index] = mix_data;
-
 		}
 }
-void VisualGame::drawTheme(DDS &theme_img) {
-	drawCell(0, 0, theme_img);
-}
+
 void VisualGame::set_elapsed_time(int elapsed_time)
 {
 	this->elapsed_time = elapsed_time;
