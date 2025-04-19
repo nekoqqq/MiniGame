@@ -5,123 +5,52 @@
 #include "GameLib/Framework.h"
 using namespace std;
 using namespace GameLib;
-void VisualGame::update() {
-	if (move_count == 48) {
-		move_count = 0;
-		for(int i =0;i<height_;i++)
-			for (int j = 0; j < width_; j++) {
-				grid_obj[i][j].set_move(0,0);
-			}
-		return;
-	}
 
-	if (move_count > 0) {
-		move_count++;
-		return;
-	}
-
-	int direction=5;
-	Framework framework = Framework::instance();
-
-	// 当前按键输入
-	bool cur_key_on_w = (framework.isKeyTriggered('w') || framework.isKeyTriggered('W'));
-	bool cur_key_on_a = (framework.isKeyTriggered('a') || framework.isKeyTriggered('A'));
-	bool cur_key_on_s = (framework.isKeyTriggered('s') || framework.isKeyTriggered('S'));
-	bool cur_key_on_d = (framework.isKeyTriggered('d') || framework.isKeyTriggered('D'));
-	if (cur_key_on_w)
-		direction = 0;
-	else if (cur_key_on_a)
-		direction = 1;
-	else if (cur_key_on_s)
-		direction = 2;
-	else if (cur_key_on_d)
-		direction = 3;
-
-	// 这里不可以直接return,否则previous_key无法置为当前的输入,就无法响应连续的同一个按键的输入
-	_update_objects(direction);
-}
-void VisualGame::update(string&){}
-void VisualGame::update(int t) {
-	if (var_move_count >= MAX_VAR_MOVE_COUNT) { 
-		var_move_count = 0;
-		for (int i = 0; i < height_; i++)
-			for (int j = 0; j < width_; j++) {
-				grid_obj[i][j].set_move(0, 0);
-			}
-	}
-
-	if (var_move_count > 0) {
-		var_move_count = min(var_move_count+t,MAX_VAR_MOVE_COUNT); // 后续需要用MAX_VAR_MOVE_COUNT减去相应的值，因此需要这里做一下处理
-		return;
-	}
-
-	int direction = 5;
-	Framework framework = Framework::instance();
-
-	// 当前按键输入
-	bool cur_key_on_w = (framework.isKeyTriggered('w') || framework.isKeyTriggered('W'));
-	bool cur_key_on_a = (framework.isKeyTriggered('a') || framework.isKeyTriggered('A'));
-	bool cur_key_on_s = (framework.isKeyTriggered('s') || framework.isKeyTriggered('S'));
-	bool cur_key_on_d = (framework.isKeyTriggered('d') || framework.isKeyTriggered('D'));
-	if (cur_key_on_w)
-		direction = 0;
-	else if (cur_key_on_a)
-		direction = 1;
-	else if (cur_key_on_s)
-		direction = 2;
-	else if (cur_key_on_d)
-		direction = 3;
-	// 这里不可以直接return,否则previous_key无法置为当前的输入,就无法响应连续的同一个按键的输入
-
-	_update_objects(direction);
-}
+VisualGame::VisualGame(int stage,bool var_fps):Game(MapSource::FILE,var_fps,stage),elapsed_time(0),move_count(0),var_move_count(0){}
 void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台是用来debug的
 	// 先绘制背景
-	for(int i =0;i<height_;i++)
-		for (int j = 0; j < width_; j++) {
-			if(grid_obj[i][j]==GameObject::BLANK || grid_obj[i][j]==GameObject::BOUNDARY||grid_obj[i][j]==GameObject::TARGET)
-				drawCell(i * 48, j * 48, static_cast<DDS&>(grid_obj[i][j]));
+	for(int i =0;i<getHeight();i++)
+		for (int j = 0; j < getWidth(); j++) {
+			GameObject& go = getGameObject(i, j);
+			if (go == GameObject::BLANK || go == GameObject::BOUNDARY || go == GameObject::TARGET) {
+				IMG_TYPE img_type = go.getImgType();
+				DDS& img = VisualGame::getImg(img_type); // 这里的一个trick是因为在类的实现里面，所以getImg是基类的方法，不需要实例化一个类才可以使用（继承的好处！）
+				drawCell(i * 48, j * 48, img);
+			}
 		}
 
 
 	// 再绘制前景，用于修复从下往上，因为先在上面的格子绘制了人物，后在下面的给子绘制了背景，导致人物的下半身没有了的问题
-	// 可变和固定的计算方式不一样，固定是每Frame移动一个固定的像素，而可变的是根据每个Frame的实际消耗时间，移动相应的距离
-	if (var_fps) {
-		for (int i = 0; i < height_; i++)
-			for (int j = 0; j < width_; j++)
+	for (int i = 0; i < getHeight(); i++)
+		for (int j = 0; j < getWidth(); j++)
+		{
+			GameObject& go = getGameObject(i,j);
+			IMG_TYPE img_type = go.getImgType();
+			DDS& img = VisualGame::getImg(img_type);
+			if (!(go == GameObject::BLANK || go == GameObject::BOUNDARY || go == GameObject::TARGET)) // 玩家或者箱子移动
 			{
-				GameObject& go = grid_obj[i][j];
-				if (!(go == GameObject::BLANK || go == GameObject::BOUNDARY || go == GameObject::TARGET)) // 玩家或者箱子移动
-				{
+				if (isGameVar()) { // 可变和固定的计算方式不一样，固定是每Frame移动一个固定的像素，而可变的是根据每个Frame的实际消耗时间，移动相应的距离
 					int move_dx = go.get_move().first, move_dy = go.get_move().second;
-					drawCell(i * 48 - 48*(MAX_VAR_MOVE_COUNT - var_move_count)* move_dx / MAX_VAR_MOVE_COUNT, j * 48 - 48*(MAX_VAR_MOVE_COUNT - var_move_count) * move_dy / MAX_VAR_MOVE_COUNT, static_cast<DDS&>(go));
+					drawCell(i * 48 - 48 * (MAX_VAR_MOVE_COUNT - var_move_count) * move_dx / MAX_VAR_MOVE_COUNT, j * 48 - 48 * (MAX_VAR_MOVE_COUNT - var_move_count) * move_dy / MAX_VAR_MOVE_COUNT, img);
 				}
-			}
-	}
-	else {
-		for (int i = 0; i < height_; i++)
-			for (int j = 0; j < width_; j++)
-			{
-				GameObject& go = grid_obj[i][j];
-				if (!(go == GameObject::BLANK || go == GameObject::BOUNDARY || go == GameObject::TARGET)) // 玩家或者箱子移动
-				{
+				else {
 					int move_dx = go.get_move().first, move_dy = go.get_move().second;
-					drawCell(i * 48 - (48 - move_count) * move_dx, j * 48 - (48 - move_count) * move_dy, static_cast<DDS&>(go));
+					drawCell(i * 48 - (48 - move_count) * move_dx, j * 48 - (48 - move_count) * move_dy, img);
 				}
+					
 			}
-	}
+		}
 	
 	// STD debug out
-	for (int i = 0; i < height_; i++, GameLib::cout << endl)
-		for (int j = 0; j < width_; j++) {
-			GameLib::cout << static_cast<char>(grid_obj[i][j]);
+	for (int i = 0; i < getHeight(); i++, GameLib::cout << endl)
+		for (int j = 0; j < getWidth(); j++) {
+			GameLib::cout << static_cast<char>(getGameObject(i,j));
 		}
 	GameLib::cout << endl;
 }
 void VisualGame::drawFPS() {
 	// TODO 绘制文字那一章再增加实现
 }
-
 void VisualGame::drawCell(int src_x, int src_y, DDS &dds)
 {
 	unsigned* p_vram = Framework::instance().videoMemory();
@@ -160,10 +89,86 @@ void VisualGame::drawCell(int src_x, int src_y, DDS &dds)
 
 		}
 }
-
 void VisualGame::drawTheme(DDS &theme_img) {
 	drawCell(0, 0, theme_img);
 }
+void VisualGame::set_elapsed_time(int elapsed_time)
+{
+	this->elapsed_time = elapsed_time;
+}
+void VisualGame::setMove()
+{
+	this->move_count = 1;
+	this->var_move_count = 1;
+}
+void VisualGame::varPreHandle(int t)
+{
+	if (var_move_count >= MAX_VAR_MOVE_COUNT) {
+		var_move_count = 0;
+		for (int i = 0; i < getHeight(); i++)
+			for (int j = 0; j < getWidth(); j++) {
+				getGameObject(i, j).set_move(0, 0);
+			}
+		setShouldSkip(false);
+	}
+
+	if (var_move_count > 0) {
+		var_move_count = min(var_move_count + t, MAX_VAR_MOVE_COUNT); // 后续需要用MAX_VAR_MOVE_COUNT减去相应的值，因此需要这里做一下处理
+		setShouldSkip(true);
+	}
+}
+Game::DIRECTION VisualGame::handleInput() {
+	DIRECTION direction = UNKNOW;
+	GameLib::Framework framework = GameLib::Framework::instance();
+	// 当前按键输入
+	bool cur_key_on_w = (framework.isKeyTriggered('w') || framework.isKeyTriggered('W'));
+	bool cur_key_on_a = (framework.isKeyTriggered('a') || framework.isKeyTriggered('A'));
+	bool cur_key_on_s = (framework.isKeyTriggered('s') || framework.isKeyTriggered('S'));
+	bool cur_key_on_d = (framework.isKeyTriggered('d') || framework.isKeyTriggered('D'));
+
+	if (cur_key_on_w)
+		direction = UP;
+	else if (cur_key_on_a)
+		direction = LEFT;
+	else if (cur_key_on_s)
+		direction = DOWN;
+	else if (cur_key_on_d)
+		direction = RIGHT;
+	GameLib::cout << "direction: " << direction << GameLib::endl;
+	return direction;
+}
+
+void VisualGame::fixPreHandle()
+{
+	if (move_count == 48) {
+		move_count = 0;
+		for (int i = 0; i < getHeight(); i++)
+			for (int j = 0; j < getWidth(); j++) {
+				GameObject& gameObject = getGameObject(i, j);
+				gameObject.set_move(0, 0);
+			}
+		setShouldSkip(false);
+	}
+
+	if (move_count > 0) {
+		move_count++;
+		setShouldSkip(true);
+	}
+}
+void VisualGame::preHandle()
+{
+	if (isGameVar()) {
+		varPreHandle(elapsed_time);
+	}
+	else
+		fixPreHandle();
+}
+void VisualGame::extraStateHandle()
+{
+	if(!move_count||!var_move_count)
+		setMove();
+}
+
 
 namespace GameLib {
 	VisualGame* p_visualGame = nullptr;
@@ -171,6 +176,9 @@ namespace GameLib {
 	bool var_fps = true;
 	GameState game_state;
 	DDS* theme_img = nullptr;
+	DDS* selection_img = nullptr;
+	DDS* loading_img = nullptr;
+	int stage = 0;
 	
 	// 主循环
 	void mainLoop() { // 主游戏循环
@@ -178,16 +186,15 @@ namespace GameLib {
 		static int counter = 0; // 游戏循环次数
 		Framework framework = Framework::instance();
 
+		GameLib::cout << "第" << ++counter << "次更新" << endl;
 		if (!p_visualGame) {
-			p_visualGame = new VisualGame();
-			p_visualGame->init(MapSource::FILE, var_fps);
+			p_visualGame = new VisualGame(stage,var_fps);
+			previous_time[FPS - 1] = framework.time();
 			GameLib::cout << "Welcome to my game, please press keyboard W|A|S|D for UP|LEFT|RIGHT|DOWN." << GameLib::endl;
 		}
-		GameLib::cout << "第" << ++counter << "次更新" << endl;
-		if (var_fps)
-			p_visualGame->update(framework.time() - previous_time[FPS - 1]); // 这里最好睡眠一下
-		else
-			p_visualGame->update();
+
+		p_visualGame->set_elapsed_time(framework.time() - previous_time[FPS - 1]); // 这里最好睡眠一下
+		p_visualGame->update();
 		p_visualGame->draw();
 		if (p_visualGame->is_finished())
 		{
@@ -216,27 +223,60 @@ namespace GameLib {
 		previous_time[FPS - 1] = framework.time();
 	} 
 	
-	// 菜单循环
-	void titleLoop() {
-		if (!theme_img)
-			theme_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\main_theme.dds");
-		p_visualGame->drawTheme(*theme_img);
-		if(Framework::instance().isKeyTriggered('m')|| Framework::instance().isKeyTriggered('M'))
-			game_state = GameState::GAME;
+	// 主题循环
+	void themeLoop() {
+			if (!theme_img)
+				theme_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\main_theme.dds");
+			p_visualGame->drawTheme(*theme_img);
+			if (Framework::instance().isKeyTriggered(32)) // 替换成空格键开始
+			{
+				game_state = GameState::SELECTION;
+				SAFE_DELETE(theme_img); // 这里如果只用了delete theme_img，那么只是所指向的空间被释放了，但是theme_img这个指针不为空，因此上面的判断仍然可以通过，这也是为什么还需要让theme_img为nullptr
+			}
+			
 		if (Framework::instance().isKeyTriggered('q') || Framework::instance().isKeyTriggered('Q'))
 			Framework::instance().requestEnd();
 	}
 
+	void selectionLoop() {
+		if (!selection_img)
+			selection_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\selection.dds");
+		p_visualGame->drawTheme(*selection_img);
+		Framework f = Framework::instance(); // 为什么Framework &f = Framework::instance() 会失败？
+		for (char c : "123456789") {
+			if (f.isKeyTriggered(c)) {
+				stage = c - '0';
+				game_state = GameState::LOADING;
+				SAFE_DELETE(selection_img);
+			}
+		}
+	}
+
+	void loadingLoop() {
+		//static DDS* loading_img=nullptr;
+		if (!loading_img)
+			loading_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\loading.dds");
+		p_visualGame->drawTheme(*loading_img);
+		Framework f = Framework::instance(); // 为什么Framework &f = Framework::instance() 会失败？
+		f.sleep(500);
+		game_state = GameState::GAME;
+		SAFE_DELETE(loading_img);
+	}
 	// 框架循环
 	void Framework::update() {
 		switch (game_state) {
 		case GameState::THEME:
-			titleLoop();
+			themeLoop();
+			break;
+		case GameState::SELECTION:
+			selectionLoop();
 			break;
 		case GameState::GAME:
 			mainLoop();
 			break;
-
+		case GameState::LOADING:
+			loadingLoop();
+			break;
 		}      
 	}
 }

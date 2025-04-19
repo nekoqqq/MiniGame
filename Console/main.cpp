@@ -7,15 +7,22 @@
 //
 #include "Game.h"
 
+
 int main() {
     cout << "Welcome to my game, please press keyboard W|A|S|D for UP|LEFT|RIGHT|DOWN." << endl;
-    Game *gameState = new ConsoleGame();
-    MapSource mapSource = MapSource::FILE;
-    gameState->init(mapSource,false);
+    int stage = 3;
+    ConsoleGame *gameState = new ConsoleGame(MapSource::FILE,stage);
     gameState->draw();
-    string input;
-    while (cin >> input) {
-        gameState->update(input);
+    char c;
+    while (cin >> c) {
+        gameState->set_input(c);
+        gameState->update();
         gameState->draw();
+        if (gameState->is_finished())
+        {
+            gameState->draw();
+            cout << "YOU WIN! Total steps(exculude invalid steps): " << gameState->steps_ << "." << endl;
+            exit(0);
+        }
     }
 }

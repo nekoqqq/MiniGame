@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="资源文件\stage">
+      <UniqueIdentifier>{098256b1-b131-4398-8cb3-c23683d9c645}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="资源文件\img">
+      <UniqueIdentifier>{4cd01a6c-be54-4618-b4d6-86169fcc4eb8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -23,39 +29,72 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="map.txt">
-      <Filter>资源文件</Filter>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="Game.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="player.dds">
-      <Filter>资源文件</Filter>
+    <Image Include="img\blank.dds">
+      <Filter>资源文件\img</Filter>
     </Image>
-    <Image Include="box.dds">
-      <Filter>资源文件</Filter>
+    <Image Include="img\boundary.dds">
+      <Filter>资源文件\img</Filter>
     </Image>
-    <Image Include="box_ready.dds">
-      <Filter>资源文件</Filter>
+    <Image Include="img\box.dds">
+      <Filter>资源文件\img</Filter>
     </Image>
-    <Image Include="player_hit.dds">
-      <Filter>资源文件</Filter>
+    <Image Include="img\box_ready.dds">
+      <Filter>资源文件\img</Filter>
     </Image>
-    <Image Include="target.dds">
-      <Filter>资源文件</Filter>
+    <Image Include="img\main_theme.dds">
+      <Filter>资源文件\img</Filter>
     </Image>
-    <Image Include="boundary.dds">
-      <Filter>资源文件</Filter>
+    <Image Include="img\player.dds">
+      <Filter>资源文件\img</Filter>
     </Image>
-    <Image Include="blank.dds">
-      <Filter>资源文件</Filter>
+    <Image Include="img\player_hit.dds">
+      <Filter>资源文件\img</Filter>
     </Image>
-    <Image Include="main_theme.dds">
-      <Filter>资源文件</Filter>
+    <Image Include="img\selection.dds">
+      <Filter>资源文件\img</Filter>
     </Image>
+    <Image Include="img\target.dds">
+      <Filter>资源文件\img</Filter>
+    </Image>
+    <Image Include="img\loading.dds">
+      <Filter>资源文件\img</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="stage\map.txt">
+      <Filter>资源文件\stage</Filter>
+    </Text>
+    <Text Include="stage\stage1.txt">
+      <Filter>资源文件\stage</Filter>
+    </Text>
+    <Text Include="stage\stage2.txt">
+      <Filter>资源文件\stage</Filter>
+    </Text>
+    <Text Include="stage\stage3.txt">
+      <Filter>资源文件\stage</Filter>
+    </Text>
+    <Text Include="stage\stage4.txt">
+      <Filter>资源文件\stage</Filter>
+    </Text>
+    <Text Include="stage\stage5.txt">
+      <Filter>资源文件\stage</Filter>
+    </Text>
+    <Text Include="stage\stage6.txt">
+      <Filter>资源文件\stage</Filter>
+    </Text>
+    <Text Include="stage\stage7.txt">
+      <Filter>资源文件\stage</Filter>
+    </Text>
+    <Text Include="stage\stage8.txt">
+      <Filter>资源文件\stage</Filter>
+    </Text>
+    <Text Include="stage\stage9.txt">
+      <Filter>资源文件\stage</Filter>
+    </Text>
   </ItemGroup>
 </Project>

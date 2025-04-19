@@ -4,6 +4,7 @@
 #include<utility>
 #include<vector>
 #include<fstream>
+#include<cassert>
 using namespace std;
 
 
@@ -13,6 +14,7 @@ enum class MapSource {
     FILE, // 文件内
     VISUAL // 窗口大小
 };
+
 enum IMG_TYPE {
     IMG_BOX,
     IMG_PLAYER,
@@ -88,6 +90,7 @@ struct DDS { // DirectX格式图片
 class GameObject {
 public:
     enum Type {
+        UNKNOW = 'x', // 未知状态
         BOX = 'o',
         PLAYER = 'p',
         TARGET = '.',
@@ -96,7 +99,12 @@ public:
         BOX_READY = 'O', // 箱子正好在要推的地方
         PLAYER_HIT = 'P',  // 人站在要推的地方上
     };
+    explicit GameObject();
+    explicit GameObject(Type);
+    explicit GameObject(Type, int,int);
+
     Type getType()const;
+    IMG_TYPE getImgType()const;
 
     void set_type(Type);
         
@@ -115,7 +123,6 @@ public:
 
     // 方便输出
     explicit operator char()const;  // 显示类型转换   
-    explicit operator DDS&() const;
     friend ostream& operator<<(ostream & out,const GameObject &);
 private:
     Type type;
@@ -126,55 +133,78 @@ private:
 
 enum class GameState {
     THEME, // 主题界面
+    SELECTION, // 选关
+    LOADING, // 加载
     GAME, // 游戏界面
+    MENU, //菜单画面
+    ENDING, // 通关
 };
 
 class Game {
 public:
     enum DIRECTION {
-        UP = 0,
-        LEFT = 1,
-        RIGHT = 2,
-        DOWN = 3
+        UNKNOW=0,
+        UP = 1,
+        LEFT = 2,
+        RIGHT = 3,
+        DOWN = 4
     };
     Game();
-    ~Game();
+    Game(MapSource,bool,int);
+    virtual ~Game();
 
     void init(MapSource,bool); // 初始化游戏中的各种状态
-    virtual void update(string&) = 0; // 更新游戏状态，当前主要功能为处理输入
-    virtual void update() = 0; // 实时输入
+    void update(); // 实时输入, 根据条款35：考虑virtual函数以外的其他选择，这里使用NVI（non-virtual interface）的方式实现Template Method，不确定这个是不是完整的设计模式
+
     virtual void draw() = 0; // 画图
     bool is_finished()const; // 判断当前游戏是否已经结束
     void reset_game(MapSource, bool);
     int steps_; // 总共用的步数
-    static DDS& getImg(IMG_TYPE);
+    DDS& getImg(IMG_TYPE);
     friend ostream& operator<<(ostream& out, Game& g);
+    void loadFile(string);
+
+    int getHeight()const;
+    int getWidth()const;
+    GameObject& getGameObject(int i, int j);
+    bool isGameVar()const;
+
+    void setShouldSkip(bool);
+    bool getShouldSkip();
 
 protected:
-    // 地图大小
-    int height_;
-    int width_;
-    vector<vector<GameObject>> grid_obj;
-    vector<pair<int, int>> box_pos_; // 箱子位置
-    vector<pair<int, int>> target_pos_; // 箱子的目标位置
-    pair<int, int> player_pos_; // 玩家的位置
     bool _valid(pair<int, int>&)const; // 判断当前是否是有效的位置
-    void _update_objects(int direction);
-
-    int move_count=0;
-    int var_move_count=0; // 可变FPS计数器
-    const int MAX_VAR_MOVE_COUNT = 50; // 50 ms 根据时间移动相应的像素,50ms移动32个像素, 则速度为640px/s
-    bool var_fps; // 是否是可变刷新率的游戏
-    static DDS* p_dds; // 各种图片素材, 无需定义为static, 因为Game对象理论上全局只有一个
     
-
 private:
-   bool finished=false;
+   int stage; // 关卡
+   bool finished = false;
+   bool var_fps; // 固定帧率还是动态的游戏
+   DDS* p_dds; // 各种图片素材, 无需定义为static, 因为Game对象理论上全局只有一个
+
+   // 地图大小
+   int height_;
+   int width_;
+   vector<vector<GameObject>> grid_obj;
+   vector<pair<int, int>> box_pos_; // 箱子位置
+   vector<pair<int, int>> target_pos_; // 箱子的目标位置
+   pair<int, int> player_pos_; // 玩家的位置
+
+   virtual void preHandle();
+   virtual DIRECTION handleInput();
+   virtual pair<int, int> updatePosition(DIRECTION);
+   virtual void extraStateHandle();
+   virtual void moveObject(pair<int, int>&);
+   bool should_skip; // 跳过更新
 };
+
 
 class ConsoleGame :public Game {
 public:
-    virtual void update(string&) override;
-    virtual void update();
-    virtual void draw() override;
+    ConsoleGame(MapSource,int);
+    virtual void draw();
+    void set_input(char);
+private:
+    char c; // 每次输入
+
+    virtual DIRECTION handleInput(); // 只重写了这个方法    
 };

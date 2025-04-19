@@ -1,59 +1,73 @@
 ﻿#include"Game.h"
 
-DDS* Game::p_dds = new DDS[7]{
-"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box.dds",
-"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player.dds" ,
-"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\target.dds",
-"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\boundary.dds",
-"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\blank.dds",
-"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box_ready.dds",
-"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player_hit.dds"
-};
-Game::Game() :height_(0), width_(0), steps_(0) {}
+
+Game::Game() :Game(MapSource::FILE,1,true) {}
+Game::Game(MapSource mapSource, bool var_fps,int stage):stage(stage),should_skip(false) { init(mapSource,var_fps); }
 Game::~Game() { delete[] p_dds; p_dds = nullptr; grid_obj.clear(); box_pos_.clear(); target_pos_.clear(); }
 bool Game::_valid(pair<int, int>& pos) const{
     if (pos.first >= 0 && pos.first < height_ && pos.second >= 0 && pos.second < width_ && grid_obj[pos.first][pos.second].getType() != GameObject::BOUNDARY)
         return true;
     return false;
 }
-void Game::_update_objects(int direction) {
+void Game::update() {
+       preHandle();
+       if (should_skip)
+           return;
+       DIRECTION direction = handleInput();
+       pair<int, int> delta = updatePosition(direction);
+       extraStateHandle();
+       moveObject(delta);
+}
+
+
+void Game::preHandle() { }
+
+Game::DIRECTION Game::handleInput() { return UNKNOW; }
+pair<int,int> Game::updatePosition(DIRECTION direction) {
     pair<int, int> one_step_pos, two_steps_pos;
     int dx = 0, dy = 0;
     if (direction == UP) // W
         dx = -1;
     else if (direction == LEFT) // A
         dy = -1;
-    else if (direction == RIGHT) // S
+    else if (direction == DOWN) // S
         dx = 1;
-    else if (direction == DOWN) // D
+    else if (direction == RIGHT) // D
         dy = 1;
     else
-        return;
+        return { 0,0 };
 
     one_step_pos = make_pair(player_pos_.first + dx, player_pos_.second + dy);
     two_steps_pos = make_pair(one_step_pos.first + dx, one_step_pos.second + dy);
     if (!_valid(one_step_pos))
-        return;
+        return { 0,0 };
 
-    GameObject & one_step_obj = grid_obj[one_step_pos.first][one_step_pos.second];
-    GameObject & two_steps_obj = grid_obj[two_steps_pos.first][two_steps_pos.second];
+    GameObject& one_step_obj = grid_obj[one_step_pos.first][one_step_pos.second];
+    GameObject& two_steps_obj = grid_obj[two_steps_pos.first][two_steps_pos.second];
 
-    if (one_step_obj == GameObject::BOX || one_step_obj == GameObject::BOX_READY) { 
+    if (one_step_obj == GameObject::BOX || one_step_obj == GameObject::BOX_READY) {
         if (!_valid(two_steps_pos) || two_steps_obj == GameObject::BOX || two_steps_obj == GameObject::BOX_READY) // 两个箱子推不动了
-            return;
+            return { 0,0 };
         if (two_steps_obj == GameObject::TARGET) // 正好可以箱子就绪
             grid_obj[two_steps_pos.first][two_steps_pos.second] = GameObject::BOX_READY;
-
         else // 普通的位置
             grid_obj[two_steps_pos.first][two_steps_pos.second] = GameObject::BOX;
         two_steps_obj.set_move(dx, dy); // 箱子动画
     }
-
-    // 更新玩家位置,这里没有办法只能遍历判断初始的是空的还是目标
-    move_count = 1;
-    var_move_count = 1;
-    one_step_obj.set_move(dx, dy); // 人物动画
+    return { dx,dy };
+}
+void Game::extraStateHandle(){}
+void Game::moveObject(pair<int,int> & delta) {
+    int dx = delta.first;
+    int dy = delta.second;
+    if (dx == 0 && dy == 0)
+        return;
     steps_++;
+    
+    pair<int,int> one_step_pos = make_pair(player_pos_.first + dx, player_pos_.second + dy);
+    GameObject& one_step_obj = grid_obj[one_step_pos.first][one_step_pos.second];
+
+    one_step_obj.set_move(dx, dy);
 
     for (auto& t : target_pos_)
         if (player_pos_.first == t.first && player_pos_.second == t.second) {
@@ -72,6 +86,8 @@ void Game::_update_objects(int direction) {
     else
         grid_obj[player_pos_.first][player_pos_.second] = GameObject::PLAYER;
 }
+
+
 bool Game::is_finished()const{
     int succeed = 0;
     for (auto& t : target_pos_)
@@ -90,7 +106,34 @@ DDS& Game::getImg(IMG_TYPE img_type)
     int index = img_type;
     return p_dds[index];
 }
-void Game::init(MapSource mapSource,bool var_fps) {
+void Game::loadFile(string file_name) {
+    ifstream fin(file_name, ios_base::in);
+    if (!fin.is_open()) {
+        cout <<file_name<< "打开失败" << endl;
+        exit(-1);
+    }
+    string line;
+    int i = 0;
+    while (getline(fin, line)) {
+        grid_obj.push_back(vector<GameObject>(line.size()));
+        for (int j = 0; j < line.size(); j++)
+            grid_obj[i][j] = line[j];
+        i++;
+    }
+}
+int Game::getWidth() const
+{
+    return width_;
+}
+GameObject& Game::getGameObject(int i, int j)
+{
+    return grid_obj[i][j];
+}
+int Game::getHeight() const
+{
+    return height_;
+}
+void Game::init(MapSource mapSource,bool var_fps)       {
     if (mapSource == MapSource::PREDEFINED) {
         height_ = 5;
         width_ = 8;
@@ -124,20 +167,10 @@ void Game::init(MapSource mapSource,bool var_fps) {
         grid_obj[player_pos_.first][player_pos_.second] = GameObject::PLAYER;
     }
     else if (mapSource == MapSource::FILE) {
-        ifstream fin("C:/Users/colorful/source/repos/MiniGame/Console/map.txt", ios_base::in);
-        if (!fin.is_open()) {
-            cout << "打开失败" << endl;
-            exit(-1);
-        }
-        string line;
-        int i = 0;
-        while (getline(fin, line)) {
-            grid_obj.push_back(vector<GameObject>(line.size()));
-            for (int j = 0; j < line.size(); j++)
-                grid_obj[i][j] = line[j];
-            i++;
-        }
+        string file_name = "C:/Users/colorful/source/repos/MiniGame/Console/stage/stage" + to_string(stage) + ".txt"; // stage1.txt
+        loadFile(file_name);
 
+        assert(grid_obj.size() > 0 && "Grid Object初始化成功");
         height_ = grid_obj.size();
 
         // TODO：暂时不支持非等长等宽的形状
@@ -146,7 +179,7 @@ void Game::init(MapSource mapSource,bool var_fps) {
                 if (grid_obj[i][j] == GameObject::BOX) {
                     box_pos_.push_back({ i,j });
                 }
-                else if (grid_obj[i][j] == GameObject::PLAYER)
+                else if (grid_obj[i][j] == GameObject::PLAYER || grid_obj[i][j]==GameObject::PLAYER_HIT)
                     player_pos_ = { i,j };
                 else if (grid_obj[i][j] == GameObject::TARGET)
                     target_pos_.push_back({ i,j });
@@ -154,22 +187,36 @@ void Game::init(MapSource mapSource,bool var_fps) {
             }
             width_ = max(width_, (int)grid_obj[i].size());
         }
+
+        for (int i = 0; i < height_; i++) {
+            for (int j = grid_obj[i].size(); j < width_; j++)
+                grid_obj[i].push_back(GameObject(GameObject::BOUNDARY));
+        }
+
     }
     this->var_fps = var_fps;
     this->finished = false;
-    this->var_move_count = 0;
-    this->move_count = 0;
 
     p_dds = new DDS[7]{
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player.dds" ,
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\target.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\boundary.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\blank.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\box_ready.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\player_hit.dds"
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\box.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\player.dds" ,
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\target.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\boundary.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\blank.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\box_ready.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\player_hit.dds"
     };
 }
+bool Game::isGameVar()const {
+    return var_fps;
+}
+
+void Game::setShouldSkip(bool should_skip)
+{
+    this->should_skip = should_skip;
+}
+
+bool Game::getShouldSkip(){return should_skip;}
 
 
 void GameObject::set_type(Type type) {
@@ -182,7 +229,41 @@ void GameObject::set_move(int dx, int dy) {
 pair<int,int> GameObject::get_move() {
     return { move_dx,move_dy };
 }
+GameObject::GameObject():GameObject(UNKNOW,0,0){} // c++11 委托构造函数, 并且使用条款04：确定对象使用前已先被初始化
+GameObject::GameObject(Type type):GameObject(type,0,0){}
+GameObject::GameObject(Type type, int move_dx, int move_dy) :type(type), move_dx(0), move_dy(0) {}
 GameObject::Type GameObject::getType()const { return type; }
+IMG_TYPE GameObject::getImgType() const
+{
+    IMG_TYPE img_type = IMG_BLANK;
+    switch (this->type)
+    {
+    case BOX:
+        img_type = IMG_BOX;
+        break;
+    case PLAYER:
+        img_type = IMG_PLAYER;
+        break;
+    case TARGET:
+        img_type = IMG_TARGET;
+        break;
+    case BOUNDARY:
+        img_type = IMG_BOUNDARY;
+        break;
+    case BLANK:
+        img_type = IMG_BLANK;
+        break;
+    case BOX_READY:
+        img_type = IMG_BOX_READY;
+        break;
+    case PLAYER_HIT:
+        img_type = IMG_PLAYER_HIT;
+        break;
+    default:
+        break;
+    }
+    return img_type;
+}
 bool GameObject::operator==(const GameObject &other)const {
     return this->type == other.getType() && this->move_dx == other.move_dx && this->move_dy == other.move_dy;
 }
@@ -207,36 +288,6 @@ GameObject& GameObject::operator=(char c)
 GameObject::operator char()const {
     return (char)this->type;
 }
-GameObject::operator DDS&() const {
-    IMG_TYPE img_type = IMG_BLANK;
-    switch (this->type)
-    {
-    case BOX:
-        img_type = IMG_BOX;
-        break;
-    case PLAYER:
-        img_type = IMG_PLAYER;
-        break;
-    case TARGET:
-        img_type = IMG_TARGET;
-        break;
-    case BOUNDARY:
-        img_type = IMG_BOUNDARY;
-        break;
-    case BLANK:
-        img_type = IMG_BLANK;
-        break;
-    case BOX_READY:
-        img_type = IMG_BOX_READY;
-        break; 
-    case PLAYER_HIT:
-        img_type = IMG_PLAYER_HIT;
-        break;
-    default:
-        break;
-    }
-    return Game::getImg(img_type);
-}
 ostream& operator<<(ostream& out, const GameObject&go) {
     return out << (char)go.getType();
 }
@@ -249,42 +300,39 @@ ostream& operator<<(ostream& out, Game& g)
     return out;
 }
 
-void ConsoleGame::update(){}
-void ConsoleGame::update(string& input) {
-    int direction;
-    for (int i = 0; i < input.size(); i++) {
-        switch (input[i]) {
-        case 'w':
-        case 'W':
-            direction = 0;
-            break;
-        case 'a':
-        case 'A':
-            direction = 1;
-            break;
-        case 's':
-        case 'S':
-            direction = 2;
-            break;
-        case 'd':
-        case 'D':
-            direction = 3;
-            break;
-        default:
-            break;
-        }
-        _update_objects(direction);
-        if (is_finished())
-        {
-            draw();
-            cout << "YOU WIN! Total steps(exculude invalid steps): " << steps_ << "." << endl;
-            exit(0);
-        }
+Game::DIRECTION ConsoleGame::handleInput() {
+    DIRECTION direction = UNKNOW;
+    switch (c) {
+    case 'w':
+    case 'W':
+        direction = UP;
+        break;
+    case 'a':
+    case 'A':
+        direction = LEFT;
+        break;
+    case 's':
+    case 'S':
+        direction = RIGHT;
+        break;
+    case 'd':
+    case 'D':
+        direction = DOWN;
+        break;
+    default:
+        break;
     }
+    return direction;
 }
+void ConsoleGame::set_input(char c)
+{
+    this->c = c;
+}
+ConsoleGame::ConsoleGame(MapSource mapSource, int stage) :Game(mapSource, false, stage) ,c('0'){ }
 void ConsoleGame::draw() {
     cout << *this;
 }
+
 
 DDS::DWORD* DDS::get_image_data()
 {

@@ -5,13 +5,32 @@
 
 class VisualGame :public Game {
 public:
-	virtual void update(string&);
-	virtual void update();
-	void update(int); //  可变FPS
+	explicit VisualGame(int stage, bool var_fps);
 	virtual void draw();
+	void set_elapsed_time(int);
+
 	void drawTheme(DDS&);
+	static void drawCell(int, int, DDS&);
+
 protected:
 	void drawFPS();
-	static void drawCell(int,int,DDS&);
-	static void drawCell(IMG_TYPE);
+
+	
+private:
+	int move_count;
+	int var_move_count; // 可变FPS计数器
+	const int MAX_VAR_MOVE_COUNT = 50; // 50 ms 根据时间移动相应的像素,50ms移动32个像素, 则速度为640px/s
+
+	int elapsed_time; // 帧之间的时间间隔
+
+
+	// update里面需要更新的逻辑
+	virtual void preHandle();
+	virtual DIRECTION handleInput();
+	virtual void extraStateHandle();
+
+	void setMove();
+	void varPreHandle(int);
+	void fixPreHandle();
+
 };
