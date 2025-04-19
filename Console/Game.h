@@ -158,7 +158,6 @@ public:
 
     virtual void draw() = 0; // 画图
     bool is_finished()const; // 判断当前游戏是否已经结束
-    void reset_game(MapSource, bool);
     int steps_; // 总共用的步数
     DDS& getImg(IMG_TYPE);
     friend ostream& operator<<(ostream& out, Game& g);
@@ -197,10 +196,9 @@ private:
 class ConsoleGame :public Game {
 public:
     ConsoleGame(MapSource,int);
-    virtual void draw();
+    virtual void draw() override;
     void set_input(char);
 private:
     char c; // 每次输入
-
-    virtual DIRECTION handleInput(); // 只重写了这个方法    
+    virtual DIRECTION handleInput() override; // 只重写了这个方法    
 };

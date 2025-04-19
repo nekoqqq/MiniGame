@@ -93,11 +93,6 @@ bool Game::is_finished()const{
     bool finished = succeed >= box_pos_.size();
     return finished;
 }
-void Game::reset_game(MapSource mapSource, bool var_fps)
-{
-    grid_obj.clear();
-    init(mapSource,var_fps);
-}
 DDS& Game::getImg(IMG_TYPE img_type)
 {
     int index = img_type;
@@ -178,7 +173,7 @@ void Game::init(MapSource mapSource,bool var_fps)       {
                 }
                 else if (grid_obj[i][j] == GameObject::PLAYER || grid_obj[i][j]==GameObject::PLAYER_HIT)
                     player_pos_ = { i,j };
-                else if (grid_obj[i][j] == GameObject::TARGET)
+                else if (grid_obj[i][j] == GameObject::TARGET || grid_obj[i][j]==GameObject::PLAYER_HIT)
                     target_pos_.push_back({ i,j });
 
             }

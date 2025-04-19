@@ -32,6 +32,9 @@
     <ClCompile Include="Visual.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="winMain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Visual.rc">

@@ -149,6 +149,7 @@
     <ClInclude Include="Visual.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="winMain.cpp" />
     <ClCompile Include="Visual.cpp" />
   </ItemGroup>
   <ItemGroup>
