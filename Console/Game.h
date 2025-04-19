@@ -169,9 +169,6 @@ public:
     GameObject& getGameObject(int i, int j);
     bool isGameVar()const;
 
-    void setShouldSkip(bool);
-    bool getShouldSkip();
-
 protected:
     bool _valid(pair<int, int>&)const; // 判断当前是否是有效的位置
     
@@ -189,12 +186,11 @@ private:
    vector<pair<int, int>> target_pos_; // 箱子的目标位置
    pair<int, int> player_pos_; // 玩家的位置
 
-   virtual void preHandle();
-   virtual DIRECTION handleInput();
-   virtual pair<int, int> updatePosition(DIRECTION);
-   virtual void extraStateHandle();
-   virtual void moveObject(pair<int, int>&);
-   bool should_skip; // 跳过更新
+   virtual void preHandle(); // 输入前处理
+   virtual DIRECTION handleInput(); // 输入处理
+   virtual pair<int, int> updatePosition(DIRECTION); // 根据输入得到需要移动的
+   virtual void updateState(pair<int,int>&); // 额外的变量处理
+   virtual void moveObject(pair<int,int>&); // 实际移动物体
 };
 
 

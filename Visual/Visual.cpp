@@ -109,12 +109,10 @@ void VisualGame::varPreHandle(int t)
 			for (int j = 0; j < getWidth(); j++) {
 				getGameObject(i, j).set_move(0, 0);
 			}
-		setShouldSkip(false);
 	}
 
 	if (var_move_count > 0) {
 		var_move_count = min(var_move_count + t, MAX_VAR_MOVE_COUNT); // 后续需要用MAX_VAR_MOVE_COUNT减去相应的值，因此需要这里做一下处理
-		setShouldSkip(true);
 	}
 }
 Game::DIRECTION VisualGame::handleInput() {
@@ -134,7 +132,6 @@ Game::DIRECTION VisualGame::handleInput() {
 		direction = DOWN;
 	else if (cur_key_on_d)
 		direction = RIGHT;
-	GameLib::cout << "direction: " << direction << GameLib::endl;
 	return direction;
 }
 
@@ -147,12 +144,10 @@ void VisualGame::fixPreHandle()
 				GameObject& gameObject = getGameObject(i, j);
 				gameObject.set_move(0, 0);
 			}
-		setShouldSkip(false);
 	}
 
 	if (move_count > 0) {
 		move_count++;
-		setShouldSkip(true);
 	}
 }
 void VisualGame::preHandle()
@@ -163,8 +158,10 @@ void VisualGame::preHandle()
 	else
 		fixPreHandle();
 }
-void VisualGame::extraStateHandle()
+void VisualGame::updateState(pair<int,int> &delta)
 {
+	if (delta.first == 0 && delta.second == 0)
+		return;
 	if(!move_count||!var_move_count)
 		setMove();
 }

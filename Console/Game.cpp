@@ -2,7 +2,7 @@
 
 
 Game::Game() :Game(MapSource::FILE,1,true) {}
-Game::Game(MapSource mapSource, bool var_fps,int stage):stage(stage),should_skip(false) { init(mapSource,var_fps); }
+Game::Game(MapSource mapSource, bool var_fps,int stage):stage(stage){ init(mapSource,var_fps); }
 Game::~Game() { delete[] p_dds; p_dds = nullptr; grid_obj.clear(); box_pos_.clear(); target_pos_.clear(); }
 bool Game::_valid(pair<int, int>& pos) const{
     if (pos.first >= 0 && pos.first < height_ && pos.second >= 0 && pos.second < width_ && grid_obj[pos.first][pos.second].getType() != GameObject::BOUNDARY)
@@ -11,17 +11,14 @@ bool Game::_valid(pair<int, int>& pos) const{
 }
 void Game::update() {
        preHandle();
-       if (should_skip)
-           return;
        DIRECTION direction = handleInput();
        pair<int, int> delta = updatePosition(direction);
-       extraStateHandle();
+       updateState(delta);
        moveObject(delta);
 }
 
 
 void Game::preHandle() { }
-
 Game::DIRECTION Game::handleInput() { return UNKNOW; }
 pair<int,int> Game::updatePosition(DIRECTION direction) {
     pair<int, int> one_step_pos, two_steps_pos;
@@ -56,12 +53,12 @@ pair<int,int> Game::updatePosition(DIRECTION direction) {
     }
     return { dx,dy };
 }
-void Game::extraStateHandle(){}
-void Game::moveObject(pair<int,int> & delta) {
+void Game::updateState(pair<int,int> &delta) {}
+void Game::moveObject(pair<int,int> &delta) {
+    if (delta.first == 0 && delta.second == 0)
+        return;
     int dx = delta.first;
     int dy = delta.second;
-    if (dx == 0 && dy == 0)
-        return;
     steps_++;
     
     pair<int,int> one_step_pos = make_pair(player_pos_.first + dx, player_pos_.second + dy);
@@ -211,14 +208,6 @@ bool Game::isGameVar()const {
     return var_fps;
 }
 
-void Game::setShouldSkip(bool should_skip)
-{
-    this->should_skip = should_skip;
-}
-
-bool Game::getShouldSkip(){return should_skip;}
-
-
 void GameObject::set_type(Type type) {
     this->type = type;
 }
@@ -313,11 +302,11 @@ Game::DIRECTION ConsoleGame::handleInput() {
         break;
     case 's':
     case 'S':
-        direction = RIGHT;
+        direction = DOWN;
         break;
     case 'd':
     case 'D':
-        direction = DOWN;
+        direction = RIGHT;
         break;
     default:
         break;

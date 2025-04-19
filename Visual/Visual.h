@@ -8,7 +8,6 @@ public:
 	explicit VisualGame(int stage, bool var_fps);
 	virtual void draw();
 	void set_elapsed_time(int);
-
 	void drawTheme(DDS&);
 	static void drawCell(int, int, DDS&);
 
@@ -25,9 +24,9 @@ private:
 
 
 	// update里面需要更新的逻辑
-	virtual void preHandle();
-	virtual DIRECTION handleInput();
-	virtual void extraStateHandle();
+	virtual void preHandle() override; // 这里最好使用override关键词，来保证一定重写的是基类的虚函数，而不是重写基类的普通函数
+	virtual DIRECTION handleInput()override;
+	virtual void updateState(pair<int,int> &) override;
 
 	void setMove();
 	void varPreHandle(int);
