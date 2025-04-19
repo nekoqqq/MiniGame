@@ -7,7 +7,7 @@ using namespace std;
 using namespace GameLib;
 
 VisualGame::VisualGame(int stage,bool var_fps):Game(MapSource::FILE,var_fps,stage),elapsed_time(0),move_count(0),var_move_count(0){}
-VisualGame::~VisualGame(){Game::~Game();}
+VisualGame::~VisualGame(){Game::~Game(); }
 void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台是用来debug的
 	// 先绘制背景
 	for(int i =0;i<getHeight();i++)

@@ -170,7 +170,7 @@ public:
 
 protected:
     bool _valid(pair<int, int>&)const; // 判断当前是否是有效的位置
-    
+
 private:
    int stage; // 关卡
    bool finished = false;

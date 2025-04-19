@@ -83,8 +83,6 @@ void Game::moveObject(pair<int,int> &delta) {
     else
         grid_obj[player_pos_.first][player_pos_.second] = GameObject::PLAYER;
 }
-
-
 bool Game::is_finished()const{
     int succeed = 0;
     for (auto& t : target_pos_)
