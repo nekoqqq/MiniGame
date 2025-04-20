@@ -1,7 +1,11 @@
 ﻿// Visual.cpp : 定义应用程序的入口点。
 //
 
+#include "../Console/Game.h"
+#include "../Console/GameObject.h"
+#include "../Console/DDS.h"
 #include "Visual.h"
+
 #include "GameLib/Framework.h"
 using namespace std;
 using namespace GameLib;

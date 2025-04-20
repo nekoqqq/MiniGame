@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../Console/Game.h"
 #include "resource.h"
+#include "../Console/Game.h"
+
 
 class VisualGame :public Game {
 public:
@@ -22,7 +23,7 @@ private:
 	// update里面需要更新的逻辑
 	virtual void preHandle() override; // 这里最好使用override关键词，来保证一定重写的是基类的虚函数，而不是重写基类的普通函数
 	virtual DIRECTION handleInput()override;
-	virtual void updateState(pair<int,int> &) override;
+	virtual void updateState(std::pair<int,int> &) override;
 
 	void setMove();
 	void varPreHandle(int);

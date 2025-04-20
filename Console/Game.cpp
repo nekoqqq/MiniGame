@@ -1,5 +1,9 @@
-﻿#include"Game.h"
-
+﻿#include"DDS.h"
+#include"GameObject.h"
+#include"Game.h"
+#include<cassert>
+#include<fstream>
+#include<iostream>
 
 Game::Game() :Game(MapSource::FILE,0,true) {}
 Game::Game(MapSource map_source, bool var_fps, int stage) :map_source(map_source),var_fps(var_fps), stage(stage) {
@@ -15,7 +19,7 @@ Game::Game(MapSource map_source, bool var_fps, int stage) :map_source(map_source
 };
 }
 Game::~Game() { delete[] p_dds; p_dds = nullptr; grid_obj.clear(); box_pos_.clear(); target_pos_.clear(); }
-bool Game::_valid(pair<int, int>& pos) const{
+bool Game::_valid(std::pair<int, int>& pos) const{
     if (pos.first >= 0 && pos.first < height_ && pos.second >= 0 && pos.second < width_ && grid_obj[pos.first][pos.second].getType() != GameObject::BOUNDARY)
         return true;
     return false;
@@ -23,16 +27,15 @@ bool Game::_valid(pair<int, int>& pos) const{
 void Game::update() {
        preHandle();
        DIRECTION direction = handleInput();
-       pair<int, int> delta = updatePosition(direction);
+       std::pair<int, int> delta = updatePosition(direction);
        updateState(delta);
        moveObject(delta);
 }
 
-
 void Game::preHandle() { }
 Game::DIRECTION Game::handleInput() { return UNKNOW; }
-pair<int,int> Game::updatePosition(DIRECTION direction) {
-    pair<int, int> one_step_pos, two_steps_pos;
+std::pair<int,int> Game::updatePosition(DIRECTION direction) {
+    std::pair<int, int> one_step_pos, two_steps_pos;
     int dx = 0, dy = 0;
     if (direction == UP) // W
         dx = -1;
@@ -45,8 +48,8 @@ pair<int,int> Game::updatePosition(DIRECTION direction) {
     else
         return { 0,0 };
 
-    one_step_pos = make_pair(player_pos_.first + dx, player_pos_.second + dy);
-    two_steps_pos = make_pair(one_step_pos.first + dx, one_step_pos.second + dy);
+    one_step_pos = std::make_pair(player_pos_.first + dx, player_pos_.second + dy);
+    two_steps_pos = std::make_pair(one_step_pos.first + dx, one_step_pos.second + dy);
     if (!_valid(one_step_pos))
         return { 0,0 };
 
@@ -64,15 +67,15 @@ pair<int,int> Game::updatePosition(DIRECTION direction) {
     }
     return { dx,dy };
 }
-void Game::updateState(pair<int,int> &delta) {}
-void Game::moveObject(pair<int,int> &delta) {
+void Game::updateState(std::pair<int,int> &delta) {}
+void Game::moveObject(std::pair<int,int> &delta) {
     if (delta.first == 0 && delta.second == 0)
         return;
     int dx = delta.first;
     int dy = delta.second;
     steps_++;
     
-    pair<int,int> one_step_pos = make_pair(player_pos_.first + dx, player_pos_.second + dy);
+    std::pair<int,int> one_step_pos = std::make_pair(player_pos_.first + dx, player_pos_.second + dy);
     GameObject& one_step_obj = grid_obj[one_step_pos.first][one_step_pos.second];
 
     one_step_obj.set_move(dx, dy);
@@ -104,19 +107,19 @@ bool Game::is_finished()const{
 }
 DDS& Game::getImg(IMG_TYPE img_type)
 {
-    int index = img_type;
+    int index = static_cast<int> (img_type);
     return p_dds[index];
 }
-void Game::loadFile(string file_name) {
-    ifstream fin(file_name, ios_base::in);
+void Game::loadFile(std::string file_name) {
+    std::ifstream fin(file_name, std::ios_base::in);
     if (!fin.is_open()) {
-        cout <<file_name<< "打开失败" << endl;
+        std::cout <<file_name<< "打开失败" << std::endl;
         exit(-1);
     }
-    string line;
+    std::string line;
     int i = 0;
     while (getline(fin, line)) {
-        grid_obj.push_back(vector<GameObject>(line.size()));
+        grid_obj.push_back(std::vector<GameObject>(line.size()));
         for (int j = 0; j < line.size(); j++)
             grid_obj[i][j] = line[j];
         i++;
@@ -175,7 +178,7 @@ void Game::init() {
         grid_obj[player_pos_.first][player_pos_.second] = GameObject::PLAYER;
     }
     else if (this->map_source == MapSource::FILE) {
-        string file_name = "C:/Users/colorful/source/repos/MiniGame/Console/stage/stage" + to_string(stage) + ".txt"; // stage1.txt
+        std::string file_name = "C:/Users/colorful/source/repos/MiniGame/Console/stage/stage" + std::to_string(stage) + ".txt"; // stage1.txt
         loadFile(file_name);
 
         assert(grid_obj.size() > 0 && "Grid Object初始化成功");
@@ -193,7 +196,7 @@ void Game::init() {
                     target_pos_.push_back({ i,j });
 
             }
-            width_ = max(width_, (int)grid_obj[i].size());
+            width_ = std::max(width_, (int)grid_obj[i].size());
         }
 
         for (int i = 0; i < height_; i++) {
@@ -211,85 +214,12 @@ void Game::reset()
 bool Game::isGameVar()const {
     return var_fps;
 }
-
-void GameObject::set_type(Type type) {
-    this->type = type;
-}
-void GameObject::set_move(int dx, int dy) {
-    move_dx = dx;
-    move_dy = dy;
-}
-pair<int,int> GameObject::get_move() {
-    return { move_dx,move_dy };
-}
-GameObject::GameObject():GameObject(UNKNOW,0,0){} // c++11 委托构造函数, 并且使用条款04：确定对象使用前已先被初始化
-GameObject::GameObject(Type type):GameObject(type,0,0){}
-GameObject::GameObject(Type type, int move_dx, int move_dy) :type(type), move_dx(0), move_dy(0) {}
-GameObject::Type GameObject::getType()const { return type; }
-IMG_TYPE GameObject::getImgType() const
+std::ostream& operator<<(std::ostream& out, Game& g)
 {
-    IMG_TYPE img_type = IMG_BLANK;
-    switch (this->type)
-    {
-    case BOX:
-        img_type = IMG_BOX;
-        break;
-    case PLAYER:
-        img_type = IMG_PLAYER;
-        break;
-    case TARGET:
-        img_type = IMG_TARGET;
-        break;
-    case BOUNDARY:
-        img_type = IMG_BOUNDARY;
-        break;
-    case BLANK:
-        img_type = IMG_BLANK;
-        break;
-    case BOX_READY:
-        img_type = IMG_BOX_READY;
-        break;
-    case PLAYER_HIT:
-        img_type = IMG_PLAYER_HIT;
-        break;
-    default:
-        break;
-    }
-    return img_type;
-}
-bool GameObject::operator==(const GameObject &other)const {
-    return this->type == other.getType() && this->move_dx == other.move_dx && this->move_dy == other.move_dy;
-}
-bool GameObject::operator!=(const GameObject& other)const {
-    return !(*this == other);
-}
-bool GameObject::operator==(Type type)const {
-    return this->type == type;
-}
-bool GameObject::operator!=(Type type)const {
-    return !(*this == type);
-}
-GameObject& GameObject::operator=(Type type) {
-    this->type = type;
-    return *this;
-}
-GameObject& GameObject::operator=(char c)
-{
-    this->type = static_cast<Type> (c);
-    return *this;
-}
-GameObject::operator char()const {
-    return (char)this->type;
-}
-ostream& operator<<(ostream& out, const GameObject&go) {
-    return out << (char)go.getType();
-}
-ostream& operator<<(ostream& out, Game& g)
-{
-    for (int i = 0; i < g.grid_obj.size(); i++,out<<endl)
+    for (int i = 0; i < g.grid_obj.size(); i++,out<<std::endl)
         for (int j = 0; j < g.grid_obj[i].size(); j++)
             out << g.grid_obj[i][j] ;
-    out << endl;
+    out << std::endl;
     return out;
 }
 
@@ -323,19 +253,5 @@ void ConsoleGame::set_input(char c)
 }
 ConsoleGame::ConsoleGame(MapSource mapSource, int stage) :Game(mapSource, false, stage) ,c('0'){ }
 void ConsoleGame::draw() {
-    cout << *this;
-}
-
-
-DDS::DWORD* DDS::get_image_data()
-{
-    return dData;
-}
-DDS::DWORD DDS::get_image_width() const
-{
-    return dWidth;
-}
-DDS::DWORD DDS::get_image_height() const
-{
-    return dHeight;
+    std::cout << *this;
 }

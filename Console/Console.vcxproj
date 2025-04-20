@@ -143,11 +143,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DDS.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="common_enum.h" />
+    <ClInclude Include="DDS.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="GameObject.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="img\blank.dds" />

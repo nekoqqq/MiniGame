@@ -1,4 +1,5 @@
 ﻿#include "Visual.h"
+#include "../Console/DDS.h"
 #include "GameLib/Framework.h"
 
 namespace GameLib {

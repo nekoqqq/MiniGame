@@ -27,9 +27,24 @@
     <ClCompile Include="Game.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="DDS.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DDS.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="common_enum.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
