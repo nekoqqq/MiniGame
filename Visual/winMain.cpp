@@ -51,14 +51,11 @@ namespace GameLib {
 		if (!theme_img)
 			theme_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\main_theme.dds");
 		gVisualGame->drawCell(0,0,*theme_img);
-		if (Framework::instance().isKeyTriggered(32)) // 替换成空格键开始
+		if (Framework::instance().isKeyTriggered(' ')) // 替换成空格键开始
 		{
 			gGameState = GameState::SELECTION;
 			SAFE_DELETE(theme_img); // 这里如果只用了delete theme_img，那么只是所指向的空间被释放了，但是theme_img这个指针不为空，因此上面的判断仍然可以通过，这也是为什么还需要让theme_img为nullptr
 		}
-
-		if (Framework::instance().isKeyTriggered('q') || Framework::instance().isKeyTriggered('Q'))
-			Framework::instance().requestEnd();
 	}
 
 	void selectionLoop() {
@@ -167,6 +164,9 @@ namespace GameLib {
 			framework.requestEnd();
 
 		if (framework.isEndRequested()) {
+			if (gVisualGame)
+				SAFE_DELETE(gVisualGame);
+
 			GameLib::cout << "Goodbye!" << GameLib::endl;
 			exit(0); // 临时处理，防止按了Q之后再按其他的按键会造成指针访问错误
 		}
