@@ -1,8 +1,19 @@
 ﻿#include"Game.h"
 
 
-Game::Game() :Game(MapSource::FILE,1,true) {}
-Game::Game(MapSource mapSource, bool var_fps,int stage):stage(stage){ init(mapSource,var_fps); }
+Game::Game() :Game(MapSource::FILE,0,true) {}
+Game::Game(MapSource map_source, bool var_fps, int stage) :map_source(map_source),var_fps(var_fps), stage(stage) {
+    init(); 
+    p_dds = new DDS[7]{
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\box.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\player.dds" ,
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\target.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\boundary.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\blank.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\box_ready.dds",
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\player_hit.dds"
+};
+}
 Game::~Game() { delete[] p_dds; p_dds = nullptr; grid_obj.clear(); box_pos_.clear(); target_pos_.clear(); }
 bool Game::_valid(pair<int, int>& pos) const{
     if (pos.first >= 0 && pos.first < height_ && pos.second >= 0 && pos.second < width_ && grid_obj[pos.first][pos.second].getType() != GameObject::BOUNDARY)
@@ -88,7 +99,7 @@ bool Game::is_finished()const{
     for (auto& t : target_pos_)
         if (grid_obj[t.first][t.second] == GameObject::BOX_READY)
             succeed += 1;
-    bool finished = succeed >= box_pos_.size();
+    bool finished = succeed >= box_pos_.size() && box_pos_.size()>0;
     return finished;
 }
 DDS& Game::getImg(IMG_TYPE img_type)
@@ -123,8 +134,15 @@ int Game::getHeight() const
 {
     return height_;
 }
-void Game::init(MapSource mapSource,bool var_fps)       {
-    if (mapSource == MapSource::PREDEFINED) {
+void Game::init() {
+
+    // 上次遗留的游戏状态需要清空
+    grid_obj.clear();
+    box_pos_.clear();
+    target_pos_.clear();
+    box_pos_.clear();
+
+    if (this->map_source == MapSource::PREDEFINED) {
         height_ = 5;
         width_ = 8;
         box_pos_ = { {2,2},{2,5} };
@@ -156,7 +174,7 @@ void Game::init(MapSource mapSource,bool var_fps)       {
         // set player
         grid_obj[player_pos_.first][player_pos_.second] = GameObject::PLAYER;
     }
-    else if (mapSource == MapSource::FILE) {
+    else if (this->map_source == MapSource::FILE) {
         string file_name = "C:/Users/colorful/source/repos/MiniGame/Console/stage/stage" + to_string(stage) + ".txt"; // stage1.txt
         loadFile(file_name);
 
@@ -184,18 +202,11 @@ void Game::init(MapSource mapSource,bool var_fps)       {
         }
 
     }
-    this->var_fps = var_fps;
     this->finished = false;
-
-    p_dds = new DDS[7]{
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\box.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\player.dds" ,
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\target.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\boundary.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\blank.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\box_ready.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\player_hit.dds"
-    };
+}
+void Game::reset()
+{
+    init();
 }
 bool Game::isGameVar()const {
     return var_fps;

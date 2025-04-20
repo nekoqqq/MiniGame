@@ -153,7 +153,8 @@ public:
     Game(MapSource,bool,int);
     virtual ~Game();
 
-    void init(MapSource,bool); // 初始化游戏中的各种状态
+    void init(); // 初始化游戏中的各种状态
+    void reset(); // 重置游戏
     void update(); // 实时输入, 根据条款35：考虑virtual函数以外的其他选择，这里使用NVI（non-virtual interface）的方式实现Template Method，不确定这个是不是完整的设计模式
 
     virtual void draw() = 0; // 画图
@@ -172,24 +173,25 @@ protected:
     bool _valid(pair<int, int>&)const; // 判断当前是否是有效的位置
 
 private:
-   int stage; // 关卡
-   bool finished = false;
-   bool var_fps; // 固定帧率还是动态的游戏
-   DDS* p_dds; // 各种图片素材, 无需定义为static, 因为Game对象理论上全局只有一个
+    MapSource map_source;
+    int stage; // 关卡
+    bool finished = false;
+    bool var_fps; // 固定帧率还是动态的游戏
+    DDS* p_dds; // 各种图片素材, 无需定义为static, 因为Game对象理论上全局只有一个
 
-   // 地图大小
-   int height_;
-   int width_;
-   vector<vector<GameObject>> grid_obj;
-   vector<pair<int, int>> box_pos_; // 箱子位置
-   vector<pair<int, int>> target_pos_; // 箱子的目标位置
-   pair<int, int> player_pos_; // 玩家的位置
+    // 地图大小
+    int height_;
+    int width_;
+    vector<vector<GameObject>> grid_obj;
+    vector<pair<int, int>> box_pos_; // 箱子位置
+    vector<pair<int, int>> target_pos_; // 箱子的目标位置
+    pair<int, int> player_pos_; // 玩家的位置
 
-   virtual void preHandle(); // 输入前处理
-   virtual DIRECTION handleInput(); // 输入处理
-   virtual pair<int, int> updatePosition(DIRECTION); // 根据输入得到需要移动的
-   virtual void updateState(pair<int,int>&); // 额外的变量处理
-   virtual void moveObject(pair<int,int>&); // 实际移动物体
+    virtual void preHandle(); // 输入前处理
+    virtual DIRECTION handleInput(); // 输入处理
+    virtual pair<int, int> updatePosition(DIRECTION); // 根据输入得到需要移动的
+    virtual void updateState(pair<int,int>&); // 额外的变量处理
+    virtual void moveObject(pair<int,int>&); // 实际移动物体
 };
 
 
