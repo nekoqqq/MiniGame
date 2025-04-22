@@ -138,13 +138,14 @@ int Game::getHeight() const
     return height_;
 }
 void Game::init() {
-
     // 上次遗留的游戏状态需要清空
     grid_obj.clear();
     box_pos_.clear();
     target_pos_.clear();
     box_pos_.clear();
-
+    this->finished = false;   
+}
+void Game::loadGame(int stage) {
     if (this->map_source == MapSource::PREDEFINED) {
         height_ = 5;
         width_ = 8;
@@ -190,9 +191,9 @@ void Game::init() {
                 if (grid_obj[i][j] == GameObject::BOX) {
                     box_pos_.push_back({ i,j });
                 }
-                else if (grid_obj[i][j] == GameObject::PLAYER || grid_obj[i][j]==GameObject::PLAYER_HIT)
+                else if (grid_obj[i][j] == GameObject::PLAYER || grid_obj[i][j] == GameObject::PLAYER_HIT)
                     player_pos_ = { i,j };
-                else if (grid_obj[i][j] == GameObject::TARGET || grid_obj[i][j]==GameObject::PLAYER_HIT)
+                else if (grid_obj[i][j] == GameObject::TARGET || grid_obj[i][j] == GameObject::PLAYER_HIT)
                     target_pos_.push_back({ i,j });
 
             }
@@ -205,11 +206,18 @@ void Game::init() {
         }
 
     }
-    this->finished = false;
+}
+void Game::setStage(int stage) {
+    this->stage = stage;
+}
+int Game::getStage() const
+{
+    return stage;
 }
 void Game::reset()
 {
     init();
+    loadGame(stage);
 }
 bool Game::isGameVar()const {
     return var_fps;

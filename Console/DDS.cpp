@@ -1,4 +1,5 @@
 #include "DDS.h"
+#include "GameLib/Framework.h"
 #include<iostream>
 #include<fstream>
 
@@ -30,7 +31,7 @@ DDS::DDS(const char* file_name) {
         dData[i] = read_dword();
     file.close();
 }
-DDS::DWORD* DDS::get_image_data()
+DDS::DWORD* DDS::get_image_data() const
 {
     return dData;
 }
@@ -51,4 +52,43 @@ DDS::~DDS() {
         delete[] dData;
         dData = nullptr;
     }
+}
+void DDS::drawCell(int src_x,int src_y) const{
+    unsigned* p_vram = GameLib::Framework::instance().videoMemory();
+    int window_width = GameLib::Framework::instance().width();
+    unsigned* p_img = get_image_data();
+    int img_width = get_image_width();
+    int img_height = get_image_height();
+    // TODO 这里的混合有问题，最终总是画面偏黄, 已经修复，是因为读取图片的API有问题
+    // 线性混合,z = a*x+(1-a)*y = y + a*(x-y) 
+    auto alpha_mix = [&](unsigned src_data, unsigned dst_data) {
+        unsigned src_data_A = (src_data & 0xff000000) >> 24;
+        unsigned src_data_R = (src_data & 0x00ff0000);
+        unsigned src_data_G = (src_data & 0x0000ff00);
+        unsigned src_data_B = (src_data & 0x000000ff);
+
+        unsigned dst_data_A = (dst_data && 0xff000000) >> 24;
+        unsigned dst_data_R = (dst_data & 0x00ff0000);
+        unsigned dst_data_G = (dst_data & 0x0000ff00);
+        unsigned dst_data_B = (dst_data & 0x000000ff);
+
+        unsigned r = dst_data_R + dst_data_A / 255.f * (src_data_R - dst_data_R);
+        unsigned g = dst_data_G + dst_data_A / 255.f * (src_data_G - dst_data_G);
+        unsigned b = dst_data_B + dst_data_A / 255.f * (src_data_B - dst_data_B);
+        return b | (g & 0x00ff00) | (r & 0xff0000);
+        };
+
+    for (int i = 0; i < img_height; i++)
+        for (int j = 0; j < img_width; j++) {
+            int src_index = (src_x + i) * window_width + src_y + j;
+            int dst_index = i * img_width + j;
+            unsigned src_data = p_vram[src_index];
+            unsigned dst_data = p_img[dst_index];
+            unsigned mix_data = alpha_mix(src_data, dst_data);
+            p_vram[src_index] = mix_data;
+        }
+}
+void DDS::drawImage() const
+{
+    drawCell(0, 0);
 }

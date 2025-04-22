@@ -15,6 +15,7 @@ enum class MapSource {
 };
 
 enum class GameState {
+    UNKONW, // 无效状态
     THEME, // 主题界面
     SELECTION, // 选关
     LOADING, // 加载
@@ -41,11 +42,13 @@ public:
     void update(); // 实时输入, 根据条款35：考虑virtual函数以外的其他选择，这里使用NVI（non-virtual interface）的方式实现Template Method，不确定这个是不是完整的设计模式
     virtual void draw() = 0; // 画图
 
-
     bool is_finished()const; // 判断当前游戏是否已经结束
     int steps_; // 总共用的步数
     DDS& getImg(IMG_TYPE);
     friend std::ostream& operator<<(std::ostream& out, Game& g);
+    void setStage(int);
+    int  getStage()const;
+    void loadGame(int);
     void loadFile(std::string);
 
     int getHeight()const;

@@ -10,7 +10,7 @@ public:
 	virtual ~VisualGame()override;
 	virtual void draw() override;
 	void set_elapsed_time(int);
-	static void drawCell(int, int, DDS&);
+	void drawCell(int, int, DDS&);
 	void drawFPS();
 
 private:

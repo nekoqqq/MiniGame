@@ -24,15 +24,51 @@
     <ClInclude Include="Resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Visual.h">
+    <ClInclude Include="VisualGame.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="HSMGame.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RootState.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MainState.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ThemeState.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Selection.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SubState.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Visual.cpp">
+    <ClCompile Include="VisualGame.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="winMain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="HSMGame.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RootState.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MainState.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ThemeState.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Selection.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SubState.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

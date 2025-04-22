@@ -144,13 +144,25 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="HSMGame.h" />
+    <ClInclude Include="MainState.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="RootState.h" />
+    <ClInclude Include="Selection.h" />
+    <ClInclude Include="SubState.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="Visual.h" />
+    <ClInclude Include="ThemeState.h" />
+    <ClInclude Include="VisualGame.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="HSMGame.cpp" />
+    <ClCompile Include="MainState.cpp" />
+    <ClCompile Include="RootState.cpp" />
+    <ClCompile Include="Selection.cpp" />
+    <ClCompile Include="SubState.cpp" />
+    <ClCompile Include="ThemeState.cpp" />
     <ClCompile Include="winMain.cpp" />
-    <ClCompile Include="Visual.cpp" />
+    <ClCompile Include="VisualGame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Visual.rc" />

@@ -19,9 +19,11 @@ struct DDS { // DirectX格式图片
     DDS(const char* file_name);
     ~DDS();
 
-    DWORD* get_image_data();
+    DWORD* get_image_data()const;
     DWORD get_image_width()const;
     DWORD get_image_height()const;
+    void drawCell(int,int)const;
+    void drawImage()const;
 
     DWORD& operator[](int i);
 };
