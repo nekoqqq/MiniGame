@@ -75,7 +75,7 @@ private:
     std::vector<std::pair<int, int>> target_pos_; // 箱子的目标位置
     std::pair<int, int> player_pos_; // 玩家的位置
 
-    virtual void preHandle(); // 输入前处理
+    virtual bool preHandle(); // 输入前处理
     virtual DIRECTION handleInput(); // 输入处理
     virtual std::pair<int, int> updatePosition(DIRECTION); // 根据输入得到需要移动的
     virtual void updateState(std::pair<int,int>&); // 额外的变量处理

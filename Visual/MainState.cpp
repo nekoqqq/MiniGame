@@ -5,7 +5,7 @@
 #include "HSMGame.h"
 
 MainState::MainState(int stage) :state_(LOADING), stage_(stage) {
-    hsm_game_ = new HSMGame(stage_,false);
+    hsm_game_ = new HSMGame(stage_,true);
     loading_state_ = new LoadingState();
     play_state_ = nullptr;
     menu_state_ = nullptr;

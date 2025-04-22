@@ -21,11 +21,11 @@ private:
 	int elapsed_time; // 帧之间的时间间隔
 
 	// update里面需要更新的逻辑
-	virtual void preHandle() override; // 这里最好使用override关键词，来保证一定重写的是基类的虚函数，而不是重写基类的普通函数
+	virtual bool preHandle() override; // 这里最好使用override关键词，来保证一定重写的是基类的虚函数，而不是重写基类的普通函数
 	virtual DIRECTION handleInput()override;
 	virtual void updateState(std::pair<int,int> &) override;
 
 	void setMove();
-	void varPreHandle(int);
-	void fixPreHandle();
+	bool varPreHandle(int);
+	bool fixPreHandle();
 };

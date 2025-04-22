@@ -10,7 +10,8 @@ Game::Game(MapSource map_source, bool var_fps, int stage) :map_source(map_source
     init(); 
     p_dds = new DDS[7]{
     "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\box.dds",
-    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\player.dds" ,
+
+// 后处理部分    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\player.dds" ,
     "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\target.dds",
     "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\boundary.dds",
     "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\blank.dds",
@@ -25,14 +26,15 @@ bool Game::_valid(std::pair<int, int>& pos) const{
     return false;
 }
 void Game::update() {
-       preHandle();
+       if (!preHandle())
+            return;
        DIRECTION direction = handleInput();
        std::pair<int, int> delta = updatePosition(direction);
        updateState(delta);
        moveObject(delta);
 }
 
-void Game::preHandle() { }
+bool Game::preHandle() { return false; }
 Game::DIRECTION Game::handleInput() { return UNKNOW; }
 std::pair<int,int> Game::updatePosition(DIRECTION direction) {
     std::pair<int, int> one_step_pos, two_steps_pos;

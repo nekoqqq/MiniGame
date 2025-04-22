@@ -36,7 +36,7 @@ void PlayState::post(MainState* parent) {
     Framework framework = Framework::instance();
     HSMGame* game_world = parent->getHSMGame();
     game_world->updateStat(framework.time()); // 这个应该是正确的实现，修复了时间统计错误的问题
-    while (framework.time() - game_world->getLastFrameCost() < 1000 / game_world->FPS)
+    while (framework.time() - game_world->getLastFrameCost() < 100 / game_world->FPS)
         framework.sleep(1);
 }
 void PlayState::update(MainState* parent) {

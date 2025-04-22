@@ -70,7 +70,7 @@ void VisualGame::setMove()
 	this->move_count = 1;
 	this->var_move_count = 1;
 }
-void VisualGame::varPreHandle(int t)
+bool VisualGame::varPreHandle(int t)
 {
 	if (var_move_count >= MAX_VAR_MOVE_COUNT) {
 		var_move_count = 0;
@@ -82,7 +82,9 @@ void VisualGame::varPreHandle(int t)
 
 	if (var_move_count > 0) {
 		var_move_count = min(var_move_count + t, MAX_VAR_MOVE_COUNT); // 后续需要用MAX_VAR_MOVE_COUNT减去相应的值，因此需要这里做一下处理
+		return false;
 	}
+	return true;
 }
 Game::DIRECTION VisualGame::handleInput() {
 	DIRECTION direction = UNKNOW;
@@ -104,7 +106,7 @@ Game::DIRECTION VisualGame::handleInput() {
 	return direction;
 }
 
-void VisualGame::fixPreHandle()
+bool VisualGame::fixPreHandle()
 {
 	if (move_count == 48) {
 		move_count = 0;
@@ -117,15 +119,17 @@ void VisualGame::fixPreHandle()
 
 	if (move_count > 0) {
 		move_count++;
+		return false;
 	}
+	return true;
 }
-void VisualGame::preHandle()
+bool VisualGame::preHandle()
 {
 	if (isGameVar()) {
-		varPreHandle(elapsed_time);
+		return varPreHandle(elapsed_time);
 	}
 	else
-		fixPreHandle();
+		return fixPreHandle();
 }
 void VisualGame::updateState(pair<int,int> &delta)
 {
