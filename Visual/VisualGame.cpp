@@ -17,22 +17,27 @@ void VisualGame::draw() { // 同时向控制台和图形界面输出，控制台
 	for(int i =0;i<getHeight();i++)
 		for (int j = 0; j < getWidth(); j++) {
 			GameObject& go = getGameObject(i, j);
-			if (go == GameObject::BLANK || go == GameObject::BOUNDARY || go == GameObject::TARGET) {
-				IMG_TYPE img_type = go.getImgType();
-				DDS& img = VisualGame::getImg(img_type); // 这里的一个trick是因为在类的实现里面，所以getImg是基类的方法，不需要实例化一个类才可以使用（继承的好处！）
+			// 修复一个bug，原本是希望除了墙壁以外都涂上空白，但是因为Target、Box这些东西都是透明的，会显示背景，所以最好也将这些位置绘制好
+			// 但是如果先处理好图片，让Target、Box这些不透明，就可以省略这些东西混合的计算过程
+			if (go != GameObject::BOUNDARY ) {
+				DDS& img = VisualGame::getImg(IMG_TYPE::IMG_BLANK); 
+				drawCell(i * 48, j * 48, img);
+			}
+			else {
+				DDS& img = VisualGame::getImg(IMG_TYPE::IMG_BOUNDARY); // 这里的一个trick是因为在类的实现里面，所以getImg是基类的方法，不需要实例化一个类才可以使用（继承的好处！）
 				drawCell(i * 48, j * 48, img);
 			}
 		}
 
 
-	// 再绘制前景，用于修复从下往上，因为先在上面的格子绘制了人物，后在下面的给子绘制了背景，导致人物的下半身没有了的问题
+	 // 再绘制前景，用于修复从下往上，因为先在上面的格子绘制了人物，后在下面的给子绘制了背景，导致人物的下半身没有了的问题
 	for (int i = 0; i < getHeight(); i++)
 		for (int j = 0; j < getWidth(); j++)
 		{
 			GameObject& go = getGameObject(i,j);
 			IMG_TYPE img_type = go.getImgType();
 			DDS& img = VisualGame::getImg(img_type);
-			if (!(go == GameObject::BLANK || go == GameObject::BOUNDARY || go == GameObject::TARGET)) // 玩家或者箱子移动
+			if (!(go == GameObject::BLANK || go == GameObject::BOUNDARY)) // 玩家或者箱子移动
 			{
 				if (isGameVar()) { // 可变和固定的计算方式不一样，固定是每Frame移动一个固定的像素，而可变的是根据每个Frame的实际消耗时间，移动相应的距离
 					int move_dx = go.get_move().first, move_dy = go.get_move().second;

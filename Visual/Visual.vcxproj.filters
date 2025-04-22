@@ -45,6 +45,9 @@
     <ClInclude Include="SubState.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="StringDrawer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VisualGame.cpp">

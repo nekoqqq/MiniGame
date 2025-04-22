@@ -160,6 +160,7 @@
     <Image Include="img\box.dds" />
     <Image Include="img\box_ready.dds" />
     <Image Include="img\ending.dds" />
+    <Image Include="img\font.dds" />
     <Image Include="img\loading.dds" />
     <Image Include="img\main_theme.dds" />
     <Image Include="img\menu.dds" />

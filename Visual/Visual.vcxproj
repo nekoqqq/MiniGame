@@ -149,6 +149,7 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RootState.h" />
     <ClInclude Include="Selection.h" />
+    <ClInclude Include="StringDrawer.h" />
     <ClInclude Include="SubState.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ThemeState.h" />

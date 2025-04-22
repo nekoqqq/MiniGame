@@ -85,6 +85,9 @@
     <Image Include="img\ending.dds">
       <Filter>资源文件\img</Filter>
     </Image>
+    <Image Include="img\font.dds">
+      <Filter>资源文件\img</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Text Include="stage\map.txt">
