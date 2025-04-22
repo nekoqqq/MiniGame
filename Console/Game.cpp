@@ -10,8 +10,7 @@ Game::Game(MapSource map_source, bool var_fps, int stage) :map_source(map_source
     init(); 
     p_dds = new DDS[7]{
     "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\box.dds",
-
-// 后处理部分    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\player.dds" ,
+    "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\player.dds" ,
     "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\target.dds",
     "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\boundary.dds",
     "C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\blank.dds",
