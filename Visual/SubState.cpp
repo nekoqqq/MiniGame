@@ -4,6 +4,8 @@
 #include "HSMGame.h"
 #include "MainState.h"
 #include "RootState.h"
+#include "StringDrawer.h"
+#include <sstream>
 
 using GameLib::Framework;
 
@@ -22,7 +24,8 @@ void LoadingState::update(MainState* parent) {
         game_world->loadGame(parent->getStage());
         parent->setState(MainState::PLAY);
     }
-    loading_img->drawImage();
+    loading_img->drawImage(); 
+    StringDrawer::instance().drawStringAt(4, 4, "Loading...",0xff0000);
 }
 
 // 前处理部分
@@ -57,7 +60,7 @@ void PlayState::update(MainState* parent) {
     post(parent);
 }
 
-MenuState::MenuState()
+MenuState::MenuState():cur_selection(1)
 {
     menu_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\menu.dds");
 }
@@ -66,21 +69,47 @@ MenuState::~MenuState()
     DYNAMIC_DEL(menu_img);
 }
 void MenuState::update(MainState* parent) {
+    // 这里修改了展示的顺序，直觉上来说应该先画图再响应键盘的输入，不然出现输入很快，直接把画面给省略了
     Framework f = Framework::instance(); // 为什么Framework &f = Framework::instance() 会失败？
-    if (f.isKeyTriggered('1')) { // 重置
-        parent->getHSMGame()->reset();
-        parent->setState(MainState::PLAY);
+    if (f.isKeyTriggered('w')) {
+        cur_selection = (cur_selection + 2) % (menu_size-1) + 1;
     }
-    else if (f.isKeyTriggered('2')) { // 选关
-        parent->setState(MainState::SELECTION);
+    else if (f.isKeyTriggered('s')) {
+        cur_selection = cur_selection % (menu_size-1) + 1;
     }
-    else if (f.isKeyTriggered('3')) { // 回到主题
-        parent->setState(MainState::THEME);
-    }
-    else if (f.isKeyTriggered('4')) { // 继续
-        parent->setState(MainState::PLAY);
+    else if (f.isKeyTriggered(' ')) {
+        switch (cur_selection)
+        {
+        case 1: // 重置
+            parent->getHSMGame()->reset();
+            parent->setState(MainState::PLAY);
+            break;
+        case 2: // 选关
+            parent->setState(MainState::SELECTION);
+            break;
+        case 3: // 回到主题
+            parent->setState(MainState::THEME);
+            break;
+        case 4: // 继续
+            parent->setState(MainState::PLAY);
+            break;
+        default:
+            exit(0);
+        }
     }
     menu_img->drawImage();
+    std::ostringstream oss;
+    for (int i = 0; i < menu_size; i++) {
+        if (i == cur_selection) {
+            oss << ":>" << menu_str[i] << std::endl;
+            StringDrawer::instance().drawStringAt(i, 0, oss.str().c_str(), 0xff0000);
+        }
+        else { // 包含0和其他的输出
+            oss << "  "<<menu_str[i] << std::endl;
+            StringDrawer::instance().drawStringAt(i, 0, oss.str().c_str(), 0x00ff00);
+        }
+        oss.str("");
+    }
 }
 
 EndingState::EndingState()

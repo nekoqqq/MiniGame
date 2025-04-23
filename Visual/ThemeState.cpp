@@ -2,6 +2,7 @@
 #include "RootState.h"
 #include "../Console/DDS.h"
 #include "GameLib/Framework.h"
+#include "StringDrawer.h"
 
 ThemeState::ThemeState() {
     theme_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\main_theme.dds");
@@ -15,4 +16,5 @@ void ThemeState::update(RootState* parent) {
         parent->setState(RootState::SELECTION);
     }
     theme_img->drawImage();
+    StringDrawer::instance().drawStringAt(6, 0, "Welcome to my game!Press SPACE Button to continue...");
 }

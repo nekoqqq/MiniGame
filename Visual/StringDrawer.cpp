@@ -1,13 +1,12 @@
 #include "StringDrawer.h"
 
 // 单例模式的实现
-StringDrawer* StringDrawer::instance_ = nullptr;
-StringDrawer* StringDrawer::instance() {
-	if (!instance_)
-		instance_ = new StringDrawer("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\font.dds", 0x00ffff);
+StringDrawer::StringDrawer(const char* file_name):font_img(std::make_unique<DDS>(file_name)){}
+StringDrawer& StringDrawer::instance() {
+	static StringDrawer instance_("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\font.dds");
 	return instance_;
 }
-void StringDrawer::drawString(int screen_x, int screen_y, const char* str) { // 在屏幕上的固定位置绘制字符串
+void StringDrawer::drawString(int screen_x, int screen_y, const char* str,unsigned font_color) { // 在屏幕上的固定位置绘制字符串
 	// 字符的宽和高
 	for (int i = 0; str[i] != '\0'; i++) {
 		int index = (str[i] - ' ');
@@ -23,13 +22,7 @@ void StringDrawer::drawString(int screen_x, int screen_y, const char* str) { // 
 		}
 	}
 }
-void StringDrawer::drawStringAt(int i, int j, const char* str) { // 在屏幕的第i行j列绘制文字，不考虑字符大小
+void StringDrawer::drawStringAt(int i, int j, const char* str,unsigned font_color) { // 在屏幕的第i行j列绘制文字，不考虑字符大小
 	int window_width = GameLib::Framework::instance().width();
-	drawString(i * char_heigth, j * char_width, str);
-}
-StringDrawer::StringDrawer(const char* file_name, unsigned font_color) :font_img(new DDS(file_name)), font_color(font_color) {}
-StringDrawer::~StringDrawer()
-{
-	delete instance_;
-	instance_ = nullptr;
+	drawString(i * char_heigth, j * char_width, str,font_color);
 }

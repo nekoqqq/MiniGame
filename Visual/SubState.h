@@ -28,6 +28,9 @@ public:
     void update(MainState* parent);
 private:
     DDS* menu_img;
+    int cur_selection;
+    const char* menu_str[5] = { "<MENU SELECT>","RETRY","BACK TO SELECT","BACK TO TITLE","CONTINUE" };
+    const int menu_size = sizeof(menu_str) / sizeof(const char*);
 };
 
 class EndingState {

@@ -1,20 +1,23 @@
 #pragma once
 #include "../Console/DDS.h"
 #include "GameLib/Framework.h"
+#include <memory>
 
 class StringDrawer {
 public:
 	// 单例模式的实现
-	static StringDrawer* instance();
-	void drawString(int screen_x,int screen_y,const char* str);
-	void drawStringAt(int i, int j, const char* str);
+	static StringDrawer& instance();
+	void drawString(int screen_x,int screen_y,const char* str,unsigned);
+	void drawStringAt(int i, int j, const char* str,unsigned =0xff0000);
 private:
 	static StringDrawer* instance_;
-	DDS* font_img;
-	unsigned font_color;
-	StringDrawer(const char* file_name,unsigned font_color);
-	~StringDrawer();
-	StringDrawer(const StringDrawer&);
+	std::unique_ptr<DDS> font_img;
+
+	StringDrawer(const char* file_name);
+	~StringDrawer() = default;
+
+	StringDrawer(const StringDrawer&) = delete;
+	StringDrawer& operator=(const StringDrawer&) = delete;
 
 	const int char_width = 16;
 	const int char_heigth = 16;

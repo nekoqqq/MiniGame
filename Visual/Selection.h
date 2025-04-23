@@ -9,4 +9,5 @@ public:
     void update(RootState* parent);
 private:
     DDS* selection_img;
+    int cur_stage;
 };
