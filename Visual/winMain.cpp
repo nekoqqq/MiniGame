@@ -2,6 +2,7 @@
 //#include "HSMGame.h"
 #include "GameLib/Framework.h"
 #include "RootState.h"
+#include "StringDrawer.h"
 #include <cstdlib>
 
 namespace GameLib {

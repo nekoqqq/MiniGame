@@ -74,6 +74,9 @@
     <ClCompile Include="SubState.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="StringDrawer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Visual.rc">

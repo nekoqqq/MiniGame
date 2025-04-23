@@ -160,6 +160,7 @@
     <ClCompile Include="MainState.cpp" />
     <ClCompile Include="RootState.cpp" />
     <ClCompile Include="Selection.cpp" />
+    <ClCompile Include="StringDrawer.cpp" />
     <ClCompile Include="SubState.cpp" />
     <ClCompile Include="ThemeState.cpp" />
     <ClCompile Include="winMain.cpp" />

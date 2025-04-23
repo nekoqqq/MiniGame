@@ -67,7 +67,6 @@ unsigned DDS::alpha_mix(unsigned fg_color, unsigned bg_color) const{
     unsigned g = bg_color_G + fg_color_A / 255.f * (fg_color_G - bg_color_G);
     unsigned b = bg_color_B + fg_color_A / 255.f * (fg_color_B - bg_color_B);
     return b | (g & 0x00ff00) | (r & 0xff0000);
-
 }
 void DDS::drawCell(int src_x,int src_y) const{ // 从src_x，src_y开始的位置绘制当前图片
     unsigned* p_vram = GameLib::Framework::instance().videoMemory();
@@ -93,7 +92,18 @@ void DDS::drawImage() const
 {
     drawCell(0, 0);
 }
-void DDS::render(int src_x, int src_y, int width, int height, int dst_x, int dst_y)const {
+void DDS::render(int src_x, int src_y, int width, int height, int screen_x, int screen_y,unsigned font_color)const {
     unsigned* p_vram = GameLib::Framework::instance().videoMemory();
     int window_width = GameLib::Framework::instance().width();
+    for(int i = 0;i<height;i++)
+        for (int j = 0; j < width; j++) {
+            int src_index = (screen_x + i) * window_width + (screen_y + j);
+            int dst_index = (src_x + i) * dWidth + (src_y + j);
+            int fg_color = dData[dst_index];
+            if (dData[dst_index] > 0xffff0000) // 原本的不是严格的黑色和白色画成的图片，这里做下近似处理
+                fg_color = 0;
+            else
+                fg_color = font_color | (0xff <<24); // 该颜色做不透明处理
+            p_vram[src_index] = alpha_mix(fg_color, p_vram[src_index]);
+        }
 }

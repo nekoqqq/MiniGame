@@ -19,16 +19,12 @@ struct DDS { // DirectX格式图片
     DDS(const char* file_name);
     ~DDS();
 
-    unsigned alpha_mix(unsigned fg_color, unsigned bg_color) const;
-
+    unsigned alpha_mix(unsigned, unsigned) const;
     DWORD* get_image_data()const;
     DWORD get_image_width()const;
     DWORD get_image_height()const;
     void drawCell(int,int)const;
     void drawImage()const;
-    void render(int src_x1,int src_y1,int src_x2,int src_y2, int dst_x,int dst_y)const; // 通用的绘图函数, [src_x1, src_y1] x [src_x2, src_y2]为原始的尺寸, dst_x，dst_y为目标的位置
-
-    void edit();
-
+    void render(int, int, int, int, int, int,unsigned)const; // 通用的绘图函数, [src_x1, src_y1] x [src_x2, src_y2]为原始的尺寸, dst_x，dst_y为目标的位置, color为需要绘制的颜色
     DWORD& operator[](int i);
 };
