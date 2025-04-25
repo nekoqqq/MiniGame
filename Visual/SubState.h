@@ -1,10 +1,11 @@
 #pragma once
-class DDS;
+#include <memory>
+struct DDS;
 class MainState;
-class LoadingState {
+class P1LoadingState {
 public:
-    LoadingState();
-    ~LoadingState();
+    P1LoadingState();
+    ~P1LoadingState();
     void update(MainState* parent);
 private:
     DDS* loading_img;
@@ -29,16 +30,33 @@ public:
 private:
     DDS* menu_img;
     int cur_selection;
-    const char* menu_str[5] = { "<MENU SELECT>","RETRY","BACK TO SELECT","BACK TO TITLE","CONTINUE" };
-    const int menu_size = sizeof(menu_str) / sizeof(const char*);
+    const char* menu_str[2] = { "CONTINUE","BACK TO THEME"};
 };
 
-class EndingState {
+class FailedState {
 public:
-    EndingState();
-    ~EndingState();
+    FailedState();
+    ~FailedState();
     void update(MainState* parent);
 private:
-    DDS* ending_img;
-    unsigned ending_start_time;
+    DDS* failed_img;
+    unsigned failed_start_time;
+};
+
+class SucceedState { // 单人模式过关状态
+public:
+    SucceedState();
+    void update(MainState* parent);
+private:
+    std::unique_ptr<DDS> succeed_img;
+    unsigned succeed_start_time;
+};
+
+class OutcomeState { // 双人模式胜负状态
+public:
+    OutcomeState();
+    void update(MainState* parent);
+private:
+    std::unique_ptr<DDS> outcome_img;
+    int selection;
 };

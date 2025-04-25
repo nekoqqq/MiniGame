@@ -155,6 +155,7 @@
     <ClInclude Include="GameObject.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="img\background.dds" />
     <Image Include="img\blank.dds" />
     <Image Include="img\boundary.dds" />
     <Image Include="img\box.dds" />

@@ -39,13 +39,16 @@
     <ClInclude Include="ThemeState.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Selection.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="SubState.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="StringDrawer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="GoodEndingState.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BadEndingState.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -68,13 +71,16 @@
     <ClCompile Include="ThemeState.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Selection.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="SubState.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="StringDrawer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="GoodEndingState.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BadEndingState.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

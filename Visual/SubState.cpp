@@ -9,23 +9,30 @@
 
 using GameLib::Framework;
 
-LoadingState::LoadingState()
+P1LoadingState::P1LoadingState()
 {
     loading_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\loading.dds");
     loading_start_time = Framework::instance().time();
 }
-LoadingState::~LoadingState()
+P1LoadingState::~P1LoadingState()
 {
     DYNAMIC_DEL(loading_img);
 }
-void LoadingState::update(MainState* parent) {
-    if (Framework::instance().time() - loading_start_time > 1000) {
+void P1LoadingState::update(MainState* parent) {
+    Framework f = Framework::instance();
+    if (f.time() - loading_start_time > 2000) {
         HSMGame* game_world = parent->getHSMGame();
         game_world->loadGame(parent->getStage());
         parent->setState(MainState::PLAY);
     }
+    else if (f.time() - loading_start_time > 1000) {
+        StringDrawer::instance().drawStringAt(1, 0, "READY...", 0xff0000);
+    }
+    else {
+        StringDrawer::instance().drawStringAt(1, 0, "GO!", 0xff0000);
+    }
     loading_img->drawImage(); 
-    StringDrawer::instance().drawStringAt(4, 4, "Loading...",0xff0000);
+    StringDrawer::instance().drawStringAt(0, 0, "<Loading>",0xff0000);
 }
 
 // 前处理部分
@@ -46,23 +53,33 @@ void PlayState::update(MainState* parent) {
     pre(parent);
     Framework framework = Framework::instance();
     HSMGame* game_world = parent->getHSMGame();
+    if (parent->getMode() == MainState::P1) {
+        if (framework.isKeyTriggered('z') || game_world->is_finished()) { // 临时加入过关的处理
+            GameLib::cout << "YOU WIN! Total steps(exculude invalid steps): " << game_world->steps_ << "." << GameLib::endl;
+            parent->setState(MainState::SUCCEED);
+        }
+        else if (framework.isKeyTriggered('f')) { // 临时加入失败的处理
+            parent->setTrial(parent->getTrial() + 1);
+            parent->setState(MainState::FAILED);
+        }
+    }
+    else if (parent->getMode() == MainState::P2) {
+        if (framework.isKeyTriggered('b')) { // 临时加入两个人的处理，任意一个失败
+            parent->setState(MainState::OUTCOME);
+        }
+    }
     if (framework.isKeyTriggered('m') || framework.isKeyTriggered('M')) {
         parent->setState(MainState::MENU);
     }
-    else {
-        game_world->update();
-        if (game_world->is_finished()) {
-            GameLib::cout << "YOU WIN! Total steps(exculude invalid steps): " << game_world->steps_ << "." << GameLib::endl;
-            parent->setState(MainState::ENDING);
-        }
-    }
+
+    game_world->update();
     game_world->draw();
     post(parent);
 }
 
 MenuState::MenuState():cur_selection(1)
 {
-    menu_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\menu.dds");
+    menu_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\background.dds");
 }
 MenuState::~MenuState()
 {
@@ -71,59 +88,110 @@ MenuState::~MenuState()
 void MenuState::update(MainState* parent) {
     // 这里修改了展示的顺序，直觉上来说应该先画图再响应键盘的输入，不然出现输入很快，直接把画面给省略了
     Framework f = Framework::instance(); // 为什么Framework &f = Framework::instance() 会失败？
-    if (f.isKeyTriggered('w')) {
-        cur_selection = (cur_selection + 2) % (menu_size-1) + 1;
-    }
-    else if (f.isKeyTriggered('s')) {
-        cur_selection = cur_selection % (menu_size-1) + 1;
+    if (f.isKeyTriggered('w') || f.isKeyTriggered('s')) {
+        cur_selection = cur_selection%2+1;
     }
     else if (f.isKeyTriggered(' ')) {
         switch (cur_selection)
         {
-        case 1: // 重置
-            parent->getHSMGame()->reset();
+        case 1: // 继续
             parent->setState(MainState::PLAY);
             break;
-        case 2: // 选关
-            parent->setState(MainState::SELECTION);
-            break;
-        case 3: // 回到主题
+        case 2: // 回到主题
             parent->setState(MainState::THEME);
             break;
-        case 4: // 继续
-            parent->setState(MainState::PLAY);
-            break;
-        default:
-            exit(0);
         }
     }
     menu_img->drawImage();
     std::ostringstream oss;
-    for (int i = 0; i < menu_size; i++) {
-        if (i == cur_selection) {
+    oss << "<MENU>" << std::endl;
+    oss.str("");
+    for (int i = 0; i < 2; i++) {
+        if (i+1 == cur_selection) {
             oss << ":>" << menu_str[i] << std::endl;
-            StringDrawer::instance().drawStringAt(i, 0, oss.str().c_str(), 0xff0000);
+            StringDrawer::instance().drawStringAt(i+1, 0, oss.str().c_str(), 0xff0000);
         }
         else { // 包含0和其他的输出
             oss << "  "<<menu_str[i] << std::endl;
-            StringDrawer::instance().drawStringAt(i, 0, oss.str().c_str(), 0x00ff00);
+            StringDrawer::instance().drawStringAt(i+1, 0, oss.str().c_str(), 0x00ff00);
         }
         oss.str("");
     }
 }
 
-EndingState::EndingState()
-{
-    ending_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\ending.dds");
-    ending_start_time = Framework::instance().time();
+OutcomeState::OutcomeState():outcome_img(std::make_unique<DDS>("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\background.dds")){
+    selection = 1;
 }
-EndingState::~EndingState()
-{
-    DYNAMIC_DEL(ending_img);
-}
-void EndingState::update(MainState* parent) {
-    if (Framework::instance().time() - ending_start_time > 2000) { // 显示2秒钟
-        parent->setState(MainState::THEME);
+void OutcomeState::update(MainState*parent) {
+    Framework f = Framework::instance();
+    if (f.isKeyTriggered('w') || f.isKeyTriggered('W') || f.isKeyTriggered('s') || f.isKeyTriggered('S')) {
+        selection = selection %2 +1;
     }
-    ending_img->drawImage();
+    else if (f.isKeyTriggered(' ')) {
+        if (selection == 1) {
+            parent->setState(MainState::P1_LOADING);
+        }
+        else if (selection == 2) {
+            parent->setState(MainState::THEME);
+        }
+        else {
+            exit(0);
+        }
+    }
+    outcome_img->drawImage();
+    const char* option[2] = {"CONTINUE","BACK TO THEME"};
+    StringDrawer::instance().drawStringAt(0, 0, "1P win!");
+    std::ostringstream oss;
+    for (int i = 0; i < 2; i++) {
+        if (i == selection-1) {
+            oss << ":>" << option[i]<<std::endl;
+            StringDrawer::instance().drawStringAt(i+1, 0, oss.str().c_str(),0xff0000);
+        }
+        else {
+            oss << "  " << option[i]<<std::endl;
+            StringDrawer::instance().drawStringAt(i+1, 0, oss.str().c_str(),0x00ff00);
+        } 
+        oss.str("");
+    }
+}
+
+SucceedState::SucceedState():succeed_img(std::make_unique<DDS>("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\background.dds"))
+{
+    succeed_start_time = Framework::instance().time();
+}
+void SucceedState::update(MainState* parent)
+{
+    if (Framework::instance().time() - succeed_start_time > 1000) { // 等待1s
+        if (parent->isFinishAllStage()) {
+            parent->setState(MainState::GOOD_ENDING);
+        }
+        else {
+            parent->setState(MainState::P1_LOADING);
+        }
+    }
+    succeed_img->drawImage();
+    StringDrawer::instance().drawStringAt(0, 0, "TASK CLEARED!");
+}
+
+FailedState::FailedState()
+{
+    failed_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\background.dds");
+    failed_start_time = Framework::instance().time();
+}
+FailedState::~FailedState()
+{
+    DYNAMIC_DEL(failed_img);
+}
+void FailedState::update(MainState* parent) {
+    Framework f = Framework::instance();
+    if (f.time() - failed_start_time > 1000) { // 显示1秒钟
+        if (parent->isFailed()) {
+            parent->setState(MainState::BAD_ENDING);
+        }
+        else {
+            parent->setState(MainState::P1_LOADING);
+        }
+    }
+    failed_img->drawImage();
+    StringDrawer::instance().drawStringAt(0, 0, "TASK FAILED!");
 }

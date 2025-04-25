@@ -1,7 +1,7 @@
 #pragma once
-#include "../Console/DDS.h"
 #include "GameLib/Framework.h"
 #include <memory>
+struct DDS;
 
 class StringDrawer {
 public:

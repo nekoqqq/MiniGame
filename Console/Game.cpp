@@ -147,6 +147,7 @@ void Game::init() {
     this->finished = false;   
 }
 void Game::loadGame(int stage) {
+    init();
     if (this->map_source == MapSource::PREDEFINED) {
         height_ = 5;
         width_ = 8;
@@ -205,7 +206,6 @@ void Game::loadGame(int stage) {
             for (int j = grid_obj[i].size(); j < width_; j++)
                 grid_obj[i].push_back(GameObject(GameObject::BOUNDARY));
         }
-
     }
 }
 void Game::setStage(int stage) {

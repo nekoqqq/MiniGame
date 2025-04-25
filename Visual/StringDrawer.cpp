@@ -1,4 +1,5 @@
 #include "StringDrawer.h"
+#include "../Console/DDS.h"
 
 // 单例模式的实现
 StringDrawer::StringDrawer(const char* file_name):font_img(std::make_unique<DDS>(file_name)){}
