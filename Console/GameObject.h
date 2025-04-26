@@ -37,6 +37,10 @@ public:
     GameObject& operator=(Type);
     GameObject& operator=(char);
 
+    virtual void drawAt(int, int)const;
+
+
+
     // 方便输出
     explicit operator char()const;  // 显示类型转换   
     friend std::ostream& operator<<(std::ostream& out, const GameObject&);

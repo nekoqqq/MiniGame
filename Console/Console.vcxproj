@@ -157,6 +157,7 @@
   <ItemGroup>
     <Image Include="img\background.dds" />
     <Image Include="img\blank.dds" />
+    <Image Include="img\bomber.dds" />
     <Image Include="img\boundary.dds" />
     <Image Include="img\box.dds" />
     <Image Include="img\box_ready.dds" />
@@ -171,6 +172,7 @@
     <Image Include="img\target.dds" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="stage\bomber_stage1.txt" />
     <Text Include="stage\map.txt" />
     <Text Include="stage\stage1.txt" />
     <Text Include="stage\stage2.txt" />

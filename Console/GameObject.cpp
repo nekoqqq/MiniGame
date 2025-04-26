@@ -74,3 +74,4 @@ GameObject::operator char()const {
 std::ostream& operator<<(std::ostream& out, const GameObject& go) {
     return out << (char)go.getType();
 }
+void GameObject::drawAt(int i, int j) const {}

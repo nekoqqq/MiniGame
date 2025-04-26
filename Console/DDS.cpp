@@ -107,3 +107,31 @@ void DDS::render(int src_x, int src_y, int width, int height, int screen_x, int 
             p_vram[src_index] = alpha_mix(fg_color, p_vram[src_index]);
         }
 }
+
+void DDS::drawFrom(int i, int j, int screen_i,int screen_j, int pixel_size) const
+{
+    unsigned* p_vram = GameLib::Framework::instance().videoMemory();
+    int window_width = GameLib::Framework::instance().width();
+    for (int x = 0; x < pixel_size; x++) 
+        for (int y = 0; y < pixel_size; y++) {
+            int src_index = (screen_i *pixel_size+x)* window_width + screen_j *pixel_size + y;
+            int dst_index = i * pixel_size * dWidth +x*dWidth +  j * pixel_size + y;
+            int fg_color = dData[dst_index];
+            p_vram[src_index] = alpha_mix(fg_color, p_vram[src_index]);
+        }
+}
+
+
+void DDS::drawAtScreen(int i, int j, int screen_x, int screen_y,int pixel_size) {
+    unsigned* p_vram = GameLib::Framework::instance().videoMemory();
+    int window_width = GameLib::Framework::instance().width();
+    for (int x = 0; x < pixel_size; x++)
+        for (int y = 0; y < pixel_size; y++) {
+            int src_index = (screen_x +  x) * window_width + screen_y + y;
+            int dst_index = i * pixel_size * dWidth + x * dWidth + j * pixel_size + y;
+            int fg_color = dData[dst_index];
+            p_vram[src_index] = alpha_mix(fg_color, p_vram[src_index]);
+        }
+
+
+}

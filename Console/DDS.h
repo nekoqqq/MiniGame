@@ -25,6 +25,10 @@ struct DDS { // DirectX格式图片
     DWORD get_image_height()const;
     void drawCell(int,int)const;
     void drawImage()const;
-    void render(int, int, int, int, int, int,unsigned)const; // 通用的绘图函数, [src_x1, src_y1] x [src_x2, src_y2]为原始的尺寸, dst_x，dst_y为目标的位置, color为需要绘制的颜色
+    void render(int, int, int, int, int, int,unsigned =0xff0000)const; // 通用的绘图函数, [src_x1, src_y1] x [src_x2, src_y2]为原始的尺寸, dst_x，dst_y为目标的位置, color为需要绘制的颜色
+    void drawFrom(int, int,int,int,int pixel_size = 16)const; // 绘制像素画的第i，j个单元格
+    void drawAtScreen(int i, int j, int screen_x, int screen_y,int pixel_size=16);
+
+
     DWORD& operator[](int i);
 };

@@ -4,21 +4,26 @@
 #include "RootState.h"
 #include "StringDrawer.h"
 #include <cstdlib>
+#include "../Console/DDS.h"
+#include "Bomber.h"
 
 namespace GameLib {
 	RootState &g_root_state = RootState::instance();
 	int gCounter = 0;
+	BomberGame bg = BomberGame();
 	// 框架循环
 	void Framework::update() {
 		// 结束处理
-		GameLib::cout << "第" << ++gCounter << "次更新" << endl;
-		g_root_state.update();
-		Framework framework = Framework::instance();
-		if (framework.isKeyTriggered('q') || framework.isKeyTriggered('Q'))
-			framework.requestEnd();
-		if (framework.isEndRequested()) {
-			GameLib::cout << "Goodbye!" << GameLib::endl;
-			exit(0); // 临时处理，防止按了Q之后再按其他的按键会造成指针访问错误
-		}
+		//GameLib::cout << "第" << ++gCounter << "次更新" << endl;
+		//g_root_state.update();
+		//Framework framework = Framework::instance();
+		//if (framework.isKeyTriggered('q') || framework.isKeyTriggered('Q'))
+		//	framework.requestEnd();
+		//if (framework.isEndRequested()) {
+		//	GameLib::cout << "Goodbye!" << GameLib::endl;
+		//	exit(0); // 临时处理，防止按了Q之后再按其他的按键会造成指针访问错误
+		//}
+		bg.update();
+		bg.draw();
 	}
 }

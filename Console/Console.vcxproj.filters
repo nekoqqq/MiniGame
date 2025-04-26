@@ -91,6 +91,9 @@
     <Image Include="img\background.dds">
       <Filter>资源文件\img</Filter>
     </Image>
+    <Image Include="img\bomber.dds">
+      <Filter>资源文件\img</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Text Include="stage\map.txt">
@@ -121,6 +124,9 @@
       <Filter>资源文件\stage</Filter>
     </Text>
     <Text Include="stage\stage9.txt">
+      <Filter>资源文件\stage</Filter>
+    </Text>
+    <Text Include="stage\bomber_stage1.txt">
       <Filter>资源文件\stage</Filter>
     </Text>
   </ItemGroup>
