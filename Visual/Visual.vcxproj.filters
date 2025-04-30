@@ -51,7 +51,10 @@
     <ClInclude Include="BadEndingState.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Bomber.h">
+    <ClInclude Include="BomberObject.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BomberGame.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -86,7 +89,10 @@
     <ClCompile Include="BadEndingState.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Bomber.cpp">
+    <ClCompile Include="BomberObject.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BomberGame.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
