@@ -2,14 +2,14 @@
 #include "VisualGame.h"
 #include "GameLib/Framework.h"
 #include "BomberObject.h"
+#include <vector>
 
 using GameLib::Framework;
+using std::vector;
 
 extern const int PIXEL_SIZE_;
-extern const int PIXEL_SIZE_ ;
 extern const int WIDTH_ ;
 extern const int HEIGHT_ ;
-extern const int BOMB_CNT;
 
 
 class BomberGame : public VisualGame {
@@ -19,17 +19,23 @@ public:
 		PLAYER2P,
 	};
 	BomberGame();
+	vector<BomberObject>& getDynamicObject();
 	static BomberGame& instance();
 	virtual void draw()override;
 	void update();
 	BomberObject& getGameObject(int i, int j);
+	vector<BomberObject>& getGameObjectList(BomberObject::Type type);
+	void setGameObject(int i, int j, BomberObject::Type type);
+	int getBomberPower()const;
+	static int bomb_cnt;
 
 private:
-	std::vector<std::vector<BomberObject>> bomber_object;
+	vector<vector<BomberObject>> static_object;
+	vector<BomberObject> dynamic_object;
 	BomberObject player_p1;
 	BomberObject player_p2;
 	Mode mode;
-
+	int bomb_power; //  爆炸威力
 
 	const int ENEMY_CNT = 4; // 敌人数量
 	const int SOFT_PCT = 20; // 可以破坏的比例

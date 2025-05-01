@@ -14,7 +14,6 @@ namespace GameLib {
 	void Framework::update() {
 		 //结束处理
 		GameLib::cout << "第" << ++gCounter << "次更新" << endl;
-		g_root_state.update();
 		Framework framework = Framework::instance();
 		if (framework.isKeyTriggered('q') || framework.isKeyTriggered('Q'))
 			framework.requestEnd();

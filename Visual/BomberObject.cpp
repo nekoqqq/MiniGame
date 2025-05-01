@@ -13,43 +13,23 @@
 using std::pair;
 using std::vector;
 
+extern const int BOMB_CNT;
+
+
 bool BomberObject::isDynamic() const {
-	bool res = false;
-	switch (type_)
-	{
-	case BomberObject::P1_PLAYER:
-	case BomberObject::P2_PLAYER:
-	case BomberObject::ENEMY:
-		res = true;
-		break;
-	case BomberObject::BOMB:
-		break;
-	case BomberObject::BOMB_RED:
-		break;
-	case BomberObject::BOM_BLUE:
-		break;
-	case BomberObject::EXPLOSION_H:
-		break;
-	case BomberObject::EXPLOSION_V:
-		break;
-	case BomberObject::BOM_CENTER:
-		break;
-	case BomberObject::SOFT_WALL:
-		break;
-	case BomberObject::IRON_WALL:
-		break;
-	case BomberObject::GROUND:
-		break;
-	}
-	return res;
+	Type type = getType();
+	if (type == P1_PLAYER || type == P2_PLAYER || type == ENEMY || type == BOMB)
+		return true;
+	return false;
 }
 
 BomberObject::BomberObject() {
-	object_img = std::make_unique<DDS>("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\bomber.dds");
+	object_img = std::make_shared<DDS>("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\bomber.dds");
 	type_ = GROUND;
-	is_destroyed_ = false;
+	power_ = 1;
+	expired_ = false;
 }
-BomberObject::BomberObject(int x) :is_destroyed_(false), bomb_cnt(BOMB_CNT), has_bomb(false), r_(PIXEL_SIZE_ / 2) {
+BomberObject::BomberObject(int x) : r_(PIXEL_SIZE_ / 2) {
 	this->type_ = static_cast<Type> (x);
 }
 BomberObject::BomberObject(int x_, int y_, int r_) {
@@ -57,8 +37,23 @@ BomberObject::BomberObject(int x_, int y_, int r_) {
 	this->y_ = y_;
 	this->r_ = r_;
 }
+BomberObject::BomberObject(int i, int j, Type type) {
+	x_ = i * PIXEL_SIZE_ + PIXEL_SIZE_ / 2;
+	y_ = j * PIXEL_SIZE_ + PIXEL_SIZE_ / 2;
+	r_ = PIXEL_SIZE_ / 2;
+	type_ = type;
+	if (type_ == P1_PLAYER || type_ == P2_PLAYER)
+		r_ -= 2;
+
+
+	object_img = std::make_shared<DDS>("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\bomber.dds");
+	power_ = 1;
+	expired_ = false;
+	direction = UNKNOWN;
+	put_time_ = 0;
+}
 bool BomberObject::isDestroyed() const {
-	return is_destroyed_;
+	return !expired_;
 }
 pair<int, int> BomberObject::softPos() const {
 	return { 8 / 4,8 % 4 };
@@ -72,13 +67,13 @@ void BomberObject::drawAtScreen() const {
 	pair<int, int> soft_pos = softPos();
 	pair<int, int> bomb_pos = bombPos();
 	if (getType() == BOMB_RED || getType() == BOM_BLUE) {
-		if (1||isDestroyed())
-			object_img->drawAtScreen(i, j, (int)(x_), (int)(y_));
+		if (1 || isDestroyed())
+			object_img->drawAtScreen(i, j, (int)(x_ - r_), (int)(y_ - r_));
 		else
-			object_img->drawAtScreen(soft_pos.first, soft_pos.second, (int)(x_-r_), (int)(y_-r_));
+			object_img->drawAtScreen(soft_pos.first, soft_pos.second, (int)(x_ - r_), (int)(y_ - r_));
 	}
 	else
-		object_img->drawAtScreen(i, j, (int)(x_-r_), (int)(y_-r_));
+		object_img->drawAtScreen(i, j, (int)(x_ - r_), (int)(y_ - r_));
 }
 void BomberObject::operator=(int x) {
 	this->type_ = static_cast<Type>(x);
@@ -90,32 +85,96 @@ bool BomberObject::validIndex(int i,int j) {
 	return 0 <= i && i < HEIGHT_ && 0 <= j && j < WIDTH_;
 }
 void BomberObject::move(int dx, int dy) {
-	GameLib::cout << x_ << " " << y_ << GameLib::endl;
-	int raw_i = (x_ - r_) / 16;
-	int raw_j = (y_ - r_) / 16;
 
+	if (type_ != P1_PLAYER && type_ != P2_PLAYER && type_ != ENEMY)
+		return;
+
+	int raw_i = getInnerPos().first;
+	int raw_j = getInnerPos().second;
+
+	double move_x = dx * PLAYER_SPEED;
+	double move_y = dy * PLAYER_SPEED;
 	if (getType() == ENEMY) { // 敌人随机移动
-		x_ += Framework::instance().getRandom() % 2 / SPEED_SCALE;
-		y_ += Framework::instance().getRandom() % 2 / SPEED_SCALE;
+		move_x = Framework::instance().getRandom() % 2 * ENEMY_SPEED;
+		move_y = Framework::instance().getRandom() % 2 * ENEMY_SPEED;
 	}
-	else {
-		x_ += dx / SPEED_SCALE;
-		y_ += dy / SPEED_SCALE;
-	}
-	x_ = min(max(0., x_), (HEIGHT_ - 1.) * PIXEL_SIZE_);
-	y_ = min(max(0., y_), (WIDTH_ - 1.) * PIXEL_SIZE_);
-
-
-
-	// TODO 现在检查的是周围9个的网格，可以优化到只检查4个网格
-	for (int i = raw_i -1; i < raw_i +2; i++)
-		for (int j = raw_j -1 ; j < raw_j + 2; j++) {
+	// TODO 这里用了总共18次循环，但是可以优化成只判断4个格子
+	// x方向
+	x_ += move_x;
+	bool is_x_hit = false;
+	for (int i = raw_i - 1; i < raw_i + 2; i ++) {
+		for (int j = raw_j - 1; j < raw_j + 2; j++) {
+			if (!validIndex(i, j))
+				continue;
 			BomberObject& t = BomberGame::instance().getGameObject(i, j);
-			if (t.getType() == IRON_WALL && isCollision(t)) {
-				x_ -= dx / SPEED_SCALE;
-				y_ -= dy / SPEED_SCALE;
+			if ((t.type_ == IRON_WALL || t.type_==BOMB) && isCollision(t)) {
+				is_x_hit = true;
 			}
 		}
+	}
+	for (auto d : BomberGame::instance().getDynamicObject()) {
+		if (d.getType() == BOMB && isCollision(d))
+			is_x_hit = true;
+	}
+	x_ -= move_x;
+
+
+	y_ += move_y;
+	bool is_y_hit = false;
+	// TODO 现在检查的是周围9个的网格，可以优化到只检查4个网格
+	for (int i = raw_i - 1; i < raw_i + 2; i++) {
+		for (int j = raw_j - 1; j < raw_j + 2; j ++) {
+			if (!validIndex(i, j))
+				continue;
+			BomberObject& t = BomberGame::instance().getGameObject(i, j);
+			if ((t.type_ == IRON_WALL || t.type_ == BOMB) && isCollision(t)) {
+				is_y_hit = true;
+			}
+
+		}
+	}
+	for (auto d : BomberGame::instance().getDynamicObject()) {
+		if (d.getType() == BOMB && isCollision(d))
+			is_y_hit = true;
+	}
+	y_ -= move_y;
+
+	if (is_x_hit && !is_y_hit) {
+		y_ += move_y;
+		direction = dy > 0 ? EAST : WEST;
+	}
+	else if (!is_x_hit && is_y_hit) {
+		x_ += move_x;
+		direction = dx > 0 ? SOUTH : NORTH;
+	}
+	else {
+		x_ += move_x;
+		y_ += move_y;
+		bool is_hit = false;
+		for (int i = raw_i - 1; i < raw_i + 2; i++) {
+			for (int j = raw_j - 1; j < raw_j + 2; j++) {
+				if (!validIndex(i, j))
+					continue;
+				BomberObject& t = BomberGame::instance().getGameObject(i, j);
+				if ((t.type_ == IRON_WALL || t.type_ == BOMB) && isCollision(t)) {
+					is_hit = true;
+				}
+			}
+		}
+		for (auto d : BomberGame::instance().getDynamicObject()) {
+			if (d.getType() == BOMB && isCollision(d))
+				is_hit = true;
+		}
+		x_ -= move_x;
+		y_ -= move_y;
+		
+		if (!is_hit) {
+			x_ += move_x;
+			y_ += move_y;
+			direction = dy > 0 ? EAST : WEST;
+		}
+	}
+
 }
 bool BomberObject::isCollision(BomberObject& o) {
 	double a_l = x_ - r_;
@@ -136,6 +195,8 @@ void BomberObject::setCoordinate(double x, double y) {
 	x_ = x;
 	y_ = y;
 	r_ = PIXEL_SIZE_ / 2;
+	if (getType() == P1_PLAYER || getType() == P2_PLAYER)
+		r_ -= 2;
 
 }
 BomberObject::Type BomberObject::getType()const {
@@ -144,15 +205,97 @@ BomberObject::Type BomberObject::getType()const {
 void BomberObject::setType(Type type) {
 	type_ = type;
 }
+
+void BomberObject::setPutTime(unsigned t) {
+	put_time_ = t;
+}
+
 void BomberObject::drawAt(int screen_i,int screen_j)const {
     int i = getType() / 4;
     int j = getType() % 4;
 	object_img->drawFrom(i, j, screen_i, screen_j);
+}
+BomberObject* BomberObject::createBomb() {
+	int i = getInnerPos().first;
+	int j = getInnerPos().second;
+
+	int raw_i = i;
+	int raw_j = j;
+
+	switch (direction)
+	{
+	case BomberObject::NORTH:
+		i -= 1;
+		break;
+	case BomberObject::EAST:
+		j += 1;
+		break;
+	case BomberObject::SOUTH:
+		i += 1;
+		break;
+	case BomberObject::WEST:
+		j -= 1;
+		break;
+	}
+
+	BomberObject* new_bomb = nullptr;
+	BomberObject& bo = BomberGame::instance().getGameObject(i, j);
+	if (bo.type_ == GROUND) {
+		new_bomb= new BomberObject(i,j,BOMB);
+		new_bomb->setPutTime(Framework::instance().time());
+		x_ = raw_i * PIXEL_SIZE_ + r_;
+		y_ = raw_j * PIXEL_SIZE_ + r_;
+	}
+	return new_bomb;
+}
+pair<int, int> BomberObject::getInnerPos() const
+{
+	int i = x_ / PIXEL_SIZE_;
+	int j = y_ / PIXEL_SIZE_;
+	return pair<int, int>(i,j);
+}
+bool BomberObject::destroyAble() const {
+	if (type_ == P1_PLAYER || type_ == P2_PLAYER || type_ == SOFT_WALL || type_ == ENEMY)
+		return true;
+	return false;
+}
+bool BomberObject::shouldExplode() const {
+	return Framework::instance().time() - put_time_ > 3000;
+}
+
+void BomberObject::explode() {
+	expired_ = true;
+	pair<int, int > inner_pos = getInnerPos();
+	int power = BomberGame::instance().getBomberPower();
+
+	auto should_stop = [&](int i,int j)->bool {
+		if (!validIndex(i, j))
+			return true;
+		if (BomberGame::instance().getGameObject(i, j).getType() == IRON_WALL)
+			return true;
+		for (auto& d : BomberGame::instance().getDynamicObject()) {
+			if (d.getInnerPos().first == i && d.getInnerPos().second == j && d.destroyAble()) {
+				d.kill();
+			}
+		}
+		BomberObject& t = BomberGame::instance().getGameObject(i, j);
+		if (t.destroyAble())
+			t.kill();
+		return false;
+		};
+	auto explode_handler = [&](int dx,int dy) {
+		for(int delta = 0;delta<=power;delta++)
+			if (should_stop(inner_pos.first + dx*delta, inner_pos.second+dy*delta))
+				break;
+		};
+	explode_handler(1, 0);
+	explode_handler(0, 1);
+	explode_handler(-1, 0);
+	explode_handler(0, -1);
+	BomberGame::bomb_cnt++;
 }
 // 在屏幕的i、j位置绘制物体
 BomberObject& BomberObject::operator=(char c) {
 	this->type_ = static_cast<Type> (c);
 	return *this;
 }
-
-
