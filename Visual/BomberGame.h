@@ -7,9 +7,9 @@
 using GameLib::Framework;
 using std::vector;
 
-extern const int PIXEL_SIZE_;
-extern const int WIDTH_ ;
-extern const int HEIGHT_ ;
+extern const int PIXCEL_SIZE;
+extern const int GRID_WIDHT ;
+extern const int GRID_HEIGHT ;
 
 
 class BomberGame : public VisualGame {

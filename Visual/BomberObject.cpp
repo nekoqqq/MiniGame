@@ -16,20 +16,15 @@ using std::vector;
 extern const int BOMB_CNT;
 
 
-bool BomberObject::isDynamic() const {
-	Type type = getType();
-	if (type == P1_PLAYER || type == P2_PLAYER || type == ENEMY || type == BOMB)
-		return true;
-	return false;
-}
+
 
 BomberObject::BomberObject() {
-	object_img = std::make_shared<DDS>("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\bomber.dds");
+	obj_img_ = std::make_shared<DDS>("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\bomber.dds");
 	type_ = GROUND;
 	power_ = 1;
 	expired_ = false;
 }
-BomberObject::BomberObject(int x) : r_(PIXEL_SIZE_ / 2) {
+BomberObject::BomberObject(int x) : r_(PIXCEL_SIZE / 2) {
 	this->type_ = static_cast<Type> (x);
 }
 BomberObject::BomberObject(int x_, int y_, int r_) {
@@ -38,15 +33,15 @@ BomberObject::BomberObject(int x_, int y_, int r_) {
 	this->r_ = r_;
 }
 BomberObject::BomberObject(int i, int j, Type type) {
-	x_ = i * PIXEL_SIZE_ + PIXEL_SIZE_ / 2;
-	y_ = j * PIXEL_SIZE_ + PIXEL_SIZE_ / 2;
-	r_ = PIXEL_SIZE_ / 2;
+	x_ = i * PIXCEL_SIZE + PIXCEL_SIZE / 2;
+	y_ = j * PIXCEL_SIZE + PIXCEL_SIZE / 2;
+	r_ = PIXCEL_SIZE / 2;
 	type_ = type;
 	if (type_ == P1_PLAYER || type_ == P2_PLAYER)
 		r_ -= 2;
 
 
-	object_img = std::make_shared<DDS>("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\bomber.dds");
+	obj_img_ = std::make_shared<DDS>("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\bomber.dds");
 	power_ = 1;
 	expired_ = false;
 	direction = UNKNOWN;
@@ -68,24 +63,23 @@ void BomberObject::drawAtScreen() const {
 	pair<int, int> bomb_pos = bombPos();
 	if (getType() == BOMB_RED || getType() == BOM_BLUE) {
 		if (1 || isDestroyed())
-			object_img->drawAtScreen(i, j, (int)(x_ - r_), (int)(y_ - r_));
+			obj_img_->drawAtScreen(i, j, (int)(x_ - r_), (int)(y_ - r_));
 		else
-			object_img->drawAtScreen(soft_pos.first, soft_pos.second, (int)(x_ - r_), (int)(y_ - r_));
+			obj_img_->drawAtScreen(soft_pos.first, soft_pos.second, (int)(x_ - r_), (int)(y_ - r_));
 	}
 	else
-		object_img->drawAtScreen(i, j, (int)(x_ - r_), (int)(y_ - r_));
+		obj_img_->drawAtScreen(i, j, (int)(x_ - r_), (int)(y_ - r_));
 }
 void BomberObject::operator=(int x) {
 	this->type_ = static_cast<Type>(x);
 }
 bool BomberObject::validPos() {
-	return 0 <= (x_-r_) && (x_ - r_) < HEIGHT_ * PIXEL_SIZE_ && 0 <= (y_ - r_) && (y_ - r_) < WIDTH_ * PIXEL_SIZE_;
+	return 0 <= (x_-r_) && (x_ - r_) < GRID_HEIGHT * PIXCEL_SIZE && 0 <= (y_ - r_) && (y_ - r_) < GRID_WIDHT * PIXCEL_SIZE;
 }
 bool BomberObject::validIndex(int i,int j) {
-	return 0 <= i && i < HEIGHT_ && 0 <= j && j < WIDTH_;
+	return 0 <= i && i < GRID_HEIGHT && 0 <= j && j < GRID_WIDHT;
 }
 void BomberObject::move(int dx, int dy) {
-
 	if (type_ != P1_PLAYER && type_ != P2_PLAYER && type_ != ENEMY)
 		return;
 
@@ -194,7 +188,7 @@ bool BomberObject::isCollision(BomberObject& o) {
 void BomberObject::setCoordinate(double x, double y) {
 	x_ = x;
 	y_ = y;
-	r_ = PIXEL_SIZE_ / 2;
+	r_ = PIXCEL_SIZE / 2;
 	if (getType() == P1_PLAYER || getType() == P2_PLAYER)
 		r_ -= 2;
 
@@ -213,7 +207,7 @@ void BomberObject::setPutTime(unsigned t) {
 void BomberObject::drawAt(int screen_i,int screen_j)const {
     int i = getType() / 4;
     int j = getType() % 4;
-	object_img->drawFrom(i, j, screen_i, screen_j);
+	obj_img_->drawFrom(i, j, screen_i, screen_j);
 }
 BomberObject* BomberObject::createBomb() {
 	int i = getInnerPos().first;
@@ -243,25 +237,38 @@ BomberObject* BomberObject::createBomb() {
 	if (bo.type_ == GROUND) {
 		new_bomb= new BomberObject(i,j,BOMB);
 		new_bomb->setPutTime(Framework::instance().time());
-		x_ = raw_i * PIXEL_SIZE_ + r_;
-		y_ = raw_j * PIXEL_SIZE_ + r_;
+		x_ = raw_i * PIXCEL_SIZE + r_;
+		y_ = raw_j * PIXCEL_SIZE + r_;
 	}
 	return new_bomb;
 }
 pair<int, int> BomberObject::getInnerPos() const
 {
-	int i = x_ / PIXEL_SIZE_;
-	int j = y_ / PIXEL_SIZE_;
+	int i = x_ / PIXCEL_SIZE;
+	int j = y_ / PIXCEL_SIZE;
 	return pair<int, int>(i,j);
 }
-bool BomberObject::destroyAble() const {
-	if (type_ == P1_PLAYER || type_ == P2_PLAYER || type_ == SOFT_WALL || type_ == ENEMY)
+bool BomberObject::destroyable() const {
+	if (type_ == P1_PLAYER || type_ == P2_PLAYER || type_ == SOFT_WALL || type_==BOMB|| type_ == ENEMY)
+		return true;
+	return false;
+}
+bool BomberObject::playerable() const
+{
+	if(type_ == P1_PLAYER || type_ == P2_PLAYER)
 		return true;
 	return false;
 }
 bool BomberObject::shouldExplode() const {
-	return Framework::instance().time() - put_time_ > 3000;
+	return type_ == BOMB && Framework::instance().time() - put_time_ > 3000;
 }
+
+bool BomberObject::movable() const {
+	if (type_ == P1_PLAYER || type_ == P2_PLAYER || type_ == ENEMY)
+		return true;
+	return false;
+}
+
 
 void BomberObject::explode() {
 	expired_ = true;
@@ -274,14 +281,16 @@ void BomberObject::explode() {
 		if (BomberGame::instance().getGameObject(i, j).getType() == IRON_WALL)
 			return true;
 		for (auto& d : BomberGame::instance().getDynamicObject()) {
-			if (d.getInnerPos().first == i && d.getInnerPos().second == j && d.destroyAble()) {
+			if (d.getInnerPos().first == i && d.getInnerPos().second == j && d.destroyable()&&d.isAlive()) {
+				if (d.getType() == BOMB)
+					d.explode();
 				d.kill();
 			}
 		}
 		BomberObject& t = BomberGame::instance().getGameObject(i, j);
-		if (t.destroyAble())
+		if (t.destroyable())
 			t.kill();
-		return false;
+			return false;
 		};
 	auto explode_handler = [&](int dx,int dy) {
 		for(int delta = 0;delta<=power;delta++)

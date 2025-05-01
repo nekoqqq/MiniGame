@@ -4,6 +4,7 @@
 #include <utility>
 using std::vector;
 using std::pair;
+using std::remove_if;
 
 int BomberGame::bomb_cnt = 3;
 BomberGame& BomberGame::instance() {
@@ -27,31 +28,34 @@ void BomberGame::update() {
 		dy += 1;
 	}
 
-	// 动的物体移动 
-	for (int i = 0; i < dynamic_object.size(); i++) {
-		BomberObject& bo = dynamic_object[i];
-		bo.move(dx, dy);
-		if (bo.getType() == PLAYER1P && f.isKeyTriggered(' ') && bomb_cnt>0) {
-			BomberObject* new_bomb = bo.createBomb();
+	// 动物移动 
+	for(auto &o:dynamic_object)
+		if (o.movable())
+			o.move(dx, dy);
+
+
+	// 放置炸弹
+	for(auto &o: dynamic_object)
+		if (o.getType()==PLAYER1P && f.isKeyTriggered(' ') && bomb_cnt> 0) {
+			BomberObject* new_bomb = o.createBomb();
 			if (new_bomb) {
 				bomb_cnt--;
 				dynamic_object.push_back(*new_bomb);
 			}
 		}
-	}
+		else if (o.getType() == PLAYER2P && f.isKeyTriggered('x') && bomb_cnt > 0) {
 
-
-	for (auto &b : dynamic_object) {
-		if (b.getType() == BomberObject::BOMB && b.shouldExplode()) {
-			b.explode();
 		}
-	}
 
-	vector<BomberObject> new_dyanmic_object;
-	for (int i = 0; i < dynamic_object.size(); i++)
-		if (dynamic_object[i].isAlive())
-			new_dyanmic_object.push_back(dynamic_object[i]);
-	dynamic_object = std::move(new_dyanmic_object);
+
+	// 爆炸处理
+	for (auto &o : dynamic_object) 
+		if (o.shouldExplode()) {
+			o.explode();
+		}
+
+	// 清除掉无效的物体
+	dynamic_object.erase(remove_if(dynamic_object.begin(), dynamic_object.end(), [](const auto& o) {return !o.isAlive(); }),dynamic_object.end());
 }
 BomberObject& BomberGame::getGameObject(int i, int j)
 {
@@ -77,18 +81,18 @@ int BomberGame::getBomberPower() const
 }
 BomberGame::BomberGame() :VisualGame(0, true) {
 	mode = PLAYER2P;
-	static_object.resize(HEIGHT_);
-	for (int i = 0; i < HEIGHT_; i++)
-		static_object[i].resize(WIDTH_);
+	static_object.resize(GRID_HEIGHT);
+	for (int i = 0; i < GRID_HEIGHT; i++)
+		static_object[i].resize(GRID_WIDHT);
 
-	pair<int, int> p1_pos{ HEIGHT_ - 2,1 };
-	pair<int, int > p2_pos{ HEIGHT_ - 2,WIDTH_ - 2 };
+	pair<int, int> p1_pos{ GRID_HEIGHT - 2,1 };
+	pair<int, int > p2_pos{ GRID_HEIGHT - 2,GRID_WIDHT - 2 };
 	vector<pair<int, int>> reserved_pos{ {13, 2}, { 12,1 } };
 
 	// 墙壁和地面初始化
 
-	for (int i = 0; i < HEIGHT_; i++)
-		for (int j = 0; j < WIDTH_; j++) {
+	for (int i = 0; i < GRID_HEIGHT; i++)
+		for (int j = 0; j < GRID_WIDHT; j++) {
 			if (i == p1_pos.first && j == p1_pos.second) {
 				dynamic_object.push_back({ i,j,BomberObject::P1_PLAYER });
 			}
@@ -99,7 +103,7 @@ BomberGame::BomberGame() :VisualGame(0, true) {
 				// 保留可以动的位置
 				if (pair<int, int>(i, j) == reserved_pos[0] || pair<int, int>(i, j) == reserved_pos[1])
 					static_object[i][j] = BomberObject::GROUND;
-				else if (i == 0 || i == HEIGHT_ - 1 || j == 0 || j == WIDTH_ - 1) {
+				else if (i == 0 || i == GRID_HEIGHT - 1 || j == 0 || j == GRID_WIDHT - 1) {
 					static_object[i][j] = BomberObject::IRON_WALL;
 				}
 				else if (i % 2 == 0 && j % 2 == 0) {
@@ -110,13 +114,13 @@ BomberGame::BomberGame() :VisualGame(0, true) {
 						dynamic_object.push_back({ i,j,BomberObject::SOFT_WALL });
 				}
 			}
-			static_object[i][j].setCoordinate(i * PIXEL_SIZE_ + PIXEL_SIZE_ / 2, j * PIXEL_SIZE_ + PIXEL_SIZE_ / 2);
+			static_object[i][j].setCoordinate(i * PIXCEL_SIZE + PIXCEL_SIZE / 2, j * PIXCEL_SIZE + PIXCEL_SIZE / 2);
 		}
 
 	auto random_generate = [&](int cnt, BomberObject::Type type) {
 		while (cnt > 0) {
-			int i = rand() % HEIGHT_;
-			int j = rand() % WIDTH_;
+			int i = rand() % GRID_HEIGHT;
+			int j = rand() % GRID_WIDHT;
 			if (static_object[i][j].getType() == BomberObject::GROUND) {
 				dynamic_object.push_back({ i,j,type });
 				cnt--;
@@ -141,11 +145,15 @@ void BomberGame::draw() {
 		for (int j = 0; j < static_object[i].size(); j++) {
 			static_object[i][j].drawAtScreen();
 		}
+
+
 	// 前景绘制
 	for(int i =0;i<dynamic_object.size();i++)
 		dynamic_object[i].drawAtScreen();
-
-
-
+	
+	
+	
 	// 爆炸绘制
+
+
 }

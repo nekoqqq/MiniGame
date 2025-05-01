@@ -9,16 +9,21 @@
 struct DDS;
 class BomberGame;
 class Bomb;
+
 using GameLib::Framework;
 using std::pair;
 using std::max;
-using std::min;
+using std::min; 
 using std::shared_ptr;
 using std::vector;
 
-const int PIXEL_SIZE_ = 16;
-const int WIDTH_ = 320 / PIXEL_SIZE_;
-const int HEIGHT_ = 240 / PIXEL_SIZE_;
+const int PIXCEL_SIZE = 16;
+const int GRID_WIDHT = 320 / PIXCEL_SIZE;
+const int GRID_HEIGHT = 240 / PIXCEL_SIZE;
+
+const int SIZE_PER_IMG = 4;
+const double PLAYER_SPEED = 1.; // 玩家移动速度，每帧移动像素*SPEED_SCALE
+const double ENEMY_SPEED = 1.; //  敌人移动速度，每帧移动x个像素
 
 // 游戏中出现的所有物体
 class BomberObject {
@@ -44,7 +49,6 @@ public:
 		SOUTH,
 		WEST
 	};
-	bool isDynamic()const;
 	BomberObject();
 	BomberObject(int x);
 	BomberObject(int x_, int y_, int r_);
@@ -80,25 +84,29 @@ public:
 		return !expired_;
 	}
 
-	bool destroyAble()const;
 
+	bool movable()const; // 可以移动的物体
+	bool destroyable()const; // 可以被炸弹毁灭的物体
+	bool playerable()const; // 是否是玩家角色
+
+	// 爆炸处理
 	bool shouldExplode()const;
 	void explode();
 
 
 private:
-	Type type_;
-	shared_ptr<DDS> object_img;
-	const int SIZE_PER_IMG = 4;
-	const double PLAYER_SPEED = 1; // 速度缩放，每帧移动像素/SPEED_SCALE
-	const double ENEMY_SPEED = 1; // 每帧移动x个像素
-	
+	Type type_; // 类型
+	shared_ptr<DDS> obj_img_; // 存储的图片
+
 	// 中心点坐标
 	double x_;
 	double y_;
 	double r_;
 
 	Direction direction; // 人物朝向
+
+	int bomb_cnt; // 炸弹数量
+	Type bomb_owner; // 炸弹的设置人
 
 	unsigned put_time_; // 放置时间
 	unsigned explode_start_time_; // 爆炸开始时间
