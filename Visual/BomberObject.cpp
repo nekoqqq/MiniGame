@@ -7,16 +7,12 @@
 #include <string>
 #include <iostream>
 #include <cmath>
+#include <ctime>
 #include "GameLib/Framework.h"
 #include "BomberGame.h"
 
 using std::pair;
 using std::vector;
-
-extern const int BOMB_CNT;
-
-
-
 
 BomberObject::BomberObject() {
 	obj_img_ = std::make_shared<DDS>("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\bomber.dds");
@@ -248,6 +244,9 @@ pair<int, int> BomberObject::getInnerPos() const
 	int j = y_ / PIXCEL_SIZE;
 	return pair<int, int>(i,j);
 }
+void BomberObject::kill() {
+	expired_ = true;
+}
 bool BomberObject::destroyable() const {
 	if (type_ == P1_PLAYER || type_ == P2_PLAYER || type_ == SOFT_WALL || type_==BOMB|| type_ == ENEMY)
 		return true;
@@ -259,8 +258,20 @@ bool BomberObject::playerable() const
 		return true;
 	return false;
 }
+bool BomberObject::shockwavable() const
+{
+	return type_ == EXPLOSION_H || type_ == EXPLOSION_V;
+}
+bool BomberObject::explodable() const
+{
+	return type_ == BOMB;
+}
 bool BomberObject::shouldExplode() const {
 	return type_ == BOMB && Framework::instance().time() - put_time_ > 3000;
+}
+
+bool BomberObject::isAlive() const {
+	return !expired_;
 }
 
 bool BomberObject::movable() const {
@@ -275,7 +286,13 @@ void BomberObject::explode() {
 	pair<int, int > inner_pos = getInnerPos();
 	int power = BomberGame::instance().getBomberPower();
 
-	auto should_stop = [&](int i,int j)->bool {
+	// 设置爆炸中心
+	BomberObject* bo = new BomberObject(inner_pos.first, inner_pos.second, BOM_CENTER);
+	bo->setExplosionTime(Framework::instance().time());
+	BomberGame::instance().getDynamicObject().push_back(*bo);
+
+
+	auto should_stop = [&](int i,int j, EXPLOSION_DIRECTION ex_direction)->bool {
 		if (!validIndex(i, j))
 			return true;
 		if (BomberGame::instance().getGameObject(i, j).getType() == IRON_WALL)
@@ -290,18 +307,44 @@ void BomberObject::explode() {
 		BomberObject& t = BomberGame::instance().getGameObject(i, j);
 		if (t.destroyable())
 			t.kill();
-			return false;
+
+		// 设置炸弹冲击波
+		Type type = EXPLOSION_V;
+		if (ex_direction == HORIZON)
+			type = EXPLOSION_H;
+		BomberObject* bo = new BomberObject(i, j, type);
+		bo->setExplosionTime(Framework::instance().time());
+		BomberGame::instance().getDynamicObject().push_back(*bo);
+		
+		return false;
 		};
-	auto explode_handler = [&](int dx,int dy) {
-		for(int delta = 0;delta<=power;delta++)
-			if (should_stop(inner_pos.first + dx*delta, inner_pos.second+dy*delta))
+	auto explode_handler = [&](int dx,int dy, EXPLOSION_DIRECTION ex_direction) {
+		for(int delta = 1;delta<=power;delta++)
+			if (should_stop(inner_pos.first + dx*delta, inner_pos.second+dy*delta,ex_direction))
 				break;
 		};
-	explode_handler(1, 0);
-	explode_handler(0, 1);
-	explode_handler(-1, 0);
-	explode_handler(0, -1);
+	explode_handler(1, 0, VERTICAL);
+	explode_handler(-1, 0, VERTICAL);
+	explode_handler(0, 1, HORIZON);
+	explode_handler(0, -1, HORIZON);
 	BomberGame::bomb_cnt++;
+}
+void BomberObject::setExplosionTime(unsigned t)
+{
+	explode_start_time_ = t;
+}
+bool BomberObject::shouldShockwave() const
+{
+	
+	if (Framework::instance().time() - explode_start_time_ < EXPLODE_TIME)
+		return true;
+	return false;
+}
+bool BomberObject::shouldBombCenter() const
+{
+	if (Framework::instance().time() - explode_start_time_ < BOMBER_CENTER_DURATION)
+		return true;
+	return false;
 }
 // 在屏幕的i、j位置绘制物体
 BomberObject& BomberObject::operator=(char c) {

@@ -29,14 +29,14 @@ void BomberGame::update() {
 	}
 
 	// 动物移动 
-	for(auto &o:dynamic_object)
+	for (auto& o : dynamic_object)
 		if (o.movable())
 			o.move(dx, dy);
 
 
 	// 放置炸弹
-	for(auto &o: dynamic_object)
-		if (o.getType()==PLAYER1P && f.isKeyTriggered(' ') && bomb_cnt> 0) {
+	for (auto& o : dynamic_object)
+		if (o.getType() == PLAYER1P && f.isKeyTriggered(' ') && bomb_cnt > 0) {
 			BomberObject* new_bomb = o.createBomb();
 			if (new_bomb) {
 				bomb_cnt--;
@@ -47,12 +47,24 @@ void BomberGame::update() {
 
 		}
 
-
 	// 爆炸处理
-	for (auto &o : dynamic_object) 
-		if (o.shouldExplode()) {
+	for (auto& o : dynamic_object){
+		if (o.explodable() && o.shouldExplode()) 
 			o.explode();
-		}
+	}
+
+	// 爆炸中心处理
+	for (auto& o : dynamic_object) {
+		if (o.getType() == BomberObject::BOM_CENTER && !o.shouldBombCenter())
+			o.kill();
+	}
+
+
+	// 冲击波处理
+	for (auto& o : dynamic_object) {
+		if (o.shockwavable() && !o.shouldShockwave())
+			o.kill();
+	}
 
 	// 清除掉无效的物体
 	dynamic_object.erase(remove_if(dynamic_object.begin(), dynamic_object.end(), [](const auto& o) {return !o.isAlive(); }),dynamic_object.end());
@@ -148,12 +160,18 @@ void BomberGame::draw() {
 
 
 	// 前景绘制
-	for(int i =0;i<dynamic_object.size();i++)
-		dynamic_object[i].drawAtScreen();
-	
-	
-	
+	for (auto& o : dynamic_object)
+		if (!o.shockwavable())
+			o.drawAtScreen();
+
+	// 爆炸中心绘制
+	for (auto& o : dynamic_object)
+		if (o.getType()==BomberObject::BOM_CENTER)
+			o.drawAtScreen();
+
+
 	// 爆炸绘制
-
-
+	for (auto& o : dynamic_object)
+		if (o.shockwavable())
+			o.drawAtScreen();
 }
