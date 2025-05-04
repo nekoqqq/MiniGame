@@ -5,9 +5,12 @@
 #include "HSMGame.h"
 #include "GoodEndingState.h"
 #include "BadEndingState.h"
+#include "BomberGame.h"
 
 MainState::MainState(int stage) : stage_(stage) {
     hsm_game_ = new HSMGame(stage_,true);
+    bomber_game_ = &BomberGame::instance();
+    bomber_game_->setStage(stage);
     p1_loading_state_ = new P1LoadingState();
     play_state_ = nullptr;
     menu_state_ = nullptr;
@@ -40,6 +43,10 @@ void MainState::setState(State state) {
 HSMGame* MainState::getHSMGame() const {
     return hsm_game_;
 }
+BomberGame* MainState::getBomberGame() const
+{
+    return bomber_game_;
+}
 void MainState::setStage(int stage)
 {
     stage_ = stage;
@@ -61,7 +68,10 @@ int MainState::getTrial() const
 }
 bool MainState::isFailed() const
 {
-    return trial_ == MAX_TRIAL;
+    for (auto& d : bomber_game_->getDynamicObject())
+        if (d.getType() == BomberObject::P1_PLAYER)
+            return false;
+    return true;
 }
 void MainState::update(RootState* parent) {
     switch (state_) {

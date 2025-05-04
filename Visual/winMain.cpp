@@ -9,7 +9,6 @@
 namespace GameLib {
 	RootState& g_root_state = RootState::instance();
 	int gCounter = 0;
-	BomberGame &bg = BomberGame::instance();
 	// 框架循环
 	void Framework::update() {
 		 //结束处理
@@ -21,7 +20,6 @@ namespace GameLib {
 			GameLib::cout << "Goodbye!" << GameLib::endl;
 			exit(0); // 临时处理，防止按了Q之后再按其他的按键会造成指针访问错误
 		}
-		bg.update();
-		bg.draw();		
+		g_root_state.update();	
 	}
 } 

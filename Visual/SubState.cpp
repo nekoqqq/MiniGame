@@ -6,6 +6,7 @@
 #include "RootState.h"
 #include "StringDrawer.h"
 #include <sstream>
+#include "BomberGame.h"
 
 using GameLib::Framework;
 
@@ -21,7 +22,7 @@ P1LoadingState::~P1LoadingState()
 void P1LoadingState::update(MainState* parent) {
     Framework f = Framework::instance();
     if (f.time() - loading_start_time > 2000) {
-        HSMGame* game_world = parent->getHSMGame();
+        BomberGame* game_world = parent->getBomberGame();
         game_world->loadGame(parent->getStage());
         parent->setState(MainState::PLAY);
     }
@@ -52,13 +53,13 @@ void PlayState::post(MainState* parent) {
 void PlayState::update(MainState* parent) {
     pre(parent);
     Framework framework = Framework::instance();
-    HSMGame* game_world = parent->getHSMGame();
+    BomberGame* game_world = parent->getBomberGame();
     if (parent->getMode() == MainState::P1) {
         if (framework.isKeyTriggered('z') || game_world->is_finished()) { // 临时加入过关的处理
             GameLib::cout << "YOU WIN! Total steps(exculude invalid steps): " << game_world->steps_ << "." << GameLib::endl;
             parent->setState(MainState::SUCCEED);
         }
-        else if (framework.isKeyTriggered('f')) { // 临时加入失败的处理
+        else if (framework.isKeyTriggered('f') || parent->isFailed()) { // 临时加入失败的处理
             parent->setTrial(parent->getTrial() + 1);
             parent->setState(MainState::FAILED);
         }

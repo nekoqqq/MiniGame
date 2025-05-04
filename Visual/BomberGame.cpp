@@ -91,8 +91,10 @@ int BomberGame::getBomberPower() const
 {
 	return bomb_power;
 }
-BomberGame::BomberGame() :VisualGame(0, true) {
-	mode = PLAYER2P;
+void BomberGame::loadGame(int stage)
+{
+	BomberInit();
+	mode = PLAYER1P;
 	static_object.resize(GRID_HEIGHT);
 	for (int i = 0; i < GRID_HEIGHT; i++)
 		static_object[i].resize(GRID_WIDHT);
@@ -146,9 +148,23 @@ BomberGame::BomberGame() :VisualGame(0, true) {
 	bomb_cnt = 3;
 	bomb_power = 2;
 }
+void BomberGame::BomberInit()
+{
+	static_object.clear();
+	dynamic_object.clear();
+
+}
+bool BomberGame::is_finished() const
+{
+	for (auto& d : dynamic_object)
+		if (d.getType() == BomberObject::ENEMY)
+			return false;
+	return true;
+}
+BomberGame::BomberGame() :VisualGame(0, true) {
+}
 vector<BomberObject>& BomberGame::getDynamicObject() {
 	return dynamic_object;
-
 }
 
 void BomberGame::draw() {

@@ -28,6 +28,12 @@ public:
 	void setGameObject(int i, int j, BomberObject::Type type);
 	int getBomberPower()const;
 	static int bomb_cnt;
+	virtual void loadGame(int stage)override;
+	void BomberInit();
+
+
+	virtual bool is_finished() const override;
+
 
 private:
 	vector<vector<BomberObject>> static_object;

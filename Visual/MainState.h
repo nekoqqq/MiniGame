@@ -8,6 +8,8 @@ class SucceedState;
 class FailedState;
 class OutcomeState;
 
+class BomberGame;
+
 class MainState {
 public:
     enum State {
@@ -39,6 +41,7 @@ public:
     void setState(State state);
 
     HSMGame* getHSMGame()const;
+    BomberGame* getBomberGame() const;
     void setStage(int);
     int getStage()const;
     bool isFinishAllStage()const;
@@ -56,6 +59,8 @@ private:
     const int MAX_TRIAL = 3;
 
     HSMGame* hsm_game_;
+    BomberGame* bomber_game_;
+
 
     P1LoadingState* p1_loading_state_;
     PlayState* play_state_;
