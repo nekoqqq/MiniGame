@@ -4,6 +4,9 @@
 #include "GameLib/Framework.h"
 #include "StringDrawer.h"
 #include <sstream>
+#include "GameLib/Input/Manager.h"
+#include "GameLib/Input/Keyboard.h"
+using namespace GameLib::Input;
 using GameLib::Framework;
 
 ThemeState::ThemeState():selection(1) {
@@ -13,12 +16,11 @@ ThemeState::~ThemeState() {
     DYNAMIC_DEL(theme_img);
 }
 void ThemeState::update(RootState* parent) {
-    Framework f = Framework::instance();
-
-    if (f.isKeyTriggered('w') || f.isKeyTriggered('W') || f.isKeyTriggered('s') || f.isKeyTriggered('S')) {
+    Keyboard k = Manager::instance().keyboard();
+    if (k.isTriggered('w') || k.isTriggered('W') || k.isTriggered('s') || k.isTriggered('S')) {
         selection = selection % 2 + 1;
     }
-    else if (f.isKeyTriggered(' ')) // 替换成空格键开始
+    else if (k.isTriggered(' ')) // 替换成空格键开始
     {
         if (selection == 1)
             parent->setMode(RootState::P1);

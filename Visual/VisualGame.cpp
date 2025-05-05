@@ -7,6 +7,9 @@
 #include "VisualGame.h"
 
 #include "GameLib/Framework.h"
+#include "GameLib/Input/Manager.h"
+#include "GameLib/Input/Keyboard.h"
+using namespace GameLib::Input;
 using namespace std;
 using namespace GameLib;
 
@@ -94,11 +97,12 @@ bool VisualGame::varPreHandle(int t)
 Game::DIRECTION VisualGame::handleInput() {
 	DIRECTION direction = UNKNOW;
 	GameLib::Framework framework = GameLib::Framework::instance();
+	Keyboard k = Manager::instance().keyboard();
 	// 当前按键输入
-	bool cur_key_on_w = (framework.isKeyTriggered('w') || framework.isKeyTriggered('W'));
-	bool cur_key_on_a = (framework.isKeyTriggered('a') || framework.isKeyTriggered('A'));
-	bool cur_key_on_s = (framework.isKeyTriggered('s') || framework.isKeyTriggered('S'));
-	bool cur_key_on_d = (framework.isKeyTriggered('d') || framework.isKeyTriggered('D'));
+	bool cur_key_on_w = (k.isTriggered('w') || k.isTriggered('W'));
+	bool cur_key_on_a = (k.isTriggered('a') || k.isTriggered('A'));
+	bool cur_key_on_s = (k.isTriggered('s') || k.isTriggered('S'));
+	bool cur_key_on_d = (k.isTriggered('d') || k.isTriggered('D'));
 
 	if (cur_key_on_w)
 		direction = UP;

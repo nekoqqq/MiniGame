@@ -2,6 +2,9 @@
 #include "BomberObject.h"
 #include <vector>
 #include <utility>
+#include "GameLib/Input/Manager.h"
+#include "GameLib/Input/Keyboard.h"
+using namespace GameLib::Input;
 using std::vector;
 using std::pair;
 using std::remove_if;
@@ -13,18 +16,19 @@ BomberGame& BomberGame::instance() {
 }
 void BomberGame::update() {
 	Framework f = Framework::instance();
+	Keyboard k = Manager::instance().keyboard();
 	int dx = 0, dy = 0;
-	if (f.isKeyOn('w')) {
+	if (k.isOn('w')) {
 		dx -= 1;
 	}
-	else if (f.isKeyOn('s')) {
+	else if (k.isOn('s')) {
 		dx += 1;
 	}
 	// 现在可以输入斜方向键
-	if (f.isKeyOn('a')) {
+	if (k.isOn('a')) {
 		dy -= 1;
 	}
-	else if (f.isKeyOn('d')) {
+	else if (k.isOn('d')) {
 		dy += 1;
 	}
 
@@ -36,14 +40,14 @@ void BomberGame::update() {
 
 	// 放置炸弹
 	for (auto& o : dynamic_object)
-		if (o.getType() == PLAYER1P && f.isKeyTriggered(' ') && bomb_cnt > 0) {
+		if (o.getType() == PLAYER1P && k.isTriggered(' ') && bomb_cnt > 0) {
 			BomberObject* new_bomb = o.createBomb();
 			if (new_bomb) {
 				bomb_cnt--;
 				dynamic_object.push_back(*new_bomb);
 			}
 		}
-		else if (o.getType() == PLAYER2P && f.isKeyTriggered('x') && bomb_cnt > 0) {
+		else if (o.getType() == PLAYER2P && k.isTriggered('x') && bomb_cnt > 0) {
 
 		}
 

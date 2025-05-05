@@ -7,7 +7,9 @@
 #include "StringDrawer.h"
 #include <sstream>
 #include "BomberGame.h"
-
+#include "GameLib/Input/Manager.h"
+#include "GameLib/Input/Keyboard.h"
+using namespace GameLib::Input;
 using GameLib::Framework;
 
 P1LoadingState::P1LoadingState()
@@ -53,23 +55,24 @@ void PlayState::post(MainState* parent) {
 void PlayState::update(MainState* parent) {
     pre(parent);
     Framework framework = Framework::instance();
+    Keyboard k = Manager::instance().keyboard();
     BomberGame* game_world = parent->getBomberGame();
     if (parent->getMode() == MainState::P1) {
-        if (framework.isKeyTriggered('z') || game_world->is_finished()) { // 临时加入过关的处理
+        if (k.isTriggered('z') || game_world->is_finished()) { // 临时加入过关的处理
             GameLib::cout << "YOU WIN! Total steps(exculude invalid steps): " << game_world->steps_ << "." << GameLib::endl;
             parent->setState(MainState::SUCCEED);
         }
-        else if (framework.isKeyTriggered('f') || parent->isFailed()) { // 临时加入失败的处理
+        else if (k.isTriggered('f') || parent->isFailed()) { // 临时加入失败的处理
             parent->setTrial(parent->getTrial() + 1);
             parent->setState(MainState::FAILED);
         }
     }
     else if (parent->getMode() == MainState::P2) {
-        if (framework.isKeyTriggered('b')) { // 临时加入两个人的处理，任意一个失败
+        if (k.isTriggered('b')) { // 临时加入两个人的处理，任意一个失败
             parent->setState(MainState::OUTCOME);
         }
     }
-    if (framework.isKeyTriggered('m') || framework.isKeyTriggered('M')) {
+    if (k.isTriggered('m') || k.isTriggered('M')) {
         parent->setState(MainState::MENU);
     }
 
@@ -89,10 +92,11 @@ MenuState::~MenuState()
 void MenuState::update(MainState* parent) {
     // 这里修改了展示的顺序，直觉上来说应该先画图再响应键盘的输入，不然出现输入很快，直接把画面给省略了
     Framework f = Framework::instance(); // 为什么Framework &f = Framework::instance() 会失败？
-    if (f.isKeyTriggered('w') || f.isKeyTriggered('s')) {
+    Keyboard k = Manager::instance().keyboard();
+    if (k.isTriggered('w') || k.isTriggered('s')) {
         cur_selection = cur_selection%2+1;
     }
-    else if (f.isKeyTriggered(' ')) {
+    else if (k.isTriggered(' ')) {
         switch (cur_selection)
         {
         case 1: // 继续
@@ -124,11 +128,11 @@ OutcomeState::OutcomeState():outcome_img(std::make_unique<DDS>("C:\\Users\\color
     selection = 1;
 }
 void OutcomeState::update(MainState*parent) {
-    Framework f = Framework::instance();
-    if (f.isKeyTriggered('w') || f.isKeyTriggered('W') || f.isKeyTriggered('s') || f.isKeyTriggered('S')) {
+    Keyboard k = Manager::instance().keyboard();
+    if (k.isTriggered('w') || k.isTriggered('W') || k.isTriggered('s') || k.isTriggered('S')) {
         selection = selection %2 +1;
     }
-    else if (f.isKeyTriggered(' ')) {
+    else if (k.isTriggered(' ')) {
         if (selection == 1) {
             parent->setState(MainState::P1_LOADING);
         }
