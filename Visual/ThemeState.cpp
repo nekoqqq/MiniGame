@@ -16,8 +16,8 @@ ThemeState::ThemeState():selection(1) {
 ThemeState::~ThemeState() {
     DYNAMIC_DEL(theme_img);
 }
-GameState* ThemeState::update(GameContext* parent) {
-    GameState* next_state = this;
+Base* ThemeState::update(GameContext* parent) {
+    Base* next_state = this;
     Keyboard k = Manager::instance().keyboard();
     if (k.isTriggered('w') || k.isTriggered('W') || k.isTriggered('s') || k.isTriggered('S')) {
         selection = selection % 2 + 1;

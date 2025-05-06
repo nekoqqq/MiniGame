@@ -1,21 +1,13 @@
 #pragma once
-class ThemeState;
-class SelectionState;
+#include "GameLib/Framework.h"
 class GamePlayState;
-class GoodEndingState;
-class BadEndingState;
 
 #ifndef PTR_DELETE
 #define DYNAMIC_DEL( x ) { delete ( x ); ( x ) = nullptr;}
 #endif // !PTR_DELETE
 
-class GameContext;
 
-class GameState {
-public:
-    virtual GameState* update(GameContext* root_context) = 0;
-    virtual ~GameState()=default;
-};
+class SubState;
 
 class GameContext {
 public:
@@ -43,10 +35,33 @@ private:
     State state_;
     Mode mode_;
 
-    GameState* current_state_;
+    SubState* current_state_;
 
     GameContext();
-    ~GameContext() { delete current_state_; };
+    ~GameContext();;
     GameContext(const GameContext&)=delete;
     GameContext& operator=(const GameContext&) = delete;
+};
+
+class Base {
+public:
+    virtual Base* update(Base* p) = 0;
+    ~Base() = default;
+};
+
+
+class SubState:public Base {
+public:
+    virtual Base* update(GameContext*) = 0;
+    virtual Base* update(Base* p) override;
+    virtual ~SubState() = default;
+};
+
+
+class SubSubState :public Base {
+public:
+    virtual Base* update(GamePlayState* parent) = 0;
+    virtual Base* update(Base* p)override;
+    virtual ~SubSubState() = default;
+
 };

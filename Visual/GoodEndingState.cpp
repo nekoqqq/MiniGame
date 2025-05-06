@@ -12,9 +12,9 @@ GoodEndingState::GoodEndingState()
 	good_ending_img = std::make_unique<DDS>("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\background.dds");
 	good_ending_start_time = Framework::instance().time();
 }
-GameState* GoodEndingState::update(GameContext* game_world)
+Base* GoodEndingState::update(GameContext* game_world)
 {
-	GameState* next_state = this;
+	Base* next_state = this;
 	if (Framework::instance().time() - good_ending_start_time > 1000) {
 		game_world->setState(GameContext::THEME);
 		next_state = new ThemeState();

@@ -14,9 +14,9 @@ BadEndingState::BadEndingState() {
 
 BadEndingState::~BadEndingState() = default;
 
-GameState* BadEndingState::update(GameContext* root_context)
+Base* BadEndingState::update(GameContext* root_context)
 {
-    GameState* next_state = this;
+    Base* next_state = this;
     if (Framework::instance().time() - failure_start_time > 2000) { // 显示1秒失败logo
         root_context->setState(GameContext::THEME); // 失败则迁移到主题
         next_state = new ThemeState();

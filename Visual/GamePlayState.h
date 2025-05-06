@@ -1,24 +1,10 @@
 #pragma once
 #include "RootState.h"
 class HSMGame;
-class P1LoadingState;
-class PlayState;
-class MenuState;
-class GameContext;
-class SucceedState;
-class FailedState;
-class OutcomeState;
-
 class BomberGame;
-class MainState;
 
-class MainState  {
-public:
-    virtual MainState* update(GamePlayState * main_state)=0;
-    virtual ~MainState() {}
-};
 
-class GamePlayState:public GameState {
+class GamePlayState:public SubState {
 public:
     enum Phase {
         P1_LOADING, // 加载
@@ -28,7 +14,6 @@ public:
         SUCCEED, // 通过当前关卡
         FAILED, // 失败当前关卡
         OUTCOME, // 游戏结果状态
-
 
         // 可能的父状态
         THEME,
@@ -57,7 +42,8 @@ public:
     void setTrial(int);
     int getTrial()const;
     bool isFailed()const;
-    virtual GameState* update(GameContext* parent)override;
+
+    virtual Base* update(GameContext* parent) override;
 
 private:
     Phase state_;
@@ -69,6 +55,5 @@ private:
     HSMGame* hsm_game_;
     BomberGame* bomber_game_;
 
-
-    MainState* derived_;
+    SubSubState* derived_;
 };

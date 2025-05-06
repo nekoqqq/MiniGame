@@ -9,6 +9,9 @@
 #include "GameLib/Input/Manager.h"
 #include "GameLib/Input/Keyboard.h"
 #include "SubState.h"
+#include "GoodEndingState.h"
+#include "BadEndingState.h"
+#include "ThemeState.h"
 using namespace GameLib::Input;
 using GameLib::Framework;
 
@@ -21,8 +24,8 @@ P1LoadingState::~P1LoadingState()
 {
     DYNAMIC_DEL(loading_img);
 }
-MainState* P1LoadingState::update(GamePlayState* parent) {
-    MainState* next_state = this;
+Base* P1LoadingState::update(GamePlayState* parent) {
+    Base* next_state = this;
     Framework f = Framework::instance();
     if (f.time() - loading_start_time > 2000) {
         BomberGame* game_world = parent->getBomberGame();
@@ -55,8 +58,8 @@ void PlayState::post(GamePlayState* parent) {
     while (framework.time() - game_world->getLastFrameCost() < 100 / game_world->FPS)
         framework.sleep(1);
 }
-MainState* PlayState::update(GamePlayState* parent) {
-    MainState* next_state = this;
+Base* PlayState::update(GamePlayState* parent) {
+    Base* next_state = this;
     pre(parent);
     Framework framework = Framework::instance();
     Keyboard k = Manager::instance().keyboard();
@@ -99,8 +102,8 @@ MenuState::~MenuState()
 {
     DYNAMIC_DEL(menu_img);
 }
-MainState* MenuState::update(GamePlayState* parent) {
-    MainState* next_state = this;
+Base* MenuState::update(GamePlayState* parent) {
+    Base* next_state = this;
     // 这里修改了展示的顺序，直觉上来说应该先画图再响应键盘的输入，不然出现输入很快，直接把画面给省略了
     Framework f = Framework::instance(); // 为什么Framework &f = Framework::instance() 会失败？
     Keyboard k = Manager::instance().keyboard();
@@ -116,6 +119,7 @@ MainState* MenuState::update(GamePlayState* parent) {
             break;
         case 2: // 回到主题
             parent->setState(GamePlayState::THEME);
+            next_state = new ThemeState();
             break;
         }
     }
@@ -140,8 +144,8 @@ MainState* MenuState::update(GamePlayState* parent) {
 OutcomeState::OutcomeState():outcome_img(std::make_unique<DDS>("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\background.dds")){
     selection = 1;
 }
-MainState* OutcomeState::update(GamePlayState*parent) {
-    MainState* next_state = this;
+Base* OutcomeState::update(GamePlayState*parent) {
+    Base* next_state = this;
     Keyboard k = Manager::instance().keyboard();
     if (k.isTriggered('w') || k.isTriggered('W') || k.isTriggered('s') || k.isTriggered('S')) {
         selection = selection %2 +1;
@@ -180,12 +184,13 @@ SucceedState::SucceedState():succeed_img(std::make_unique<DDS>("C:\\Users\\color
 {
     succeed_start_time = Framework::instance().time();
 }
-MainState* SucceedState::update(GamePlayState* parent)
+Base* SucceedState::update(GamePlayState* parent)
 {
-    MainState* next_state = this;
+    Base* next_state = this;
     if (Framework::instance().time() - succeed_start_time > 1000) { // 等待1s
         if (parent->isFinishAllStage()) {
             parent->setState(GamePlayState::GOOD_ENDING);
+            next_state = new GoodEndingState();
         }
         else {
             parent->setState(GamePlayState::P1_LOADING);
@@ -206,12 +211,13 @@ FailedState::~FailedState()
 {
     DYNAMIC_DEL(failed_img);
 }
-MainState* FailedState::update(GamePlayState* parent) {
-    MainState* next_state = this;
+Base* FailedState::update(GamePlayState* parent) {
+    Base* next_state = this;
     Framework f = Framework::instance();
     if (f.time() - failed_start_time > 1000) { // 显示1秒钟
         if (parent->isFailed()) {
             parent->setState(GamePlayState::BAD_ENDING);
+            next_state = new BadEndingState();
         }
         else {
             parent->setState(GamePlayState::P1_LOADING);

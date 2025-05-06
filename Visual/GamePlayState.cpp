@@ -64,30 +64,22 @@ bool GamePlayState::isFailed() const
             return false;
     return true;
 }
-GameState* GamePlayState::update(GameContext* parent) {
-    GameState* base = this;
-    MainState* next_state = derived_->update(this);
+Base* GamePlayState::update(GameContext* parent) {
+    Base* next = this;
+    Base* next_state = derived_->update(this);
     if (next_state != derived_) {
         DYNAMIC_DEL(derived_);
-        derived_ = next_state;
+        auto casted = dynamic_cast<SubSubState*>( next_state);
+        if (casted) {
+            DYNAMIC_DEL(derived_);
+            derived_ = casted;
+        }
+        else {
+            next = next_state;
+        }
+        return next;
     }
     ASSERT(next_state != nullptr);
-    
-    switch (state_)
-    {
-        case GamePlayState::THEME:
-            base = new ThemeState();
-            break;
-        case GamePlayState::GOOD_ENDING:
-            base = new GoodEndingState();
-            break;
-        case GamePlayState::BAD_ENDING:
-            base = new BadEndingState();
-            break;
-        default:
-            break;
-    }
-
-    return base;
+    return next;
 }
 
