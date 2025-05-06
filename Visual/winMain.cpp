@@ -12,7 +12,7 @@
 using namespace GameLib::Input;
 
 namespace GameLib {
-	RootState& g_root_state = RootState::instance();
+	GameContext& g_root_state = GameContext::instance();
 	int gCounter = 0;
 	// 框架循环
 	void Framework::update() {

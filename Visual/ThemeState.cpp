@@ -1,4 +1,5 @@
 #include "ThemeState.h"
+#include "GamePlayState.h"
 #include "RootState.h"
 #include "../Console/DDS.h"
 #include "GameLib/Framework.h"
@@ -15,7 +16,8 @@ ThemeState::ThemeState():selection(1) {
 ThemeState::~ThemeState() {
     DYNAMIC_DEL(theme_img);
 }
-void ThemeState::update(RootState* parent) {
+GameState* ThemeState::update(GameContext* parent) {
+    GameState* next_state = this;
     Keyboard k = Manager::instance().keyboard();
     if (k.isTriggered('w') || k.isTriggered('W') || k.isTriggered('s') || k.isTriggered('S')) {
         selection = selection % 2 + 1;
@@ -23,10 +25,11 @@ void ThemeState::update(RootState* parent) {
     else if (k.isTriggered(' ')) // 替换成空格键开始
     {
         if (selection == 1)
-            parent->setMode(RootState::P1);
+            parent->setMode(GameContext::P1);
         else if (selection == 2)
-            parent->setMode(RootState::P2);
-        parent->setState(RootState::MAIN);
+            parent->setMode(GameContext::P2);
+        parent->setState(GameContext::MAIN);
+        next_state = new GamePlayState(1);
     }
     theme_img->drawImage();
     const char* option[] = { "<Welcome!>","1P GAME","2P GAME" };
@@ -42,4 +45,5 @@ void ThemeState::update(RootState* parent) {
         }
         oss.str("");
     }
+    return next_state;
 }

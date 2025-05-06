@@ -1,7 +1,7 @@
 #pragma once
 class ThemeState;
 class SelectionState;
-class MainState;
+class GamePlayState;
 class GoodEndingState;
 class BadEndingState;
 
@@ -9,7 +9,15 @@ class BadEndingState;
 #define DYNAMIC_DEL( x ) { delete ( x ); ( x ) = nullptr;}
 #endif // !PTR_DELETE
 
-class RootState {
+class GameContext;
+
+class GameState {
+public:
+    virtual GameState* update(GameContext* root_context) = 0;
+    virtual ~GameState()=default;
+};
+
+class GameContext {
 public:
     enum State {
         UNKNOW,
@@ -24,7 +32,7 @@ public:
         P1, // 单人游戏
         P2 // 双人游戏
     };
-    static RootState& instance();
+    static GameContext& instance();
 
     void update();
     void setState(State state);
@@ -35,13 +43,10 @@ private:
     State state_;
     Mode mode_;
 
-    ThemeState* theme_state_;
-    MainState* main_state_;
-    GoodEndingState* good_ending_state_;
-    BadEndingState* bad_ending_state_;
+    GameState* current_state_;
 
-    RootState();
-    ~RootState();
-    RootState(const RootState&) = delete;
-    RootState& operator=(const RootState&) = delete;
+    GameContext();
+    ~GameContext() { delete current_state_; };
+    GameContext(const GameContext&)=delete;
+    GameContext& operator=(const GameContext&) = delete;
 };

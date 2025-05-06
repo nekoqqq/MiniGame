@@ -14,18 +14,19 @@ enum class MapSource {
     VISUAL // 窗口大小
 };
 
-enum class GameState {
-    UNKONW, // 无效状态
-    THEME, // 主题界面
-    SELECTION, // 选关
-    LOADING, // 加载
-    GAME, // 游戏界面
-    MENU, //菜单画面
-    ENDING, // 通关
-};
+
 
 class Game {
 public:
+    enum  State {
+        UNKONW, // 无效状态
+        THEME, // 主题界面
+        SELECTION, // 选关
+        LOADING, // 加载
+        GAME, // 游戏界面
+        MENU, //菜单画面
+        ENDING, // 通关
+    };
     enum DIRECTION {
         UNKNOW=0,
         UP = 1,

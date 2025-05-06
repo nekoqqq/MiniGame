@@ -1,18 +1,26 @@
 #pragma once
+#include "RootState.h"
 class HSMGame;
 class P1LoadingState;
 class PlayState;
 class MenuState;
-class RootState;
+class GameContext;
 class SucceedState;
 class FailedState;
 class OutcomeState;
 
 class BomberGame;
+class MainState;
 
-class MainState {
+class MainState  {
 public:
-    enum State {
+    virtual MainState* update(GamePlayState * main_state)=0;
+    virtual ~MainState() {}
+};
+
+class GamePlayState:public GameState {
+public:
+    enum Phase {
         P1_LOADING, // 加载
         P2_LOADING, //双人游戏加载
         PLAY, // 游戏过程
@@ -33,12 +41,12 @@ public:
         P2
     };
 
-    MainState(int stage);
-    ~MainState();
+    GamePlayState(int stage);
+    ~GamePlayState();
     
     Mode getMode()const;
 
-    void setState(State state);
+    void setState(Phase state);
 
     HSMGame* getHSMGame()const;
     BomberGame* getBomberGame() const;
@@ -49,10 +57,10 @@ public:
     void setTrial(int);
     int getTrial()const;
     bool isFailed()const;
-    void update(RootState* parent);
+    virtual GameState* update(GameContext* parent)override;
 
 private:
-    State state_;
+    Phase state_;
     int stage_;
     const int TOTAL_STAGE = 3;
     int trial_;
@@ -62,10 +70,5 @@ private:
     BomberGame* bomber_game_;
 
 
-    P1LoadingState* p1_loading_state_;
-    PlayState* play_state_;
-    MenuState* menu_state_;
-    SucceedState* succeed_state_;
-    FailedState* failed_state_;
-    OutcomeState* outcome_state_;
+    MainState* derived_;
 };

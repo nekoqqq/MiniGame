@@ -33,7 +33,7 @@
     <ClInclude Include="RootState.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="MainState.h">
+    <ClInclude Include="GamePlayState.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="ThemeState.h">
@@ -71,7 +71,7 @@
     <ClCompile Include="RootState.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="MainState.cpp">
+    <ClCompile Include="GamePlayState.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ThemeState.cpp">

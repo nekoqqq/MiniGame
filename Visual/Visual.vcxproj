@@ -149,7 +149,7 @@
     <ClInclude Include="BadEndingState.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="HSMGame.h" />
-    <ClInclude Include="MainState.h" />
+    <ClInclude Include="GamePlayState.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RootState.h" />
     <ClInclude Include="StringDrawer.h" />
@@ -163,7 +163,7 @@
     <ClCompile Include="GoodEndingState.cpp" />
     <ClCompile Include="BadEndingState.cpp" />
     <ClCompile Include="HSMGame.cpp" />
-    <ClCompile Include="MainState.cpp" />
+    <ClCompile Include="GamePlayState.cpp" />
     <ClCompile Include="RootState.cpp" />
     <ClCompile Include="StringDrawer.cpp" />
     <ClCompile Include="SubState.cpp" />
