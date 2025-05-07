@@ -19,6 +19,9 @@
     <Filter Include="资源文件\img">
       <UniqueIdentifier>{4cd01a6c-be54-4618-b4d6-86169fcc4eb8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="资源文件\music">
+      <UniqueIdentifier>{190ea1ec-4ac7-4718-8d8d-97bd66744f0e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -129,5 +132,25 @@
     <Text Include="stage\bomber_stage1.txt">
       <Filter>资源文件\stage</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="music\dokaan.wav">
+      <Filter>资源文件\music</Filter>
+    </Media>
+    <Media Include="music\bgm.wav">
+      <Filter>资源文件\music</Filter>
+    </Media>
+    <Media Include="music\boom.wav">
+      <Filter>资源文件\music</Filter>
+    </Media>
+    <Media Include="music\game.wav">
+      <Filter>资源文件\music</Filter>
+    </Media>
+    <Media Include="music\move.wav">
+      <Filter>资源文件\music</Filter>
+    </Media>
+    <Media Include="music\theme.wav">
+      <Filter>资源文件\music</Filter>
+    </Media>
   </ItemGroup>
 </Project>

@@ -7,7 +7,10 @@
 #include <sstream>
 #include "GameLib/Input/Manager.h"
 #include "GameLib/Input/Keyboard.h"
+#include "GameLib/Sound/Wave.h"
+#include "GameLib/Sound/Manager.h"
 using namespace GameLib::Input;
+using namespace GameLib::Sound;
 using GameLib::Framework;
 
 ThemeState::ThemeState():selection(1) {
@@ -18,7 +21,7 @@ ThemeState::~ThemeState() {
 }
 Base* ThemeState::update(GameContext* parent) {
     Base* next_state = this;
-    Keyboard k = Manager::instance().keyboard();
+    Keyboard k = GameLib::Input::Manager::instance().keyboard();
     if (k.isTriggered('w') || k.isTriggered('W') || k.isTriggered('s') || k.isTriggered('S')) {
         selection = selection % 2 + 1;
     }

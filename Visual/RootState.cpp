@@ -5,6 +5,7 @@
 #include "GoodEndingState.h"
 #include "BadEndingState.h"
 #include "GameLib/Framework.h"
+#include "GameSound.h"
 
 
 GameContext& GameContext::instance()
