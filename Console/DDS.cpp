@@ -2,7 +2,18 @@
 #include "GameLib/Framework.h"
 #include<iostream>
 #include<fstream>
-
+#include <cmath>
+#include "Vector2.h"
+using GameLib::Framework;
+int least_power2(int x)
+{
+    if ((x & (x - 1)) == 0)
+        return x;
+    unsigned int_max = 0x80000000;
+    while ((int_max & x) == 0)
+        int_max = int_max >> 1;
+    return int_max << 1;
+}
 DDS::DDS(const char* file_name) {
     std::ifstream file(file_name, std::ios_base::binary);
     if (!file.is_open()) {
@@ -23,12 +34,22 @@ DDS::DDS(const char* file_name) {
         }; // 读取unsigned
     dHeight = read_dword();
     dWidth = read_dword();
+    dTextureHeight = least_power2(dHeight);
+    dTextureWidth = least_power2(dWidth);
+
     std::cout << file_name << " " << "读取的文件大小为: " << dHeight << "x" << dWidth << std::endl;
+    std::cout << file_name << " " << "读取的纹理大小为: " << dTextureHeight << "x" << dTextureWidth << std::endl;
+
     // 读取图片数据
     file.seekg(sizeof(dMagic) + dSize, std::ios_base::beg);
     dData = new DWORD[dWidth * dHeight];
     for (int i = 0; i < dWidth * dHeight; i++)
         dData[i] = read_dword();
+
+    // 创建纹理
+    texture = nullptr;
+    Framework::instance().createTexture(&texture, dTextureWidth, dTextureHeight, dData, dWidth, dHeight);
+    SAFE_DELETE(dData);
     file.close();
 }
 DDS::DWORD* DDS::get_image_data() const
@@ -52,6 +73,7 @@ DDS::~DDS() {
         delete[] dData;
         dData = nullptr;
     }
+    GameLib::Framework::instance().destroyTexture(&texture);
 }
 unsigned DDS::alpha_mix(unsigned fg_color, unsigned bg_color) const{
     unsigned fg_color_A =(fg_color & 0xff000000) >> 24;
@@ -68,8 +90,9 @@ unsigned DDS::alpha_mix(unsigned fg_color, unsigned bg_color) const{
     unsigned b = bg_color_B + fg_color_A / 255.f * (fg_color_B - bg_color_B);
     return b | (g & 0x00ff00) | (r & 0xff0000);
 }
+// 待废弃的API
 void DDS::drawCell(int src_x,int src_y) const{ // 从src_x，src_y开始的位置绘制当前图片
-    unsigned* p_vram = GameLib::Framework::instance().videoMemory();
+    unsigned* p_vram = new unsigned[dWidth * dHeight];
     int window_width = GameLib::Framework::instance().width();
     unsigned* p_img = get_image_data();
     int img_width = get_image_width();
@@ -90,48 +113,33 @@ void DDS::drawCell(int src_x,int src_y) const{ // 从src_x，src_y开始的位�
 }
 void DDS::drawImage() const
 {
-    drawCell(0, 0);
+    render(0, 0, dWidth, dHeight, 0, 0);
 }
-void DDS::render(int src_x, int src_y, int width, int height, int screen_x, int screen_y,unsigned font_color)const {
-    unsigned* p_vram = GameLib::Framework::instance().videoMemory();
-    int window_width = GameLib::Framework::instance().width();
-    for(int i = 0;i<height;i++)
-        for (int j = 0; j < width; j++) {
-            int src_index = (screen_x + i) * window_width + (screen_y + j);
-            int dst_index = (src_x + i) * dWidth + (src_y + j);
-            int fg_color = dData[dst_index];
-            if (dData[dst_index] > 0xffff0000) // 原本的不是严格的黑色和白色画成的图片，这里做下近似处理
-                fg_color = 0;
-            else
-                fg_color = font_color | (0xff <<24); // 该颜色做不透明处理
-            p_vram[src_index] = alpha_mix(fg_color, p_vram[src_index]);
-        }
-}
+// 这里的x、y的坐标和类库的坐标现在是反着来的
+void DDS::render(int src_x, int src_y, int width, int height, int screen_x, int screen_y,unsigned font_color)const {    
+    Vector2 p0(screen_y, screen_x);
+    Vector2 p1(screen_y + width, screen_x);
+    Vector2 p2(screen_y, screen_x + height);
+    Vector2 p3(screen_y + width, screen_x + height);
 
-void DDS::drawFrom(int i, int j, int screen_i,int screen_j, int pixel_size) const
-{
-    unsigned* p_vram = GameLib::Framework::instance().videoMemory();
-    int window_width = GameLib::Framework::instance().width();
-    for (int x = 0; x < pixel_size; x++) 
-        for (int y = 0; y < pixel_size; y++) {
-            int src_index = (screen_i *pixel_size+x)* window_width + screen_j *pixel_size + y;
-            int dst_index = i * pixel_size * dWidth +x*dWidth +  j * pixel_size + y;
-            int fg_color = dData[dst_index];
-            p_vram[src_index] = alpha_mix(fg_color, p_vram[src_index]);
-        }
-}
+    // 纹理坐标
+    double u0 = 1.0 * src_x / dTextureHeight;
+    double v0 = 1.0 * src_y / dTextureWidth;
+    double u1 = 1.0 * (src_x + height) / dTextureHeight;
+    double v1 = 1.0 * (src_y + width) / dTextureWidth;
 
+    Vector2 t0(v0, u0);
+    Vector2 t1(v1,u0);
+    Vector2 t2(v0,u1);
+    Vector2 t3(v1,u1);
+    Framework f = Framework::instance();
+    
+    f.setTexture(texture);
+    f.setBlendMode(Framework::BLEND_LINEAR);
+    f.drawTriangle2D(p0,p1,p2,t0,t1,t2);
+    f.drawTriangle2D(p3,p1,p2,t3,t1,t2);
+}
 
 void DDS::drawAtScreen(int i, int j, int screen_x, int screen_y,int pixel_size) {
-    unsigned* p_vram = GameLib::Framework::instance().videoMemory();
-    int window_width = GameLib::Framework::instance().width();
-    for (int x = 0; x < pixel_size; x++)
-        for (int y = 0; y < pixel_size; y++) {
-            int src_index = (screen_x +  x) * window_width + screen_y + y;
-            int dst_index = i * pixel_size * dWidth + x * dWidth + j * pixel_size + y;
-            int fg_color = dData[dst_index];
-            p_vram[src_index] = alpha_mix(fg_color, p_vram[src_index]);
-        }
-
-
+    render( i * pixel_size, j * pixel_size, pixel_size,pixel_size, screen_x, screen_y);
 }

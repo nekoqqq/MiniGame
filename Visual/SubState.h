@@ -20,6 +20,8 @@ public:
     void pre(GamePlayState* parent);
     // 后处理部分
     void post(GamePlayState* parent);
+    PlayState();
+    ~PlayState();
     virtual Base* update(GamePlayState* parent)override;
 };
 

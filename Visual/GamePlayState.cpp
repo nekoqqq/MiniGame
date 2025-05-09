@@ -14,6 +14,7 @@ GamePlayState::GamePlayState(int stage) : stage_(stage) {
     bomber_game_->setStage(stage);
     derived_ = new P1LoadingState();
     state_ = P1_LOADING;
+    trial_ = 0;
 }
 GamePlayState::~GamePlayState()
 {

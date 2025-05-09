@@ -9,15 +9,18 @@
 #include "GameLib/Input/Keyboard.h"
 #include "GameLib/Sound/Wave.h"
 #include "GameLib/Sound/Manager.h"
+#include "GameSound.h"
 using namespace GameLib::Input;
 using namespace GameLib::Sound;
 using GameLib::Framework;
 
 ThemeState::ThemeState():selection(1) {
     theme_img = new DDS("C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\img\\main_theme.dds");
+    GameSound::instance().playBGM(GameSound::THEME);
 }
 ThemeState::~ThemeState() {
     DYNAMIC_DEL(theme_img);
+    GameSound::instance().stopBGM();
 }
 Base* ThemeState::update(GameContext* parent) {
     Base* next_state = this;

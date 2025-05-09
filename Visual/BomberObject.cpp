@@ -20,7 +20,7 @@ BomberObject::BomberObject() {
 	power_ = 1;
 	expired_ = false;
 }
-BomberObject::BomberObject(int x) : r_(PIXCEL_SIZE / 2) {
+BomberObject::BomberObject(int x) : r_(PIXEL_SIZE / 2) {
 	this->type_ = static_cast<Type> (x);
 }
 BomberObject::BomberObject(int x_, int y_, int r_) {
@@ -29,9 +29,9 @@ BomberObject::BomberObject(int x_, int y_, int r_) {
 	this->r_ = r_;
 }
 BomberObject::BomberObject(int i, int j, Type type) {
-	x_ = i * PIXCEL_SIZE + PIXCEL_SIZE / 2;
-	y_ = j * PIXCEL_SIZE + PIXCEL_SIZE / 2;
-	r_ = PIXCEL_SIZE / 2;
+	x_ = i * PIXEL_SIZE + PIXEL_SIZE / 2;
+	y_ = j * PIXEL_SIZE + PIXEL_SIZE / 2;
+	r_ = PIXEL_SIZE / 2;
 	type_ = type;
 	if (type_ == P1_PLAYER || type_ == P2_PLAYER)
 		r_ -= 2;
@@ -70,7 +70,7 @@ void BomberObject::operator=(int x) {
 	this->type_ = static_cast<Type>(x);
 }
 bool BomberObject::validPos() {
-	return 0 <= (x_-r_) && (x_ - r_) < GRID_HEIGHT * PIXCEL_SIZE && 0 <= (y_ - r_) && (y_ - r_) < GRID_WIDHT * PIXCEL_SIZE;
+	return 0 <= (x_-r_) && (x_ - r_) < GRID_HEIGHT * PIXEL_SIZE && 0 <= (y_ - r_) && (y_ - r_) < GRID_WIDHT * PIXEL_SIZE;
 }
 bool BomberObject::validIndex(int i,int j) {
 	return 0 <= i && i < GRID_HEIGHT && 0 <= j && j < GRID_WIDHT;
@@ -184,7 +184,7 @@ bool BomberObject::isCollision(BomberObject& o) {
 void BomberObject::setCoordinate(double x, double y) {
 	x_ = x;
 	y_ = y;
-	r_ = PIXCEL_SIZE / 2;
+	r_ = PIXEL_SIZE / 2;
 	if (getType() == P1_PLAYER || getType() == P2_PLAYER)
 		r_ -= 2;
 
@@ -200,11 +200,6 @@ void BomberObject::setPutTime(unsigned t) {
 	put_time_ = t;
 }
 
-void BomberObject::drawAt(int screen_i,int screen_j)const {
-    int i = getType() / 4;
-    int j = getType() % 4;
-	obj_img_->drawFrom(i, j, screen_i, screen_j);
-}
 BomberObject* BomberObject::createBomb() {
 	int i = getInnerPos().first;
 	int j = getInnerPos().second;
@@ -233,15 +228,15 @@ BomberObject* BomberObject::createBomb() {
 	if (bo.type_ == GROUND) {
 		new_bomb= new BomberObject(i,j,BOMB);
 		new_bomb->setPutTime(Framework::instance().time());
-		x_ = raw_i * PIXCEL_SIZE + r_;
-		y_ = raw_j * PIXCEL_SIZE + r_;
+		x_ = raw_i * PIXEL_SIZE + r_;
+		y_ = raw_j * PIXEL_SIZE + r_;
 	}
 	return new_bomb;
 }
 pair<int, int> BomberObject::getInnerPos() const
 {
-	int i = x_ / PIXCEL_SIZE;
-	int j = y_ / PIXCEL_SIZE;
+	int i = x_ / PIXEL_SIZE;
+	int j = y_ / PIXEL_SIZE;
 	return pair<int, int>(i,j);
 }
 void BomberObject::kill() {

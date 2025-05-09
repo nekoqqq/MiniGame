@@ -4,6 +4,7 @@
 #include <utility>
 #include "GameLib/Input/Manager.h"
 #include "GameLib/Input/Keyboard.h"
+#include "GameSound.h"
 using namespace GameLib::Input;
 using std::vector;
 using std::pair;
@@ -40,7 +41,7 @@ void BomberGame::update() {
 
 	// 放置炸弹
 	for (auto& o : dynamic_object)
-		if (o.getType() == PLAYER1P && k.isTriggered(' ') && bomb_cnt > 0) {
+		if (o.getType() == BomberObject::P1_PLAYER && k.isTriggered(' ') && bomb_cnt > 0) {
 			BomberObject* new_bomb = o.createBomb();
 			if (new_bomb) {
 				bomb_cnt--;
@@ -53,8 +54,10 @@ void BomberGame::update() {
 
 	// 爆炸处理
 	for (auto& o : dynamic_object){
-		if (o.explodable() && o.shouldExplode()) 
+		if (o.explodable() && o.shouldExplode()) {
 			o.explode();
+			GameSound::instance().playPRO(GameSound::BOOM);
+		}
 	}
 
 	// 爆炸中心处理
@@ -70,22 +73,25 @@ void BomberGame::update() {
 			o.kill();
 	}
 
+	// 人物碰撞检测，碰到敌人则死亡
+	for (auto& e : dynamic_object) {
+		if (e.getType() != BomberObject::ENEMY)
+			continue;
+		for (auto& p : dynamic_object) {
+			if (p.getType() != BomberObject::P1_PLAYER)
+				continue;
+			if (p.isCollision(e))
+				p.kill();
+		}
+	}
+
+
 	// 清除掉无效的物体
 	dynamic_object.erase(remove_if(dynamic_object.begin(), dynamic_object.end(), [](const auto& o) {return !o.isAlive(); }),dynamic_object.end());
 }
 BomberObject& BomberGame::getGameObject(int i, int j)
 {
 	return static_object[i][j];
-}
-vector<BomberObject>& BomberGame::getGameObjectList(BomberObject::Type type)
-{
-	vector<BomberObject> res;
-	for(int i =0;i<static_object.size();i++)
-		for(int j =0;j<static_object[i].size();j++)
-			if (static_object[i][j].getType() == type) {
-				res.push_back(static_object[i][j]);
-			}
-	return res;
 }
 void BomberGame::setGameObject(int i, int j, BomberObject::Type type)
 {
@@ -132,7 +138,7 @@ void BomberGame::loadGame(int stage)
 						dynamic_object.push_back({ i,j,BomberObject::SOFT_WALL });
 				}
 			}
-			static_object[i][j].setCoordinate(i * PIXCEL_SIZE + PIXCEL_SIZE / 2, j * PIXCEL_SIZE + PIXCEL_SIZE / 2);
+			static_object[i][j].setCoordinate(i * PIXEL_SIZE + PIXEL_SIZE / 2, j * PIXEL_SIZE + PIXEL_SIZE / 2);
 		}
 
 	auto random_generate = [&](int cnt, BomberObject::Type type) {

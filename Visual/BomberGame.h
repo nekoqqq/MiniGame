@@ -7,7 +7,7 @@
 using GameLib::Framework;
 using std::vector;
 
-extern const int PIXCEL_SIZE;
+extern const int PIXEL_SIZE;
 extern const int GRID_WIDHT ;
 extern const int GRID_HEIGHT ;
 
@@ -24,7 +24,6 @@ public:
 	virtual void draw()override;
 	void update();
 	BomberObject& getGameObject(int i, int j);
-	vector<BomberObject>& getGameObjectList(BomberObject::Type type);
 	void setGameObject(int i, int j, BomberObject::Type type);
 	int getBomberPower()const;
 	static int bomb_cnt;

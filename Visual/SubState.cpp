@@ -12,6 +12,7 @@
 #include "GoodEndingState.h"
 #include "BadEndingState.h"
 #include "ThemeState.h"
+#include "GameSound.h"
 using namespace GameLib::Input;
 using GameLib::Framework;
 
@@ -44,6 +45,14 @@ Base* P1LoadingState::update(GamePlayState* parent) {
     return next_state;
 }
 
+PlayState::PlayState()
+{
+    GameSound::instance().playBGM(GameSound::GAME);
+}
+PlayState::~PlayState()
+{
+    GameSound::instance().stopBGM();
+}
 // 前处理部分
 void PlayState::pre(GamePlayState* parent) {
     HSMGame* game_world = parent->getHSMGame();

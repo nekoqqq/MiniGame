@@ -17,9 +17,9 @@ using std::min;
 using std::shared_ptr;
 using std::vector;
 
-const int PIXCEL_SIZE = 16;
-const int GRID_WIDHT = 320 / PIXCEL_SIZE;
-const int GRID_HEIGHT = 240 / PIXCEL_SIZE;
+const int PIXEL_SIZE = 16;
+const int GRID_WIDHT = 320 / PIXEL_SIZE;
+const int GRID_HEIGHT = 240 / PIXEL_SIZE;
 
 const int SIZE_PER_IMG = 4;
 const double PLAYER_SPEED = 1.; // 玩家移动速度，每帧移动像素*SPEED_SCALE
@@ -78,7 +78,6 @@ public:
 	Type getType()const;
 	void setType(Type type);
 	void setPutTime(unsigned t);
-	void drawAt(int, int)const; // 在屏幕的i、j位置绘制物体
 
 	BomberObject* createBomb();
 

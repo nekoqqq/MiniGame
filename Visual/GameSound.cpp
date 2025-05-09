@@ -34,6 +34,7 @@ void GameSound::stopBGM()
 void GameSound::playPRO(Progress pro)
 {
 	pro_player_[pro] = Player::create(progress_[pro]);
+	pro_player_[pro].setVolume(-20);
 	pro_player_[pro].play();
 }
 
@@ -56,8 +57,8 @@ GameSound::GameSound()
 		}
 	}; 
 	vector<string> bgm ={ 
-		"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\music\\game.wav",
 		"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\music\\theme.wav",
+		"C:\\Users\\colorful\\source\\repos\\MiniGame\\Console\\music\\game.wav",
 	};
 	create_wav(bgm_, bgm);
 	vector<string> progress = {
