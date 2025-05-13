@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <utility>
 class Vector3 {
 public:
 	double x, y, z;
@@ -41,12 +42,30 @@ public:
 		return *this;
 	}
 		
-	Vector3& operator-=(const Vector3& other) {
-		this->x -= other.x;
-		this->y -= other.y;
-		this->z -= other.z;
-		return *this;
+	//Vector3& operator-=(const Vector3& other) {
+	//	Vector3 tmp = -other;
+	//	*this += -other;
+	//	return *this;
+	//}
+
+	Vector3 operator+(int t) {
+		return Vector3(x + t, y + t, z + t);
 	}
+
+	Vector3 operator-(int t) {
+		return *this + (-t);
+	}
+
+	Vector3 operator+(const Vector3& o) {
+		if (this == &o)
+			return *this;
+		return Vector3(x + o.x, y + o.y, z + o.z);
+	}
+	
+	//Vector3 operator-(const Vector3& o) {
+	//	Vector3 tmp = -o;
+	//	return this + tmp;
+	//}
 
 	// 只读
 	double operator[](int i)const{

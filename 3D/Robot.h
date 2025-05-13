@@ -18,29 +18,41 @@ public:
 
 	Mecha(Type type){
 		if (type == PLAYER) {
-			pos_ = { 0,0,50 };
-		}
-		else if (type == ENEMY) {
 			pos_ = { 0,0,-50 };
 		}
+		else if (type == ENEMY) {
+			pos_ = { 0,0,50 };
+		}
 		setBody();
-		
-		const double t[][4]={
+		this->type = type;
+	}
+	~Mecha(){}
+
+	void move(int dx,int dy, int dz) {
+		pos_.x += dx;
+		pos_.y += dy;
+		pos_.z += dz;
+	}
+
+	const Vector3& getPos() {
+		return pos_;
+	}
+
+	void update() {
+		if (!type == PLAYER)
+			return;
+	};
+	void draw(Matrix44 &viewTransform, Matrix44 & projectionTransform) {
+		Framework f = Framework::instance();
+		const double t[][4] = {
 			{ 2,0,0,pos_.x },
 			{ 0,2, 0 ,pos_.y},
 			{ 0,0,-2 ,pos_.z},
 			{ 0,0,0,1 }
 		};
-		world_transform = t;
-	}
-	~Mecha(){}
 
-
-
-
-	void update() {};
-	void draw(Matrix44 &viewTransform, Matrix44 & projectionTransform) {
-		Framework f = Framework::instance();
+		// 世界变换矩阵
+		Matrix44 world_transform = t;
 		Matrix44 pvm = projectionTransform.matMul(viewTransform).matMul(world_transform);
 		Vector3 res[8];
 		for (int i = 0; i < 8; i++) {
@@ -75,13 +87,25 @@ public:
 		}
 	}
 
+	Vector3 getOrigin() {
+		return pos_;
+	}
 
-
+	Vector3 getWorldDirection() {
+		Vector3 v(0, 0, 1);
+		const double t[][4] = {
+			{ 2,0,0,pos_.x },
+			{ 0,2, 0 ,pos_.y},
+			{ 0,0,-2 ,pos_.z},
+			{ 0,0,0,1 }
+		};
+		Matrix44 world_transform = t;
+		return world_transform.vecMul(v);
+	}
 private:
+	Type type;
 	Vector3 pos_; // 中心点在世界坐标系中的位置
 	Vector3 body[8]; // 8个顶点在模型坐标中的位置
-	Matrix44 world_transform; // 世界变换矩阵
-	
 	GameLib::Texture* texture_;
 
 	void setBody() {
@@ -101,10 +125,10 @@ class Stage
 public:
 	Stage() {
 		vectors = new Vector3[4]{
-			{-50,0,-50},
-			{-50,0,50},
-			{50,0,50},
-			{50,0,-50}
+			{-100,0,-100},
+			{-100,0,100},
+			{100,0,100},
+			{100,0,-100}
 		};
 		texture_ = nullptr;
 		GameLib::Framework::instance().createTexture(&texture_, "stage.tga");
@@ -116,11 +140,13 @@ public:
 			p2,
 			p3
 		};
+		texture_ = nullptr;
 	}
-
-	~Stage() { delete[]vectors; vectors = nullptr; 
-	GameLib::Framework::instance().destroyTexture(&texture_);
-	texture_ = nullptr; 
+	~Stage() { 
+		delete[]vectors; 
+		vectors = nullptr; 
+		GameLib::Framework::instance().destroyTexture(&texture_);
+		texture_ = nullptr; 
 	};
 	void draw(Matrix44&viewTransform, Matrix44 & projectionTransform)const
 	{
@@ -148,4 +174,78 @@ public:
 private:
 	Vector3 *vectors;
 	GameLib::Texture* texture_;
+};
+
+// 绘制辅助坐标轴
+class Axis {
+public:
+	static void draw(Matrix44& viewTransform, Matrix44& projectionTransform) {
+		// 绘制坐标轴		
+		Vector3 x_axis[4] = {
+			{-100,1,0,1},
+			{100,1,0,1},
+			{100,-1,0,1},
+			{-100,-1,0,1},
+		};
+		Vector3 y_axis[4] = {
+			{-1,-100,0,1},
+			{1,-100,0,1},
+			{1,100,0,1},
+			{-1,100,0,1},
+		};
+		Vector3 z_axis[4] = {
+			{-1,0,100,1},
+			{1,0,100,1},
+			{1,0,-100,1},
+			{-1,0,-100,1}
+		};
+		Vector3 res[12];
+		for (int i = 0; i < 4; i++) {
+			res[i] = projectionTransform.vecMul(viewTransform.vecMul(x_axis[i]));
+		}
+		for (int i = 0; i < 4; i++) {
+			res[4+i] = projectionTransform.vecMul(viewTransform.vecMul(y_axis[i]));
+		}
+		for (int i = 0; i < 4; i++) {
+			res[8 + i] = projectionTransform.vecMul(viewTransform.vecMul(z_axis[i]));
+		}
+		Framework f = Framework::instance();
+		f.drawTriangle3DH(res[0], res[1], res[2], 0, 0, 0, 0xffff0000, 0xffff0000, 0xffff0000);
+		f.drawTriangle3DH(res[0], res[2], res[3], 0, 0, 0, 0xffff0000, 0xffff0000, 0xffff0000);
+		f.drawTriangle3DH(res[4+0], res[4+1], res[4+2], 0, 0, 0, 0xff00ff00, 0xff00ff00, 0xff00ff00);
+		f.drawTriangle3DH(res[4+0], res[4+2], res[4+3], 0, 0, 0, 0xff00ff00, 0xff00ff00, 0xff00ff00);
+		f.drawTriangle3DH(res[8 + 0], res[8 + 1], res[8 + 2], 0, 0, 0, 0xff0000ff, 0xff0000ff, 0xff0000ff);
+		f.drawTriangle3DH(res[8 + 0], res[8 + 2], res[8 + 3], 0, 0, 0, 0xff0000ff, 0xff0000ff, 0xff0000ff);
+
+
+		// 绘制箭头
+		Vector3 x_dir[] = {
+			{100,5,0,1},
+			{120,0,0,1},
+			{100,-5,0,1}
+		};
+		Vector3 y_dir[] = {
+			{-5,100,0,1},
+			{5,100,0,1},
+			{0,120,0,1}
+		};
+		Vector3 z_dir[] = {
+			{0,5,100,1},
+			{0,-5,100,1},
+			{0,0,120,1}
+		};
+		Vector3 dir_res[9];
+		for (int i = 0; i < 3; i++) {
+			dir_res[i] = projectionTransform.vecMul(viewTransform.vecMul(x_dir[i]));
+		}
+		for (int i = 0; i < 3; i++) {
+			dir_res[3+i] = projectionTransform.vecMul(viewTransform.vecMul(y_dir[i]));
+		}
+		for (int i = 0; i < 3; i++) {
+			dir_res[6+i] = projectionTransform.vecMul(viewTransform.vecMul(z_dir[i]));
+		}
+		f.drawTriangle3DH(dir_res[0], dir_res[1], dir_res[2], 0, 0, 0, 0xffff0000, 0xffff0000, 0xffff0000);
+		f.drawTriangle3DH(dir_res[3 + 0], dir_res[3 + 1], dir_res[3 + 2], 0, 0, 0, 0xff00ff00, 0xff00ff00, 0xff00ff00);
+		f.drawTriangle3DH(dir_res[6 + 0], dir_res[6 + 1], dir_res[6 + 2], 0, 0, 0, 0xff0000ff, 0xff0000ff, 0xff0000ff);
+	}
 };
