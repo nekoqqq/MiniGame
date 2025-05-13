@@ -57,6 +57,9 @@
     <ClInclude Include="BomberGame.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="GameSound.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VisualGame.cpp">
@@ -93,6 +96,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BomberGame.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="GameSound.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
