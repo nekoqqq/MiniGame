@@ -37,24 +37,24 @@ namespace GameLib {
 			gEnemy = new Mecha(Mecha::ENEMY);
 			gProjectionTransform.setProjection(PI / 3, 1.0*WIDTH / HEIGHT, 1, 1000);
 		}
-		int dx = 0,dy=0, dz = 0;
+		double dx = 0.,dy=0., dz = 0.;
 		if (k.isOn('w')) {
-			dz = 1;
+			dz = 1.0;
 		}
 		if (k.isOn('a')) {
-			dx = -1;
+			dx = -1.0;
 		}
 		if (k.isOn('s')) {
-			dz = -1;
+			dz = -1.0;
 		}
 		if (k.isOn('d')) {
-			dx = 1;
+			dx = 1.0;
 		}
 		if (k.isOn(' ')) {
-			dy = 1;
+			dy = 1.0;
 		}
 		if (k.isOn('z')) {
-			dy = -1;
+			dy = -1.0;
 		}
 		gPlayer->move(dx, dy, dz);
 		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m

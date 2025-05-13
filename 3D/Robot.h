@@ -28,10 +28,16 @@ public:
 	}
 	~Mecha(){}
 
-	void move(int dx,int dy, int dz) {
-		pos_.x += dx;
-		pos_.y += dy;
-		pos_.z += dz;
+	void move(double dx,double dy, double dz) {
+		// 这里的移动是在物体坐标系内移动
+		// 移动前坐标为Y，世界坐标X = AY+C，
+		// 移动后坐标为Y',世界坐标X' = AY'+C,
+		// 两式相减X'-X = A(Y'-Y) => X'=X+A(Y'-Y) => X'=X+A delta，其中delta是物体坐标系中的位移量
+		// 或者 X=AY+C => X=A(Y+delta)+c => X=AY + c +A delta，增加量还是旋转*delta
+		if (fabs(dx) < 1e-6 && fabs(dy) < 1e-6 && fabs(dz) < 1e-6)
+			return;
+		Matrix44 m = getRotationMatrix();
+		pos_ += m.vecMul({ dx,dy,dz });
 	}
 
 	const Vector3& getPos() {
@@ -91,15 +97,27 @@ public:
 		return pos_;
 	}
 
+	Matrix44 getRotationMatrix() {
+		const double t[][4] = {
+			{ 1,0,0 ,0},
+			{ 0,1,0,0},
+			{ 0,0,-1,0},
+			{ 0,0,0,1}
+		};
+		Matrix44 m(t);
+		return m;
+	}
+	Matrix44 getWorldMatrix() {
+		Matrix44 r = getRotationMatrix();
+		r[0][3] = pos_.x;
+		r[1][3] = pos_.y;
+		r[2][3] = pos_.z;
+		return r;
+	}
+
 	Vector3 getWorldDirection() {
 		Vector3 v(0, 0, 1);
-		const double t[][4] = {
-			{ 2,0,0,pos_.x },
-			{ 0,2, 0 ,pos_.y},
-			{ 0,0,-2 ,pos_.z},
-			{ 0,0,0,1 }
-		};
-		Matrix44 world_transform = t;
+		Matrix44 world_transform = getWorldMatrix();
 		return world_transform.vecMul(v);
 	}
 private:
