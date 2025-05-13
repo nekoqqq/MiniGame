@@ -151,6 +151,7 @@
     <ClInclude Include="ZBuffer.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="player.tga" />
     <Image Include="stage.tga" />
     <Image Include="stage_bak.tga" />
   </ItemGroup>

@@ -56,17 +56,17 @@ namespace GameLib {
 		if (k.isOn('z')) {
 			dy = -1.0;
 		}
-		gPlayer->move(dx, dy, dz);
+		gPlayer->move(dx, dy, dz,gEyePos,gTargetPos,gEyeUp);
 		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
 		Vector3 player_dir = gPlayer->getWorldDirection();
 		gEyePos  = player_dir + Vector3(0,10,-5);
 		gTargetPos = player_dir +Vector3(0,0,10);
 		gViewTransform.setView(gEyePos, gTargetPos, gEyeUp);
 		gStage->draw(gViewTransform, gProjectionTransform);
-		gPlayer->draw(gViewTransform,gProjectionTransform);
+		gPlayer->draw(gViewTransform, gProjectionTransform);
 		gEnemy->draw(gViewTransform,gProjectionTransform);
 		Axis::draw(gViewTransform, gProjectionTransform);
-		draw_coor(gPlayer->getPos());
+		draw_coor(gTargetPos);
 		if (k.isOn('q'))
 			GameLib::Framework::instance().requestEnd();
 	}

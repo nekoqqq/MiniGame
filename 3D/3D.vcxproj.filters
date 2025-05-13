@@ -36,5 +36,8 @@
     <Image Include="stage_bak.tga">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="player.tga">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>
