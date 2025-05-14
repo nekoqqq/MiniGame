@@ -1,8 +1,12 @@
 ﻿#pragma once
+#include <vector>
+#include <array>
+#include <cassert>
 #include"Math.h"
 #include "GameLib/Framework.h"
 using GameLib::Framework;
-
+using std::vector;
+using std::array;
 namespace GameLib {
 	class Texture;
 }
@@ -321,4 +325,47 @@ public:
 		f.drawTriangle3DH(dir_res[3 + 0], dir_res[3 + 1], dir_res[3 + 2], 0, 0, 0, 0xff00ff00, 0xff00ff00, 0xff00ff00);
 		f.drawTriangle3DH(dir_res[6 + 0], dir_res[6 + 1], dir_res[6 + 2], 0, 0, 0, 0xff0000ff, 0xff0000ff, 0xff0000ff);
 	}
+};
+
+class VertexBuffer {
+public:
+	VertexBuffer(){}
+	VertexBuffer(int n)
+	{
+		points_.resize(n);
+	}
+	~VertexBuffer()
+	{
+	}
+	const Vector3& operator[](int i)const {
+		return points_[i];
+	}
+	Vector3& operator[](int i) {
+		return points_[i];
+	}
+	void setPoint(int i, Vector3& v) {
+		assert(0 <= i && i < points_.size());
+		points_[i] = v;
+	}
+private:
+	vector<Vector3> points_;
+	vector<array<int,2>> uvs_;
+};
+
+class IndexBuffer {
+public:
+	IndexBuffer() {}
+	IndexBuffer(int n) {
+		indexes_.resize(n);
+	}
+	~IndexBuffer(){}
+	void setIndex(int i,int value) {
+		assert(0 <= i && i < indexes_.size());
+		indexes_[i] = value;
+	}
+	int size()const {
+		return indexes_.size();
+	}
+private:
+	vector<int> indexes_;
 };
