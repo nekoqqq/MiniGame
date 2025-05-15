@@ -4,6 +4,9 @@
 #include <cassert>
 #include"Math.h"
 #include "GameLib/Framework.h"
+#include "GameLib/Input/Keyboard.h"
+#include "GameLib/Input/Manager.h"
+using namespace GameLib::Input;
 using GameLib::Framework;
 using std::vector;
 using std::array;
@@ -115,6 +118,62 @@ private:
 	GameLib::Texture* texture_;
 };
 
+class Camera {
+public:
+	Camera(const Vector3 &eye_pos,const Vector3 &target_pos, const Vector3& up,double fov_y,double near,double far, double aspect_ratio):eye_pos_(eye_pos),target_pos_(target_pos),up_(up),fov_y(fov_y),near(near),far(far),aspect_ratio(aspect_ratio){
+		setProjectionTransform();
+	}
+	~Camera() {}
+	Matrix44 getViewRotation() {
+		Vector3 e3 = (target_pos_ - eye_pos_).normalize();
+		Vector3 e1 = up_.cross(e3).normalize();
+		Vector3 e2 = e3.cross(e1).normalize();
+		const double rot_t[][4] = {
+			{e1.x,e2.x,e3.x,0},
+			{e1.y,e2.y,e3.y,0},
+			{e1.z,e2.z,e3.z,0},
+			{0,0,0,1}
+		};
+
+		return Matrix44(rot_t);
+	}
+
+	Matrix44 getViewProjectionMatrix() {
+		Matrix44 rotation = getViewRotation().transpose();
+		const double trans_t[][4] = {
+			{1.,0.,0.,-eye_pos_.x },
+			{0.,1.,0.,-eye_pos_.y },
+			{ 0.,0.,1.,-eye_pos_.z},
+			{0,0,0,1}
+		};
+		Matrix44 trans(trans_t);
+		return projectionTransform.matMul(rotation.matMul(trans));
+	}
+	void update(const Vector3 &player_dir) {
+		eye_pos_ = player_dir + Vector3(0, 10, -5);
+		target_pos_ = player_dir + Vector3(0, 0, 10);
+	}
+private:
+	Vector3 eye_pos_;
+	Vector3 target_pos_;
+	Vector3 up_;
+	double fov_y;
+	double near;
+	double far;
+	double aspect_ratio;
+	Matrix44 projectionTransform;
+
+	void setProjectionTransform() {
+		double (& p)[4][4] = projectionTransform.p;
+		p[1][1] = 1 / tan(fov_y * 0.5);
+		p[0][0] = p[1][1] / aspect_ratio;
+		p[2][2] = far / (far - near);
+		p[2][3] = -near * far / (far - near);
+		p[3][2] = 1;
+	}
+
+};
+
 class Mecha
 {
 public:
@@ -138,14 +197,33 @@ public:
 	~Mecha(){
 		Framework::instance().destroyTexture(&texture_);
 	}
-	void move(double dx,double dy, double dz, Vector3& eye_pos, Vector3& target_pos, Vector3& up) {
+	void move( Matrix44 &vr) {
+		Keyboard k = Manager::instance().keyboard();
+		double dx = 0., dy = 0., dz = 0.;
+		if (k.isOn('w')) {
+			dz = 1.0;
+		}
+		if (k.isOn('a')) {
+			dx = -1.0;
+		}
+		if (k.isOn('s')) {
+			dz = -1.0;
+		}
+		if (k.isOn('d')) {
+			dx = 1.0;
+		}
+		if (k.isOn(' ')) {
+			dy = 1.0;
+		}
+		if (k.isOn('z')) {
+			dy = -1.0;
+		}
 		// 这里的移动是在相机坐标系内移动
 		// 移动前坐标为Y，世界坐标X = AY+C，
 		// 移动后坐标为Y',世界坐标X' = AY'+C,
 		// 两式相减X'-X = A(Y'-Y) => X'=X+A(Y'-Y) => X'=X+A delta，其中delta是相机坐标系中的位移量
 		// 或者 X=AY+C => X=A(Y+delta)+c => X=AY + c +A delta，增加量还是旋转*delta
-		Matrix44 m = Matrix44::getViewRotation(eye_pos, target_pos, up);
-		pos_ += m.vecMul({ dx,dy,dz });
+		pos_ += vr.vecMul({ dx,dy,dz });
 	}
 	const Vector3& getPos() {
 		return pos_;
@@ -154,10 +232,10 @@ public:
 		if (!type == PLAYER)
 			return;
 	};
-	void draw(Matrix44 &viewTransform, Matrix44 & projectionTransform) {
+	void draw(const Matrix44 & pv) {
 		// 先做点的变换
 		Matrix44 world_transform = getWorldMatrix();
-		Matrix44 pvm = projectionTransform.matMul(viewTransform).matMul(world_transform);
+		Matrix44 pvm = pv.matMul(world_transform);
 		vector<Vector3> res;
 		for (int i = 0; i < vb_.size(); i++)
 			res.push_back(pvm.vecMul(vb_.vertex(i)));
@@ -350,12 +428,12 @@ public:
 		GameLib::Framework::instance().destroyTexture(&texture_);
 		texture_ = nullptr; 
 	};
-	void draw(Matrix44&viewTransform, Matrix44 & projectionTransform)const
+	void draw(const Matrix44 &pv)const
 	{
 		GameLib::Framework f = GameLib::Framework::instance();
 		Vector3 res[4];
 		for (int i = 0; i < 4; i++) {
-			res[i] =  projectionTransform.vecMul(viewTransform.vecMul(vectors[i]));
+			res[i] = pv.vecMul(vectors[i]);
 		}
 		double uv[][2] = {
 			{0,0},
@@ -379,7 +457,7 @@ private:
 // 绘制辅助坐标轴
 class Axis {
 public:
-	static void draw(Matrix44& viewTransform, Matrix44& projectionTransform) {
+	static void draw(const Matrix44 &pvm) {
 		// 绘制坐标轴		
 		Vector3 x_axis[4] = {
 			{-100,1,0,1},
@@ -401,13 +479,13 @@ public:
 		};
 		Vector3 res[12];
 		for (int i = 0; i < 4; i++) {
-			res[i] = projectionTransform.vecMul(viewTransform.vecMul(x_axis[i]));
+			res[i] = pvm.vecMul(x_axis[i]);
 		}
 		for (int i = 0; i < 4; i++) {
-			res[4+i] = projectionTransform.vecMul(viewTransform.vecMul(y_axis[i]));
+			res[4+i] = pvm.vecMul(y_axis[i]);
 		}
 		for (int i = 0; i < 4; i++) {
-			res[8 + i] = projectionTransform.vecMul(viewTransform.vecMul(z_axis[i]));
+			res[8 + i] = pvm.vecMul(z_axis[i]);
 		}
 		Framework f = Framework::instance();
 		f.enableDepthTest(true);
@@ -438,13 +516,13 @@ public:
 		};
 		Vector3 dir_res[9];
 		for (int i = 0; i < 3; i++) {
-			dir_res[i] = projectionTransform.vecMul(viewTransform.vecMul(x_dir[i]));
+			dir_res[i] = pvm.vecMul(x_dir[i]);
 		}
 		for (int i = 0; i < 3; i++) {
-			dir_res[3+i] = projectionTransform.vecMul(viewTransform.vecMul(y_dir[i]));
+			dir_res[3+i] = pvm.vecMul(y_dir[i]);
 		}
 		for (int i = 0; i < 3; i++) {
-			dir_res[6+i] = projectionTransform.vecMul(viewTransform.vecMul(z_dir[i]));
+			dir_res[6+i] = pvm.vecMul(z_dir[i]);
 		}
 
 		f.enableDepthTest(true);

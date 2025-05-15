@@ -36,26 +36,24 @@ public:
 		this->z += other.z;
 		return *this;
 	}
-	//Vector3& operator-=(const Vector3& other) {
-	//	Vector3 tmp = -other;
-	//	*this += -other;
-	//	return *this;
-	//}
+	Vector3& operator-=(const Vector3& other) {
+		*this += -other;
+		return *this;
+	}
 	Vector3 operator+(int t) {
 		return Vector3(x + t, y + t, z + t);
 	}
 	Vector3 operator-(int t) {
 		return *this + (-t);
 	}
-	Vector3 operator+(const Vector3& o) {
+	Vector3 operator+(const Vector3& o) const{
 		if (this == &o)
 			return *this;
 		return Vector3(x + o.x, y + o.y, z + o.z);
 	}
-	//Vector3 operator-(const Vector3& o) {
-	//	Vector3 tmp = -o;
-	//	return this + tmp;
-	//}
+	Vector3 operator-(const Vector3& o)const {
+		return *this + (-o);
+	}
 	// 只读
 	double operator[](int i)const{
 		if (i == 0)
@@ -143,7 +141,7 @@ public:
 	double* operator[](int row) {
 		return p[row];
 	}
-	Vector3 vecMul(const Vector3& o) {
+	Vector3 vecMul(const Vector3& o)const {
 		Vector3 res;
 		for (int i = 0; i < N; i++) {
 			double cur = 0;
@@ -154,7 +152,7 @@ public:
 		}
 		return res;
 	}
-	Matrix44 matMul(const Matrix44& o) {
+	Matrix44 matMul(const Matrix44& o) const {
 		if (this == &o)
 			return *this;
 		Matrix44 res;
@@ -166,40 +164,5 @@ public:
 				res[i][j] = tmp; 
 			}
 		return res;
-	}
-	static Matrix44 getViewRotation(Vector3& eye_pos, Vector3& target_pos, Vector3& up) {
-		Vector3 e3 = (target_pos - eye_pos).normalize();
-		Vector3 e1 = up.cross(e3).normalize();
-		Vector3 e2 = e3.cross(e1).normalize();
-
-		// 过渡矩阵需要取逆，并且由于是标准正交基之间的变换，可以直接取转置
-		const double rot_t[][4] = {
-			{e1.x,e2.x,e3.x,0},
-			{e1.y,e2.y,e3.y,0},
-			{e1.z,e2.z,e3.z,0},
-			{0,0,0,1}
-		};
-
-		return Matrix44(rot_t);
-	}
-	// 视图变化
-	void setView(Vector3 &eye_pos, Vector3 & target_pos, Vector3&up) {
-		Matrix44 rotation = getViewRotation(eye_pos, target_pos, up).transpose();
-		const double trans_t[][4] = {
-			{1.,0.,0.,-eye_pos.x },
-			{0.,1.,0.,-eye_pos.y },
-			{ 0.,0.,1.,-eye_pos.z},
-			{0,0,0,1}
-		};
-		Matrix44 trans(trans_t); 
-		*this = rotation.matMul(trans);
-	}
-	// 投影变换
-	void setProjection(double fov_y,double aspect_ratio,double near,double far){
-		p[1][1] = 1 / tan(fov_y * 0.5);
-		p[0][0] = p[1][1] / aspect_ratio ;
-		p[2][2] = far / (far-near);
-		p[2][3] = -near * far / (far - near);
-		p[3][2] = 1;
 	}
 };
