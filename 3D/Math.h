@@ -1,6 +1,8 @@
 #pragma once
 #include <cmath>
+#include <array>
 #include <utility>
+using std::array;
 class Vector3 {
 public:
 	double x, y, z;
@@ -99,6 +101,9 @@ public:
 	friend Vector3 setSub(const Vector3& a, const Vector3& b) {
 		return Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
 	}
+	operator array<double,3>() {
+		return { x,y,z };
+	}
 };
 
 class Matrix44 { // 4阶齐次矩阵
@@ -179,12 +184,7 @@ public:
 	}
 	// 视图变化
 	void setView(Vector3 &eye_pos, Vector3 & target_pos, Vector3&up) {
-		Vector3 e3 = (target_pos - eye_pos).normalize();
-		Vector3 e1 = up.cross(e3).normalize();
-		Vector3 e2 = e3.cross(e1).normalize();
-
 		Matrix44 rotation = getViewRotation(eye_pos, target_pos, up).transpose();
-		
 		const double trans_t[][4] = {
 			{1.,0.,0.,-eye_pos.x },
 			{0.,1.,0.,-eye_pos.y },
@@ -196,12 +196,10 @@ public:
 	}
 	// 投影变换
 	void setProjection(double fov_y,double aspect_ratio,double near,double far){
-		// 现在要进行左右手坐标系的变换了，从右手系变成左手系，z要变成-z
 		p[1][1] = 1 / tan(fov_y * 0.5);
 		p[0][0] = p[1][1] / aspect_ratio ;
 		p[2][2] = far / (far-near);
 		p[2][3] = -near * far / (far - near);
 		p[3][2] = 1;
 	}
-
 };

@@ -11,6 +11,110 @@ namespace GameLib {
 	class Texture;
 }
 
+class VertexBuffer {
+public:
+	VertexBuffer() {}
+	VertexBuffer(int n) // 存了多少点的坐标
+	{
+		points_.resize(n);
+		uvs_.resize(n);
+	}
+	VertexBuffer(const vector<Vector3>& vertexes) {
+		points_ = vertexes;
+	}
+	~VertexBuffer()
+	{
+	}
+	int size()const {
+		return points_.size();
+	}
+	void setInternal(const vector<Vector3>& vertexes,const vector<array<double, 2>>& uv){
+		points_ = vertexes;
+		uvs_ = uv;
+	}
+	void setPoint(int i, Vector3& v) {
+		assert(0 <= i && i < points_.size());
+		points_[i] = v;
+	}
+	const Vector3 vertex(int i)const {
+		assert(0 <= i && i < points_.size());
+		return points_[i];
+	}
+	Vector3& vertex(int i) {
+		return points_[i];
+	}
+	const array<double, 2> uv(int i)const {
+		assert(0 <= i && i < points_.size());
+		return uvs_[i];
+	}
+	array<double, 2>& uv(int i) {
+		return uvs_[i];
+	}
+
+private:
+	vector<Vector3> points_;
+	vector<array<double, 2>> uvs_;
+};
+
+class IndexBuffer {
+public:
+	IndexBuffer() {}
+	IndexBuffer(int n) {
+		indices.resize(n);
+	}
+	IndexBuffer(const vector<array<unsigned, 3>>& arr) {
+		indices = arr;
+	}
+	~IndexBuffer() {}
+	void setIndex(int i, array<unsigned, 3> arr) {
+		assert(0 <= i && i < indices.size());
+		indices[i] = arr;
+	}
+	int size()const {
+		return indices.size();
+	}
+	const array<unsigned, 3> operator[](unsigned i)const {
+		return indices[i];
+	}
+	array<unsigned, 3>& operator[](unsigned i) {
+		return indices[i];
+	}
+private:
+	vector<array<unsigned, 3>> indices;
+};
+
+class Model {
+public:
+	enum Type {
+		STAGE,
+		PLAYER,
+		ENEMY
+	};
+	Model() {}
+	~Model() {}
+	void draw(Matrix44& world_transform, Matrix44& viewTransform, Matrix44& projectionTransform) {
+		Matrix44 composite_matrix = projectionTransform.matMul(viewTransform.matMul(world_transform));
+
+		vector<Vector3> res(vb_->size());
+		for (int i = 0; i < vb_->size(); i++) {
+			res[i] = composite_matrix.vecMul(vb_->vertex(i));
+		}
+
+		Framework f = Framework::instance();
+		for (int i = 0; i < ib_->size(); i++) {
+			int i0 = (*ib_)[i][0], i1 = (*ib_)[i][1], i2 = (*ib_)[i][2];
+			f.drawTriangle3DH(res[i0], res[i1], res[i2], vb_->uv(i0).data(), vb_->uv(i1).data(), vb_->uv(i2).data());
+		}
+	}
+private:
+	Type type_;
+	Vector3 pos_;
+
+	VertexBuffer* vb_;
+	IndexBuffer* ib_;
+	GameLib::Texture* texture_;
+};
+
 class Mecha
 {
 public:
@@ -43,120 +147,61 @@ public:
 		Matrix44 m = Matrix44::getViewRotation(eye_pos, target_pos, up);
 		pos_ += m.vecMul({ dx,dy,dz });
 	}
-
 	const Vector3& getPos() {
 		return pos_;
 	}
-
 	void update() {
 		if (!type == PLAYER)
 			return;
 	};
 	void draw(Matrix44 &viewTransform, Matrix44 & projectionTransform) {
-		Framework f = Framework::instance();
-		const double t[][4] = {
-			{ 2,0,0,pos_.x },
-			{ 0,2, 0 ,pos_.y},
-			{ 0,0,-2 ,pos_.z},
-			{ 0,0,0,1 }
-		};
-
-		// 世界变换矩阵
-		Matrix44 world_transform = t;
+		// 先做点的变换
+		Matrix44 world_transform = getWorldMatrix();
 		Matrix44 pvm = projectionTransform.matMul(viewTransform).matMul(world_transform);
-		Vector3 res[8];
-		for (int i = 0; i < 8; i++) {
-			res[i] = pvm.vecMul(body[i]);
-		}
-		int tri_idx[12][3] = {
-			// -y
-			{0,1,2},
-			{0,2,3},
+		vector<Vector3> res;
+		for (int i = 0; i < vb_.size(); i++)
+			res.push_back(pvm.vecMul(vb_.vertex(i)));
 
-			// +y
-			{4,5,6},
-			{4,6,7},
-
-			// -z
-			{0,4,7},
-			{0,3,7},
-
-			// +z
-			{1,5,6},
-			{1,2,6},
-
-			//  +x
-			{2,6,7},
-			{2,3,7},
-
-			// -x
-			{1,4,5},
-			{0,1,4}
-		};
-
-		
-		int uv_idx[12][3] = {
-			{6,7,12 },
-			{6,12,11},
-			{5,6,11},
-			{5,11,10},
-
-
-
-			{7,2,1},
-			{7,6,1},
-			{6,1,0},
-			{6,5,0},
-
-
-
-			{9,4,3},
-			{9,8,3},
-			{8,2,3},
-			{7,8,2}
-		};
-
-		// 六个图形，一共5+5+3 = 13个顶点
-		double uv[13][2] = {
-			{0.0,0.0}, // 0
-			{0.25,0.0}, // 1
-			{0.5,0.0}, // 2
-			{0.75,0.0}, // 3
-			{1.0,0.0}, // 4
-			{0.0,0.25},// 5
-			{0.25,0.25}, // 6
-			{0.5,0.25},// 7
-			{0.75,0.25}, // 8
-			{1.0,0.25}, // 9
-			{0,0.375}, // 10
-			{0.25,0.375}, // 11
-			{0.5,0.375} // 12
-		};
-
+		// 绘制三角形
+		Framework f = Framework::instance();
 		f.enableDepthTest(true);
 		f.setTexture(texture_);
-		f.setBlendMode(Framework::BLEND_OPAQUE);
-
-		for (int i = 0; i < 4; i++) {
-			f.drawTriangle3DH(res[tri_idx[i][0]], res[tri_idx[i][1]], res[tri_idx[i][2]],uv[uv_idx[i][0]], uv[uv_idx[i][1]], uv[uv_idx[i][2]], 0xffff0000, 0xff00ff00, 0xff0000ff);
-		}
-		for (int i = 4; i < 8; i++) {
-			f.drawTriangle3DH(res[tri_idx[i][0]], res[tri_idx[i][1]], res[tri_idx[i][2]], uv[uv_idx[i][0]], uv[uv_idx[i][1]], uv[uv_idx[i][2]], 0xff8f0000, 0xff008f00, 0xff00008f);
-		}		
-		for (int i = 8; i < 12; i++) {
-			f.drawTriangle3DH(res[tri_idx[i][0]], res[tri_idx[i][1]], res[tri_idx[i][2]], uv[uv_idx[i][0]], uv[uv_idx[i][1]], uv[uv_idx[i][2]], 0xff4f0000, 0xff004f00, 0xff00004f);
+		f.setBlendMode(Framework::BLEND_LINEAR);
+		int n = ib_.size();
+		for (int i = 0; i < n; i++) {
+			int i0 = ib_[i][0];
+			int i1 = ib_[i][1];
+			int i2 = ib_[i][2];
+			int c0 = 0;
+			int c1 = 0;
+			int c2 = 0;
+			if (i/8 == 0) {
+				c0 = 0xffff0000;
+				c1 = 0xff00ff00;
+				c2= 0xff0000ff;
+			}
+			else if (i/8 == 1) {
+				c0 = 0xff8f0000;
+				c1 = 0xff008f00;
+				c2 = 0xff00008f;
+			}
+			else if (i/8 ==2) {
+				c0 = 0xff4f0000;
+				c1 = 0xff004f00;
+				c2 = 0xff00004f;
+			}
+			f.drawTriangle3DH(res[i0], res[i1], res[i2], vb_.uv(i0).data(), vb_.uv(i1).data(), vb_.uv(i2).data(),c0,c1,c2);
+			//f.drawTriangle3DH(res[i0], res[i1], res[i2], 0,0,0, c0, c1, c2);
 		}
 	}
-
 	Vector3 getOrigin() {
 		return pos_;
 	}
-
 	Matrix44 getRotationMatrix() {
 		const double t[][4] = {
 			{ 1,0,0 ,0},
 			{ 0,1,0,0},
-			{ 0,0,-1,0},
+			{ 0,0,1,0},
 			{ 0,0,0,1}
 		};
 		Matrix44 m(t);
@@ -178,18 +223,100 @@ public:
 private:
 	Type type;
 	Vector3 pos_; // 中心点在世界坐标系中的位置
-	Vector3 body[8]; // 8个顶点在模型坐标中的位置
 	GameLib::Texture* texture_;
+	VertexBuffer vb_;
+	IndexBuffer ib_;
 
 	void setBody() {
-		body[0] = { -1,0,-1 };
-		body[1] = { -1,0,1 };
-		body[2] = { 1,0,1 };
-		body[3] = { 1,0,-1 };
-		body[4] = { -1,2,-1 };
-		body[5] = { -1,2,1 };
-		body[6] = { 1,2,1 };
-		body[7] = { 1,2,-1 };
+		vector<Vector3> vertexes = {
+			{1,1,1},  // +z
+			{-1,1,1},
+			{-1,0,1},
+			{1,0,1},
+
+			{-1,1,-1}, // -z
+			{1,1,-1},
+			{1,0,-1},
+			{-1,0,-1},
+
+			{ -1,1,1 }, // -x
+			{-1,1,-1},
+			{-1,0,-1},
+			{-1,0,1},
+
+			{1,1,-1}, // +x
+			{1,1,1},
+			{1,0,1},
+			{1,0,-1},
+
+			{-1,1,1}, // +y
+			{1,1,1},
+			{1,1,-1},
+			{-1,1,-1},
+
+			{1,0,1}, // -y
+			{-1,0,1},
+			{-1,0,-1},
+			{1,0,-1}
+		};
+		vector<array<double, 2>> uvs = {
+			// +z
+			{0.0,0.0},
+			{0.25,0.0},
+			{0.25,0.25},
+			{0.0,0.25},
+
+			// -z
+			{0.25,0.0},
+			{0.5,0.0},
+			{0.5,0.25},
+			{0.25,0.25},
+
+			// -x
+			{0.5,0.0},
+			{0.75,0.0},
+			{0.75,0.25},
+			{0.5,0.25},
+
+			// +x
+			{0.75,0.0},
+			{1.0,0.0},
+			{1.0,0.25},
+			{0.75,0.25},
+
+			// +y
+			{0.25,0.0},
+			{0.25,0.25},
+			{0.25,0.375},
+			{0.0,0.375},
+
+			// -y
+			{0.25,0.25},
+			{0.5,0.25},
+			{0.5,0.375},
+			{0.25,0.375}
+		};
+		vb_.setInternal(vertexes, uvs);
+		vector<array<unsigned, 3>> indices = {
+			{0,1,2},
+			{3,2,0},
+
+			{4,5,6},
+			{7,6,4},
+
+			{8,9,10},
+			{11,10,8},
+
+			{12,13,14},
+			{15,14,12},
+
+			{16,17,18},
+			{19,18,16},
+
+			{20,21,22},
+			{23,22,20}
+		};
+		ib_ = indices;
 	}
 };
 
@@ -198,10 +325,10 @@ class Stage
 public:
 	Stage(){
 		vectors = new Vector3[4]{
-			{-100,0,-100},
-			{-100,0,100},
-			{100,0,100},
-			{100,0,-100}
+			{-1000,0,-1000},
+			{-1000,0,1000},
+			{1000,0,1000},
+			{1000,0,-1000}
 		};
 		init();
 	};
@@ -243,9 +370,6 @@ public:
 		f.setBlendMode(GameLib::Framework::BLEND_LINEAR);
 		f.drawTriangle3DH(res[0], res[1], res[2], uv[0], uv[1], uv[2]);
 		f.drawTriangle3DH(res[0], res[3], res[2], uv[0], uv[3], uv[2]);
-
-		//f.drawTriangle3DH(res[0], res[1], res[2]);
-		//f.drawTriangle3DH(res[0], res[3], res[2]);
 	}
 private:
 	Vector3 *vectors;
@@ -287,6 +411,7 @@ public:
 		}
 		Framework f = Framework::instance();
 		f.enableDepthTest(true);
+		f.setBlendMode(Framework::BLEND_LINEAR);
 		f.drawTriangle3DH(res[0], res[1], res[2], 0, 0, 0, 0xffff0000, 0xffff0000, 0xffff0000);
 		f.drawTriangle3DH(res[0], res[2], res[3], 0, 0, 0, 0xffff0000, 0xffff0000, 0xffff0000);
 		f.drawTriangle3DH(res[4+0], res[4+1], res[4+2], 0, 0, 0, 0xff00ff00, 0xff00ff00, 0xff00ff00);
@@ -321,51 +446,12 @@ public:
 		for (int i = 0; i < 3; i++) {
 			dir_res[6+i] = projectionTransform.vecMul(viewTransform.vecMul(z_dir[i]));
 		}
+
+		f.enableDepthTest(true);
+		f.setBlendMode(Framework::BLEND_LINEAR);
 		f.drawTriangle3DH(dir_res[0], dir_res[1], dir_res[2], 0, 0, 0, 0xffff0000, 0xffff0000, 0xffff0000);
 		f.drawTriangle3DH(dir_res[3 + 0], dir_res[3 + 1], dir_res[3 + 2], 0, 0, 0, 0xff00ff00, 0xff00ff00, 0xff00ff00);
 		f.drawTriangle3DH(dir_res[6 + 0], dir_res[6 + 1], dir_res[6 + 2], 0, 0, 0, 0xff0000ff, 0xff0000ff, 0xff0000ff);
 	}
 };
 
-class VertexBuffer {
-public:
-	VertexBuffer(){}
-	VertexBuffer(int n)
-	{
-		points_.resize(n);
-	}
-	~VertexBuffer()
-	{
-	}
-	const Vector3& operator[](int i)const {
-		return points_[i];
-	}
-	Vector3& operator[](int i) {
-		return points_[i];
-	}
-	void setPoint(int i, Vector3& v) {
-		assert(0 <= i && i < points_.size());
-		points_[i] = v;
-	}
-private:
-	vector<Vector3> points_;
-	vector<array<int,2>> uvs_;
-};
-
-class IndexBuffer {
-public:
-	IndexBuffer() {}
-	IndexBuffer(int n) {
-		indexes_.resize(n);
-	}
-	~IndexBuffer(){}
-	void setIndex(int i,int value) {
-		assert(0 <= i && i < indexes_.size());
-		indexes_[i] = value;
-	}
-	int size()const {
-		return indexes_.size();
-	}
-private:
-	vector<int> indexes_;
-};
