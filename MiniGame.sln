@@ -6,8 +6,14 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Console", "Console\Console.vcxproj", "{DA0CF21A-BD0E-42A4-AA83-03C13E904503}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Visual", "Visual\Visual.vcxproj", "{8798BACA-09D2-43FC-8B42-661F566CBF8E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DA0CF21A-BD0E-42A4-AA83-03C13E904503} = {DA0CF21A-BD0E-42A4-AA83-03C13E904503}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3D", "3D\3D.vcxproj", "{AFACAB7D-8431-4777-BAB9-A0BB7184550D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9844804E-DA57-4C7A-A884-A28CDD3E3CF9} = {9844804E-DA57-4C7A-A884-A28CDD3E3CF9}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Library", "Library\Library.vcxproj", "{9844804E-DA57-4C7A-A884-A28CDD3E3CF9}"
 EndProject
