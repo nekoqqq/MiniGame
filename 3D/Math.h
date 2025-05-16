@@ -108,6 +108,11 @@ class Matrix44 { // 4阶齐次矩阵
 public:
 	double p[4][4];
 	static const int N = 4;
+	static const Matrix44 &identity() {
+		static Matrix44 m;
+		m.p[0][0] = m.p[1][1] = m.p[2][2] = m.p[3][3] = 1;
+		return m;
+	}
 	Matrix44()
 	{
 		for (int i = 0; i < N; i++)
