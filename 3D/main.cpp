@@ -1,10 +1,9 @@
-#include "Math.h"
 #include "GameLib/Framework.h"
 #include "GameLib/Framework.h"
 #include "GameLib/Input/Manager.h"
 #include "GameLib/Input/Keyboard.h"
 #include "GameLib/Input/Mouse.h"
-#include "Robot.h"
+#include "Library/Robot.h"
 #include <sstream>
 using namespace std;
 using namespace GameLib::Input;
@@ -261,7 +260,7 @@ namespace GameLib {
 		IndexBuffer* stage_ib = new IndexBuffer(stage_indices);
 		Texture* stage_texture = nullptr;
 		Framework::instance().createTexture(&stage_texture, "stage.tga");
-		stage_painter = new Painter(stage_vb, stage_ib, stage_texture, true, Framework::BLEND_LINEAR);
+		stage_painter = new Painter(stage_vb, stage_ib, stage_texture, true, Framework::BLEND_OPAQUE);
 
 		vector<Vector3> axis_vertexes = {
 			// x

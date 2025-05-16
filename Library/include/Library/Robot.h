@@ -2,10 +2,10 @@
 #include <vector>
 #include <array>
 #include <cassert>
-#include"Math.h"
 #include "GameLib/Framework.h"
 #include "GameLib/Input/Keyboard.h"
 #include "GameLib/Input/Manager.h"
+#include "Math.h"
 using namespace GameLib::Input;
 using GameLib::Framework;
 using std::vector;
@@ -180,7 +180,7 @@ public:
 		delete ib_;
 		ib_ = nullptr;
 
-		delete texture_;
+		Framework::instance().destroyTexture(&texture_);
 		texture_ = nullptr;
 	}
 	void draw(Matrix44 &pvm){

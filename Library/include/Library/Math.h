@@ -99,9 +99,7 @@ public:
 	friend Vector3 setSub(const Vector3& a, const Vector3& b) {
 		return Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
 	}
-	operator array<double,3>() {
-		return { x,y,z };
-	}
+	operator array<double, 3>();
 };
 
 class Matrix44 { // 4阶齐次矩阵
