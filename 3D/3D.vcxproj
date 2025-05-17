@@ -156,6 +156,9 @@
     <Image Include="stage.tga" />
     <Image Include="stage_bak.tga" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="model.xml" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

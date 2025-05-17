@@ -6,6 +6,7 @@
 #include "GameLib/Input/Keyboard.h"
 #include "GameLib/Input/Manager.h"
 #include "Math.h"
+#include "Library/Xml.h"
 using namespace GameLib::Input;
 using GameLib::Framework;
 using std::vector;
@@ -59,8 +60,8 @@ public:
 		return projectionTransform.matMul(rotation.matMul(trans));
 	}
 	void update(const Vector3& player_dir) {
-		eye_pos_ = player_dir + Vector3(0, 10, -5);
-		target_pos_ = player_dir + Vector3(0, 0, 5);
+		eye_pos_ = player_dir + Vector3(0, 100, -50);
+		target_pos_ = player_dir + Vector3(0, 0, 50);
 	}
 private:
 	Vector3 eye_pos_;
@@ -102,8 +103,28 @@ public:
 		else
 			colors_ = colors;
 	}
+	VertexBuffer(const Element* e) {
+		for (auto& child : e->getChildren()) {
+			string raw = child->getAttr("position");
+			vector<double> point = Element::converToArray<double>(raw);
+			assert(point.size() == 3);
+			points_.push_back({point[0], point[1], point[2]});
+
+			string raw_uv = child->getAttr("uv");
+			vector<double> uv = Element::converToArray<double>(raw_uv);
+			assert(uv.size() == 2);
+			uvs_.push_back({ uv[0],uv[1] });
+
+			string raw_color = child->getAttr("color");
+			unsigned color = Element::convertHexToUnsigned(raw_color);
+			colors_.push_back(static_cast<Color>(color));
+		}
+		this->name = e->getAttr("name");
+		GameLib::cout << "create vertex buffer: " << name.c_str() << GameLib::endl;
+	}
 	~VertexBuffer()
 	{
+		GameLib::cout << "delete vertex buffer: " << name.c_str() << GameLib::endl;
 	}
 	int size()const {
 		return points_.size();
@@ -138,6 +159,7 @@ public:
 	}
 
 private:
+	string name;
 	vector<Vector3> points_;
 	vector<array<double, 2>> uvs_;
 	vector<Color> colors_;
@@ -152,7 +174,19 @@ public:
 	IndexBuffer(const vector<array<unsigned, 3>>& arr) {
 		indices = arr;
 	}
-	~IndexBuffer() {}
+	IndexBuffer(const Element* e) {
+		for (auto& child : e->getChildren()) {
+			string raw = child->getAttr("indices");
+			vector<unsigned> point = Element::converToArray<unsigned>(raw);
+			assert(point.size() == 3);
+			indices.push_back({ point[0], point[1], point[2] });
+		}
+		this->name = e->getAttr("name");
+		GameLib::cout << "create index buffer: " << name.c_str() << GameLib::endl;
+	}
+	~IndexBuffer() {
+		GameLib::cout << "delete index buffer: " << name.c_str() << GameLib::endl;
+	}
 	void setIndex(int i, array<unsigned, 3> arr) {
 		assert(0 <= i && i < indices.size());
 		indices[i] = arr;
@@ -167,12 +201,33 @@ public:
 		return indices[i];
 	}
 private:
+	string name;
 	vector<array<unsigned, 3>> indices;
+};
+
+class Texture {
+public:
+	Texture(const Element* e) {
+		const string file_name = e->getAttr("file_name");
+		Framework::instance().createTexture(&texture, file_name.c_str());
+		this->name = e->getAttr("name");
+		GameLib::cout << "create texture: " << name.c_str() << GameLib::endl;
+	}
+	~Texture() {
+		Framework::instance().destroyTexture(&texture);
+		GameLib::cout << "delete texture: "<<name.c_str() << GameLib::endl;
+	}
+	void set()const {
+		Framework::instance().setTexture(texture);
+	}
+private:
+	string name;
+	GameLib::Texture* texture;
 };
 
 class Painter {
 public:
-	Painter(VertexBuffer*vb,IndexBuffer *ib,GameLib::Texture* t,bool isZTest,GameLib::Framework::BlendMode mode):vb_(vb),ib_(ib),texture_(t),isZTest_(isZTest),blend_mode_(mode){}
+	Painter(VertexBuffer*vb,IndexBuffer *ib,Texture* t,bool isZTest,GameLib::Framework::BlendMode mode):vb_(vb),ib_(ib),texture_(t),isZTest_(isZTest),blend_mode_(mode){}
 	~Painter() {
 		delete vb_;
 		vb_ = nullptr;
@@ -180,8 +235,11 @@ public:
 		delete ib_;
 		ib_ = nullptr;
 
-		Framework::instance().destroyTexture(&texture_);
+		delete texture_;
 		texture_ = nullptr;
+	}
+	const string& getName()const {
+		return name;
 	}
 	void draw(Matrix44 &pvm){
 		vector<Vector3> res(vb_->size());
@@ -195,7 +253,10 @@ public:
 		else {
 			f.enableDepthWrite(false);
 		}
-		f.setTexture(texture_);
+		if (texture_)
+			texture_->set();
+		else
+			f.setTexture(nullptr); // TODO这里的封装不太优雅
 		f.enableDepthTest(isZTest_);
 		f.setBlendMode(blend_mode_);
 		for (int i = 0; i < ib_->size(); i++) {
@@ -204,9 +265,10 @@ public:
 		}
 	}
 private:
+	string name; // 文件中的名称
 	VertexBuffer* vb_;
 	IndexBuffer* ib_;
-	GameLib::Texture* texture_;
+	Texture* texture_;
 	bool isZTest_;
 	GameLib::Framework::BlendMode blend_mode_;
 };
@@ -246,10 +308,10 @@ protected:
 	void setPos(double x, double y, double z) {
 		setPos({ x,y,z });
 	}
-	void setPos(const Vector3 &v) {
+	void setPos(const Vector3& v) {
 		pos_ = v;
 	}
-	Matrix44 getModelTransform() const{
+	Matrix44 getModelTransform() const {
 		Matrix44 r = getModelRotation();
 		r[0][3] = pos_.x;
 		r[1][3] = pos_.y;
@@ -263,12 +325,11 @@ private:
 	Matrix44 world_rotation_;
 };
 
-
-class Mecha:public Model{
+class Mecha :public Model {
 public:
-	Mecha(Type type, const Vector3& pos, Painter *painter,const Matrix44 &m = Matrix44::identity()):Model(type,pos,painter,m){
+	Mecha(Type type, const Vector3& pos, Painter* painter, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, m) {
 	}
-	~Mecha(){
+	~Mecha() {
 	}
 	virtual void update(const Matrix44& vr)override {
 		Keyboard k = Manager::instance().keyboard();
@@ -300,21 +361,95 @@ public:
 	};
 };
 
-class Stage:public Model
+class Stage :public Model
 {
 public:
-	Stage(Type type,Painter * painter) :Model(type, { 0,0,0 },painter,Matrix44::identity()) {
+	Stage(Type type, Painter* painter) :Model(type, { 0,0,0 }, painter, Matrix44::identity()) {
 	};
-	~Stage() { 
+	~Stage() {
 	};
-	virtual void update(const Matrix44& vr)override{}
+	virtual void update(const Matrix44& vr)override {}
 };
 
 // 绘制辅助坐标轴
-class Axis:public Model {
+class Axis :public Model {
 public:
-	Axis(Type type,Painter * painter) :Model(type, { 0,0,0 },painter,Matrix44::identity()){}
-	~Axis(){}
+	Axis(Type type, Painter* painter) :Model(type, { 0,0,0 }, painter, Matrix44::identity()) {}
+	~Axis() {}
 	virtual void update(const Matrix44& pvm) override {}
 };
 
+
+class Resource
+{
+public:
+	Resource(const char* file_name) {
+		XMLParser xml_parser(file_name);
+		const Element* root = xml_parser.getRoot();
+
+		for (auto& child : root->getChildren()) {
+			const string& tag_name = child->getTagName();
+			const string& name = child->getAttr("name"); 
+			if (name == "") // 没有name的被忽略了
+				continue;
+			if (tag_name == "VertexBuffer") {
+				vbs[name]=new VertexBuffer(child);
+			}
+			else if (tag_name == "IndexBuffer") {
+				ibs[name] = (new IndexBuffer(child));
+			}
+			else if (tag_name == "Texture") {
+				textures[name] = new Texture(child);
+			}
+		}
+		// Painter依赖他们
+		for (auto& child : root->getChildren()) {
+			if (child->getTagName() == "Painter"){
+				const string& name = child->getAttr("name");
+				const string& vb_name = child->getAttr("vertexBuffer");
+				const string& ib_name = child->getAttr("indexBuffer");
+				const string& texture_name = child->getAttr("texture");
+				const string& blend = child->getAttr("blend");
+				Framework::BlendMode blend_mode=Framework::BLEND_OPAQUE;
+				if (blend == "linear") {
+					blend_mode = Framework::BLEND_LINEAR;
+				}else if (blend == "additive")
+					blend_mode = Framework::BLEND_ADDITIVE;
+				bool is_ztest = true;
+				Painter* painter = new Painter(vbs[vb_name], ibs[ib_name], textures[texture_name], is_ztest, blend_mode);
+				painters[name] = painter;
+			}
+		}
+	}
+	~Resource() {
+		for (auto& kv : vbs)
+			delete kv.second;
+		for (auto& kv : ibs)
+			delete kv.second;
+		for (auto& kv : textures)
+			delete kv.second;
+		for (auto& kv : painters)
+			delete kv.second;
+	}
+	Model* createModel(Model::Type type, const char* name) {
+		Model* new_model = nullptr;
+		if (painters.count(name)) {
+			Painter *p = painters[name];
+			if (type == Model::PLAYER)
+				new_model = new Mecha(type, { 0,0,-50 }, p);
+			else if (type == Model::ENEMY)
+				new_model = new Mecha(type, { 0,0,50 }, p);
+			else if (type == Model::STAGE)
+				new_model = new Stage(type, p);
+			else if (type == Model::AXIS)
+				new_model = new Axis(type, p);
+		}
+		return new_model;
+	}
+private:
+	unordered_map<string,VertexBuffer*> vbs;
+	unordered_map<string,IndexBuffer*> ibs;
+	unordered_map<string,Texture*> textures;
+	unordered_map<string,Painter*> painters;
+
+};

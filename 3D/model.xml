@@ -1,0 +1,131 @@
+<root>
+	<VertexBuffer name="player">
+		<!-- +z面 -->
+		<Vertex position="10,10,10" uv="0.0,0.0" color="0xffff0000"></Vertex>
+		<Vertex position="-10,10,10" uv="0.25,0.0" color="0xff00ff00"></Vertex>
+		<Vertex position="-10,0,10" uv="0.25,0.25" color="0xff0000ff"></Vertex>
+		<Vertex position="10,0,10" uv="0.0,0.25" color="0xffff0000"></Vertex>
+
+		<!-- -z面 -->
+		<Vertex position="-10,10,-10" uv="0.25,0.0" color="0xffff0000"></Vertex>
+		<Vertex position="10,10,-10" uv="0.5,0.0" color="0xff00ff00"></Vertex>
+		<Vertex position="10,0,-10" uv="0.5,0.25" color="0xff0000ff"></Vertex>
+		<Vertex position="-10,0,-10" uv="0.25,0.25" color="0xffff0000"></Vertex>
+
+		<!-- -x面 -->
+		<Vertex position="-10,10,10" uv="0.5,0.0" color="0xff8f0000"></Vertex>
+		<Vertex position="-10,10,-10" uv="0.75,0.0" color="0xff008f00"></Vertex>
+		<Vertex position="-10,0,-10" uv="0.75,0.25" color="0xff00008f"></Vertex>
+		<Vertex position="-10,0,10" uv="0.5,0.25" color="0xff8f0000"></Vertex>
+
+		<!-- +x面 -->
+		<Vertex position="10,10,-10" uv="0.75,0.0" color="0xff8f0000"></Vertex>
+		<Vertex position="10,10,10" uv="1.0,0.0" color="0xff008f00"></Vertex>
+		<Vertex position="10,0,10" uv="1.0,0.25" color="0xff00008f"></Vertex>
+		<Vertex position="10,0,-10" uv="0.75,0.25" color="0xff8f0000"></Vertex>
+
+		<!-- +y面 -->
+		<Vertex position="-10,10,10" uv="0.25,0.0" color="0xff4f0000"></Vertex>
+		<Vertex position="10,10,10" uv="0.25,0.25" color="0xff004f00"></Vertex>
+		<Vertex position="10,10,-10" uv="0.25,0.375" color="0xff00004f"></Vertex>
+		<Vertex position="-10,10,-10" uv="0.0,0.375" color="0xff4f0000"></Vertex>
+
+		<!-- -y面 -->
+		<Vertex position="10,0,10" uv="0.25,0.25" color="0xff4f0000"></Vertex>
+		<Vertex position="-10,0,10" uv="0.5,0.25" color="0xff004f00"></Vertex>
+		<Vertex position="-10,0,-10" uv="0.5,0.375" color="0xff00004f"></Vertex>
+		<Vertex position="10,0,-10" uv="0.25,0.375" color="0xff4f0000"></Vertex>
+	</VertexBuffer>
+	<VertexBuffer name="stage">
+		<Vertex position="-1000,0,-1000" uv="0.0,0.0" color="0xffffffff"></Vertex>
+		<Vertex position="-1000,0,1000" uv="1.0,0.0" color="0xffffffff"></Vertex>
+		<Vertex position="1000,0,1000" uv="1.0,1.0" color="0xffffffff"></Vertex>
+		<Vertex position="1000,0,-1000" uv="0.0,1.0" color="0xffffffff"></Vertex>
+	</VertexBuffer>
+	<VertexBuffer name="axis">
+		<!-- x轴 -->
+		<Vertex position="-100,1,0" uv="0.0,0.0" color="0xffff0000"></Vertex>
+		<Vertex position="100,1,0" uv="0.0,0.0" color="0xffff0000"></Vertex>
+		<Vertex position="100,-1,0" uv="0.0,0.0" color="0xffff0000"></Vertex>
+		<Vertex position="-100,-1,0" uv="0.0,0.0" color="0xffff0000"></Vertex>
+
+		<!-- y轴 -->
+		<Vertex position="-1,-100,0" uv="0.0,0.0" color="0xff00ff00"></Vertex>
+		<Vertex position="1,-100,0" uv="0.0,0.0" color="0xff00ff00"></Vertex>
+		<Vertex position="1,100,0" uv="0.0,0.0" color="0xff00ff00"></Vertex>
+		<Vertex position="-1,100,0" uv="0.0,0.0" color="0xff00ff00"></Vertex>
+
+		<!-- z轴 -->
+		<Vertex position="-1,0,100" uv="0.0,0.0" color="0xff0000ff"></Vertex>
+		<Vertex position="1,0,100" uv="0.0,0.0" color="0xff0000ff"></Vertex>
+		<Vertex position="1,0,-100" uv="0.0,0.0" color="0xff0000ff"></Vertex>
+		<Vertex position="-1,0,-100" uv="0.0,0.0" color="0xff0000ff"></Vertex>
+
+		<!-- x箭头 -->
+		<Vertex position="100,5,0" uv="0.0,0.0" color="0xffff0000"></Vertex>
+		<Vertex position="120,0,0" uv="0.0,0.0" color="0xffff0000"></Vertex>
+		<Vertex position="100,-5,0" uv="0.0,0.0" color="0xffff0000"></Vertex>
+
+		<!-- y箭头 -->
+		<Vertex position="-5,100,0" uv="0.0,0.0" color="0xff00ff00"></Vertex>
+		<Vertex position="5,100,0" uv="0.0,0.0" color="0xff00ff00"></Vertex>
+		<Vertex position="0,120,0" uv="0.0,0.0" color="0xff00ff00"></Vertex>
+
+		<!-- z箭头 -->
+		<Vertex position="0,5,100" uv="0.0,0.0" color="0xff0000ff"></Vertex>
+		<Vertex position="0,-5,100" uv="0.0,0.0" color="0xff0000ff"></Vertex>
+		<Vertex position="0,0,120" uv="0.0,0.0" color="0xff0000ff"></Vertex>
+	</VertexBuffer>
+
+	<IndexBuffer name="player">
+		<!-- +z面 -->
+		<Triangle indices="0, 1, 2"></Triangle>
+		<Triangle indices="3, 2, 0"></Triangle>
+
+		<!-- -z面 -->
+		<Triangle indices="4, 5, 6"></Triangle>
+		<Triangle indices="7, 6, 4"></Triangle>
+
+		<!-- -x面 -->
+		<Triangle indices="8, 9, 10"></Triangle>
+		<Triangle indices="11, 10, 8"></Triangle>
+
+		<!-- +x面 -->
+		<Triangle indices="12, 13, 14"></Triangle>
+		<Triangle indices="15, 14, 12"></Triangle>
+
+		<!-- +y面 -->
+		<Triangle indices="16, 17, 18"></Triangle>
+		<Triangle indices="19, 18, 16"></Triangle>
+
+		<!-- -y面 -->
+		<Triangle indices="20, 21, 22"></Triangle>
+		<Triangle indices="23, 22, 20"></Triangle>
+	</IndexBuffer>
+	<IndexBuffer name="stage">
+		<Triangle indices="0, 1, 2"></Triangle>
+		<Triangle indices="3, 2, 0"></Triangle>
+	</IndexBuffer>
+	<IndexBuffer name="axis">
+		<Triangle indices="0, 1, 2"></Triangle>
+		<Triangle indices="3, 2, 0"></Triangle>
+
+		<Triangle indices="4, 5, 6"></Triangle>
+		<Triangle indices="7, 6, 4"></Triangle>
+
+		<Triangle indices="8, 9, 10"></Triangle>
+		<Triangle indices="11, 10, 8"></Triangle>
+
+		<Triangle indices="12, 13, 14"></Triangle>
+		<Triangle indices="15, 16, 17"></Triangle>
+		<Triangle indices="18, 19, 20"></Triangle>
+	</IndexBuffer>
+
+	<Texture name="player" file_name="player.tga"></Texture>
+	<Texture name="stage" file_name="stage.tga"></Texture>
+
+	<Painter name="player" vertexBuffer="player" indexBuffer="player" texture="player" blend="opaque"></Painter>
+	<Painter name="enemy" vertexBuffer="player" indexBuffer="player" blend="opaque"></Painter>
+	<Painter name="stage" vertexBuffer="stage" indexBuffer="stage" texture="stage" blend="opaque"></Painter>
+	<Painter name="axis" vertexBuffer="axis" indexBuffer="axis" texture="axis" blend="opaque"></Painter>
+</root>

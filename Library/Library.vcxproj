@@ -152,6 +152,7 @@
   <ItemGroup>
     <ClInclude Include="include\Library\Math.h" />
     <ClInclude Include="include\Library\Robot.h" />
+    <ClInclude Include="include\Library\Xml.h" />
     <ClInclude Include="include\Library\ZBuffer.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
