@@ -12,6 +12,7 @@ const int WIDTH = 640;
 const int HEIGHT = 480;
 // 动物
 Model* gPlayer;
+vector<Model*>gEnemys;
 Model* gEnemy;
 // 静物
 Model* gStage;
@@ -21,7 +22,7 @@ Matrix44 gProjectionTransform;
 Matrix44 gViewTransform;
 // 摄像机
 Camera* gCamera;
-Vector3 gEyePos(50, 50, 50);
+Vector3 gEyePos(0, 0, 1);
 Vector3 gTargetPos(0, 0, 0);
 Vector3 gEyeUp(0., 1., 0.); // 一般是向上
 const double fov_y = PI / 3;
@@ -41,17 +42,19 @@ namespace GameLib {
 			firstFrame = false;
 			gResource = new Resource("model.xml");
 			gPlayer = gResource->createModel(Model::PLAYER, "player");
+
 			gEnemy = gResource->createModel(Model::ENEMY, "enemy");
 			gStage = gResource->createModel(Model::STAGE, "stage");
 			gAxis = gResource->createModel(Model::AXIS, "axis");
 			gCamera = new Camera(gEyePos, gTargetPos, gEyeUp, fov_y, near, far, aspec_ratio);
+			// 设置碰撞物体
+			gPlayer->setCollisionModels({gStage,gEnemy});
 		}
 		// 更新
 		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
 		Matrix44 vr = gCamera->getViewRotation();
 		gPlayer->update(vr);
-		Vector3 player_dir = gPlayer->getZDirection();
-		gCamera->update(player_dir);
+		gCamera->update(gPlayer);
 
 		// 绘制
 		Matrix44 pv = gCamera->getViewProjectionMatrix();

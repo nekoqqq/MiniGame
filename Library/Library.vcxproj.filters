@@ -30,6 +30,9 @@
     <ClInclude Include="include\Library\Xml.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\Library\Collision.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Library.cpp">

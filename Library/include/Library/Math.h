@@ -54,6 +54,10 @@ public:
 	Vector3 operator-(const Vector3& o)const {
 		return *this + (-o);
 	}
+	Vector3 operator*(int t)const {
+		return Vector3(x * t, y * t, z * t);
+	}
+
 	// 只读
 	double operator[](int i)const{
 		if (i == 0)
