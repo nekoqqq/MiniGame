@@ -248,12 +248,12 @@ public:
 	}
 	virtual void update(const Matrix44& vr) = 0;
 
-	void initCollisionModel(const Vector3&origin,const Vector3 & half,double r) {
+	void initCollisionModel(const Vector3&cuboid_origin,const Vector3 & half,const Vector3& sphere_origin,double r) {
 		if (collision_type_ == CUBOID) {
-			collision_model_ = new Cuboid(origin,half);
+			collision_model_ = new Cuboid(cuboid_origin,half);
 		}
 		else if (collision_type_ == SPHERE) {
-			collision_model_ = new Sphere(origin, r);
+			collision_model_ = new Sphere(sphere_origin, r);
 		}
 	}
 	void updateCollisionModel(const Vector3 & center) {
@@ -319,7 +319,7 @@ private:
 class Mecha :public Model {
 public:
 	Mecha(Type type, const Vector3& pos, Painter* painter, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, m) {
-		initCollisionModel(pos, getCuboidHalf(),getCuboidHalf().x);
+		initCollisionModel(pos, getCuboidHalf(),pos,getCuboidHalf().x);
 	}
 	~Mecha() {
 	}
@@ -410,7 +410,7 @@ class Stage :public Model
 {
 public:
 	Stage(Type type, Painter* painter) :Model(type, { 0.0,0.0,0.0 }, painter, Matrix44::identity()) {
-		initCollisionModel({ 0.0,-10000.0,0.0 }, { 1000.0, 0.0, 1000.0 },10000);
+		initCollisionModel({ 0.0,0.0,0.0 }, { 1000.0, 0.0, 1000.0 }, { 0.0,-10000.0,0.0 },10000);
 	};
 	~Stage() {
 	};
