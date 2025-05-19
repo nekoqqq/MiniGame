@@ -73,23 +73,36 @@ struct Sphere:public CollisionModel {
 	}
 };
 
-
-struct Triangle {
+struct Triangle:public CollisionModel {
 	Vector3 points[3];
-	bool isCollision(const Vector3& M, const Vector3& N) { // 线段MN两个端点的位置
-		// 0:A 1:B 2:C
+	Vector3 getNorm()const {
 		const Vector3& AB = points[1] - points[0];
 		const Vector3& AC = points[2] - points[0];
 		const Vector3& n = AB.cross(AC);
+		return n;
+	}
+	Triangle() :Triangle({ 0,0,0 }, { 0,0,0 }, { 0,0,0 }) {}
+	Triangle(const Vector3& a, const Vector3& b, const Vector3& c):CollisionModel(TRIANGLE), points{ a,b,c } {}
+	virtual const Vector3& getOrigin()const override {
+		return points[0];
+	}
+	bool isCollision(const CollisionModel& o)const override { return false; }
+	bool isCollision(const Vector3& origin, const Vector3& direction) const { // M的端点以及方向
+		// 0:A 1:B 2:C
+		const Vector3& M = origin;
+		const Vector3& N = origin + direction;
+		const Vector3& AB = points[1] - points[0];
+		const Vector3& AC = points[2] - points[0];
+		const Vector3& n = getNorm();
 		const Vector3& AM = M - points[0];
-		const Vector3& AN = N - points[1];
+		const Vector3& AN = N - points[0];
 		const Vector3& MN = N - M; // 直线l
 		// 先求出直线和平面的交点
 		double ln = MN.dot(n);
 		if (fabs(ln) < eps) // 在平面内和平面平行视为没有碰撞
 			return false;
 		double lambda = AN.dot(n) / ln;
-		if (lambda < 0 || lambda > 1)
+		if (lambda < 0.0 || lambda > 1)
 			return false;
 		// 线段和平面的交点,求解线性方程组
 		// a11*s+a12*t = b1, a21*s + a22*t = b2;
@@ -103,10 +116,10 @@ struct Triangle {
 		// 行列式a11*a22- a21*a12 一定不为0，因此分母不为0
 		double det = a11 * a22 - a12 * a21;
 		assert(fabs(det) > eps);
-		double s = b1 * a22 - b2 * a12;
+		double s = (b1 * a22 - b2 * a12) / det;
 		if (s < 0.0 || s > 1)
 			return false;
-		double t = a11 * b2 - a12 * b1;
+		double t = (a11 * b2 - a21 * b1) / det;
 		if (t < 0 || s + t>1)
 			return false;
 		return true;

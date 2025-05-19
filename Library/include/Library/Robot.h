@@ -189,6 +189,14 @@ public:
 	const string& getName()const {
 		return name;
 	}
+	vector<Triangle> getTriangles()const{
+		vector<Triangle> res;
+		for (int i = 0; i < ib_->size(); i++) {
+			int i0 = (*ib_)[i][0], i1 = (*ib_)[i][1], i2 = (*ib_)[i][2];
+			res.push_back(Triangle(vb_->vertex(i0), vb_->vertex(i1), vb_->vertex(i2)));
+		}
+		return res;
+	}
 	void draw(Matrix44 &pvm){
 		vector<Vector3> res(vb_->size());
 		for (int i = 0; i < vb_->size(); i++) {
@@ -250,6 +258,9 @@ public:
 		else if (collision_type_ == CollisionModel::Type::SPHERE) {
 			collision_model_ = new Sphere(sphere_origin, r);
 		}
+		else if (collision_type_ == CollisionModel::Type::TRIANGLE) {
+			collision_model_ = new Triangle();
+		}
 	}
 	void updateCollisionModel(const Vector3 & center) {
 		if (collision_type_ == CollisionModel::Type::CUBOID) {
@@ -297,9 +308,7 @@ protected:
 		r[2][3] = pos_.z;
 		return r;
 	}
-	CollisionModel::Type getCollisionType()const {
-		return collision_type_;
-	}
+
 
 private:
 	Type type_;
@@ -310,6 +319,24 @@ private:
 	CollisionModel::Type collision_type_;
 	vector<Model*> test_collision_models; // 会发生碰撞的其他物体
 };
+
+class Stage :public Model
+{
+public:
+	Stage(Type type, Painter* painter, CollisionModel::Type collision_type) :Model(type, { 0.0,0.0,0.0 }, painter, collision_type, Matrix44::identity()) {
+		triangles_ = painter->getTriangles();
+		initCollisionModel({ 0.0,0.0,0.0 }, { 1000.0, 0.0, 1000.0 }, { 0.0,-10000.0,0.0 }, 10000);
+	};
+	~Stage() {
+	};
+	const vector<Triangle>& getTriangles()const {
+		return triangles_;
+	}
+	virtual void update(const Matrix44& vr)override {}
+private:
+	vector<Triangle> triangles_;
+};
+
 
 class Mecha :public Model {
 public:
@@ -357,7 +384,7 @@ public:
 		// 存在一个方向，使得和其他所有物体都不相撞，才可以移动
 		// 反之，存在一个物体，所有方向都和他相撞，则不可以移动
 		
-		if (getCollisionType() == CollisionModel::Type::CUBOID) {
+		if (getCollsionModel()->getType() == CollisionModel::Type::CUBOID) {
 			vector<Vector3> possible_move_vectors = {
 			move_vector,
 			{0.0,move_vector.y,move_vector.z},
@@ -382,15 +409,27 @@ public:
 				}
 			}
 		}
-		else if (getCollisionType() == CollisionModel::Type::SPHERE) {
+		else if (getCollsionModel()->getType() == CollisionModel::Type::SPHERE) {
 			Vector3 old_origin = getCollsionModel()->getOrigin();
 			for (auto& other_model : getCollisionModels()) {
 				updateCollisionModel(old_pos + move_vector);
-				if (isCollision(other_model)) {
+				if (other_model->getCollsionModel()->getType() == CollisionModel::SPHERE && isCollision(other_model)) {
 					Vector3 t = other_model->getCollsionModel()->getOrigin() - old_origin;
 					double s = 1 / t.squareDist();
-					 move_vector -= t* (move_vector.dot(t)) *(1/ t.squareDist());
+					 move_vector -= t* (move_vector.dot(t)) *(1 / t.squareDist());
 				}
+				else if (other_model->getCollsionModel()->getType() == CollisionModel::TRIANGLE) { // 碰撞检测的部分可以继续优化，这部分写的不太优雅
+					const Stage & o = dynamic_cast<const Stage&> (*other_model);
+					for (auto& tri : o.getTriangles()) {
+						if (tri.isCollision(old_pos, move_vector)) {
+							Vector3 n = tri.getNorm();
+							double lambda = n.dot(move_vector) / n.dot(n);
+							move_vector -=n*lambda;
+						}
+					}
+
+				}
+
 			}
 			setPos(old_pos + move_vector);
 		}
@@ -399,17 +438,6 @@ private:
 	Vector3 getCuboidHalf()const {
 		return { 10,10,10 };
 	}
-};
-
-class Stage :public Model
-{
-public:
-	Stage(Type type, Painter* painter, CollisionModel::Type collision_type ) :Model(type, { 0.0,0.0,0.0 }, painter,collision_type, Matrix44::identity()) {
-		initCollisionModel({ 0.0,0.0,0.0 }, { 1000.0, 0.0, 1000.0 }, { 0.0,-10000.0,0.0 },10000);
-	};
-	~Stage() {
-	};
-	virtual void update(const Matrix44& vr)override {}
 };
 
 // 绘制辅助坐标轴

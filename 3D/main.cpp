@@ -41,14 +41,14 @@ namespace GameLib {
 			setFrameRate(144);
 			firstFrame = false;
 			gResource = new Resource("model.xml");
-			gPlayer = gResource->createModel(Model::PLAYER, CollisionModel::CUBOID, "player");
+			gPlayer = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");
 
-			gEnemy = gResource->createModel(Model::ENEMY, CollisionModel::CUBOID, "enemy");
-			gStage = gResource->createModel(Model::STAGE, CollisionModel::CUBOID, "stage");
+			gEnemy = gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, "enemy");
+			gStage = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "stage");
 			gAxis = gResource->createModel(Model::AXIS, CollisionModel::CUBOID, "axis");
 			gCamera = new Camera(gEyePos, gTargetPos, gEyeUp, fov_y, near, far, aspec_ratio);
 			// 设置碰撞物体
-			gPlayer->setCollisionModels({gStage,gEnemy});
+			gPlayer->setCollisionModels({ gStage,gEnemy});
 		}
 		// 更新
 		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
