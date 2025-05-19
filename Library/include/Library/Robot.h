@@ -230,12 +230,7 @@ public:
 		ENEMY,
 		AXIS
 	};
-	enum CollisionType {
-		CUBOID,
-		SPHERE
-	};
-	Model(Type type,const Vector3 &pos, Painter *painter, const Matrix44 &m ):type_(UNKNOW),pos_(pos), painter_(painter),world_rotation_(m) {
-		collision_type_ = SPHERE;
+	Model(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m) :type_(UNKNOW), pos_(pos), painter_(painter),collision_type_(collision_type), world_rotation_(m) {
 	}
 	virtual ~Model() {
 		delete painter_;
@@ -249,18 +244,18 @@ public:
 	virtual void update(const Matrix44& vr) = 0;
 
 	void initCollisionModel(const Vector3&cuboid_origin,const Vector3 & half,const Vector3& sphere_origin,double r) {
-		if (collision_type_ == CUBOID) {
+		if (collision_type_ == CollisionModel::Type::CUBOID) {
 			collision_model_ = new Cuboid(cuboid_origin,half);
 		}
-		else if (collision_type_ == SPHERE) {
+		else if (collision_type_ == CollisionModel::Type::SPHERE) {
 			collision_model_ = new Sphere(sphere_origin, r);
 		}
 	}
 	void updateCollisionModel(const Vector3 & center) {
-		if (collision_type_ == CUBOID) {
+		if (collision_type_ == CollisionModel::Type::CUBOID) {
 			dynamic_cast<Cuboid*>(collision_model_)->center =center;
 		}
-		else if (collision_type_ == SPHERE) {
+		else if (collision_type_ == CollisionModel::Type::SPHERE) {
 			dynamic_cast<Sphere*>(collision_model_)->center = center;
 		}
 	}
@@ -302,7 +297,7 @@ protected:
 		r[2][3] = pos_.z;
 		return r;
 	}
-	CollisionType getCollisionType()const {
+	CollisionModel::Type getCollisionType()const {
 		return collision_type_;
 	}
 
@@ -312,13 +307,13 @@ private:
 	Painter* painter_;
 	Matrix44 world_rotation_;
 	CollisionModel *collision_model_;
-	CollisionType collision_type_;
+	CollisionModel::Type collision_type_;
 	vector<Model*> test_collision_models; // 会发生碰撞的其他物体
 };
 
 class Mecha :public Model {
 public:
-	Mecha(Type type, const Vector3& pos, Painter* painter, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, m) {
+	Mecha(Type type, const Vector3& pos, Painter* painter,CollisionModel::Type collision_type, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, collision_type, m) {
 		initCollisionModel(pos, getCuboidHalf(),pos,getCuboidHalf().x);
 	}
 	~Mecha() {
@@ -362,7 +357,7 @@ public:
 		// 存在一个方向，使得和其他所有物体都不相撞，才可以移动
 		// 反之，存在一个物体，所有方向都和他相撞，则不可以移动
 		
-		if (getCollisionType() == CUBOID) {
+		if (getCollisionType() == CollisionModel::Type::CUBOID) {
 			vector<Vector3> possible_move_vectors = {
 			move_vector,
 			{0.0,move_vector.y,move_vector.z},
@@ -387,14 +382,14 @@ public:
 				}
 			}
 		}
-		else if (getCollisionType() == SPHERE) {
+		else if (getCollisionType() == CollisionModel::Type::SPHERE) {
 			Vector3 old_origin = getCollsionModel()->getOrigin();
 			for (auto& other_model : getCollisionModels()) {
 				updateCollisionModel(old_pos + move_vector);
 				if (isCollision(other_model)) {
 					Vector3 t = other_model->getCollsionModel()->getOrigin() - old_origin;
 					double s = 1 / t.squareDist();
-					 move_vector -= t* (move_vector.dotProduct(t)) *(1/ t.squareDist());
+					 move_vector -= t* (move_vector.dot(t)) *(1/ t.squareDist());
 				}
 			}
 			setPos(old_pos + move_vector);
@@ -409,7 +404,7 @@ private:
 class Stage :public Model
 {
 public:
-	Stage(Type type, Painter* painter) :Model(type, { 0.0,0.0,0.0 }, painter, Matrix44::identity()) {
+	Stage(Type type, Painter* painter, CollisionModel::Type collision_type ) :Model(type, { 0.0,0.0,0.0 }, painter,collision_type, Matrix44::identity()) {
 		initCollisionModel({ 0.0,0.0,0.0 }, { 1000.0, 0.0, 1000.0 }, { 0.0,-10000.0,0.0 },10000);
 	};
 	~Stage() {
@@ -420,7 +415,7 @@ public:
 // 绘制辅助坐标轴
 class Axis :public Model {
 public:
-	Axis(Type type, Painter* painter) :Model(type, { 0.0,0.0,0.0 }, painter, Matrix44::identity()) {}
+	Axis(Type type, Painter* painter, CollisionModel::Type collision_type) :Model(type, { 0.0,0.0,0.0 }, painter, collision_type, Matrix44::identity()) {}
 	~Axis() {}
 	virtual void update(const Matrix44& pvm) override {}
 };
@@ -477,18 +472,18 @@ public:
 		for (auto& kv : painters)
 			delete kv.second;
 	}
-	Model* createModel(Model::Type type, const char* name) {
+	Model* createModel(Model::Type type, CollisionModel::Type collision_type, const char* name) {
 		Model* new_model = nullptr;
 		if (painters.count(name)) {
-			Painter *p = painters[name];
+			Painter* p = painters[name];
 			if (type == Model::PLAYER)
-				new_model = new Mecha(type, { 0.0,10.0,-50.0 }, p);
+				new_model = new Mecha(type, { 0.0,10.0,-50.0 }, p, collision_type);
 			else if (type == Model::ENEMY)
-				new_model = new Mecha(type, { 0.0,10.0,50.0 }, p);
+				new_model = new Mecha(type, { 0.0,10.0,50.0 }, p, collision_type);
 			else if (type == Model::STAGE)
-				new_model = new Stage(type, p);
+				new_model = new Stage(type, p, collision_type);
 			else if (type == Model::AXIS)
-				new_model = new Axis(type, p);
+				new_model = new Axis(type, p,collision_type);
 		}
 		return new_model;
 	}

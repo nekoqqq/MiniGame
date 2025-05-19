@@ -88,7 +88,7 @@ public:
 		return tmp.x* tmp.x + tmp.y * tmp.y + tmp.z * tmp.z;
 	}
 
-	Vector3 cross(const Vector3& b) {
+	Vector3 cross(const Vector3& b)const {
 		return {
 			y * b.z - z * b.y,
 			z * b.x - x * b.z,
@@ -102,7 +102,7 @@ public:
 		z /= r;
 		return *this;
 	}
-	double dotProduct(const Vector3& o) {
+	double dot(const Vector3& o) const{
 		return x * o.x + y * o.y + z * o.z;
 	}
 

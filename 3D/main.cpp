@@ -41,11 +41,11 @@ namespace GameLib {
 			setFrameRate(144);
 			firstFrame = false;
 			gResource = new Resource("model.xml");
-			gPlayer = gResource->createModel(Model::PLAYER, "player");
+			gPlayer = gResource->createModel(Model::PLAYER, CollisionModel::CUBOID, "player");
 
-			gEnemy = gResource->createModel(Model::ENEMY, "enemy");
-			gStage = gResource->createModel(Model::STAGE, "stage");
-			gAxis = gResource->createModel(Model::AXIS, "axis");
+			gEnemy = gResource->createModel(Model::ENEMY, CollisionModel::CUBOID, "enemy");
+			gStage = gResource->createModel(Model::STAGE, CollisionModel::CUBOID, "stage");
+			gAxis = gResource->createModel(Model::AXIS, CollisionModel::CUBOID, "axis");
 			gCamera = new Camera(gEyePos, gTargetPos, gEyeUp, fov_y, near, far, aspec_ratio);
 			// 设置碰撞物体
 			gPlayer->setCollisionModels({gStage,gEnemy});
