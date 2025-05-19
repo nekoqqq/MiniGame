@@ -40,10 +40,10 @@ public:
 		*this += -other;
 		return *this;
 	}
-	Vector3 operator+(int t) {
+	Vector3 operator+(double t) {
 		return Vector3(x + t, y + t, z + t);
 	}
-	Vector3 operator-(int t) {
+	Vector3 operator-(double t) {
 		return *this + (-t);
 	}
 	Vector3 operator+(const Vector3& o) const{
@@ -54,7 +54,7 @@ public:
 	Vector3 operator-(const Vector3& o)const {
 		return *this + (-o);
 	}
-	Vector3 operator*(int t)const {
+	Vector3 operator*(double t)const {
 		return Vector3(x * t, y * t, z * t);
 	}
 
@@ -83,6 +83,11 @@ public:
 	operator double* () {
 		return &this->x;
 	}
+	double squareDist(const Vector3& b = { 0,0,0 })const {
+		Vector3 tmp = *this - b;
+		return tmp.x* tmp.x + tmp.y * tmp.y + tmp.z * tmp.z;
+	}
+
 	Vector3 cross(const Vector3& b) {
 		return {
 			y * b.z - z * b.y,
@@ -97,6 +102,10 @@ public:
 		z /= r;
 		return *this;
 	}
+	double dotProduct(const Vector3& o) {
+		return x * o.x + y * o.y + z * o.z;
+	}
+
 	friend Vector3 setAdd(const Vector3& a, const Vector3& b) {
 		return Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
 	}
