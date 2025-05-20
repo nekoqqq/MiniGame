@@ -262,7 +262,7 @@ public:
 			collision_model_ = new Triangle();
 		}
 	}
-	void updateCollisionModel(const Vector3 & center) {
+	void updateCollisionPos(const Vector3 & center) {
 		if (collision_type_ == CollisionModel::Type::CUBOID) {
 			dynamic_cast<Cuboid*>(collision_model_)->center =center;
 		}
@@ -345,7 +345,7 @@ class Mecha :public Model {
 public:
 	Mecha(Type type, const Vector3& pos, Painter* painter,CollisionModel::Type collision_type, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, collision_type, m) {
 		// 中心点设置在脚底，因为现在实际上是线段在判断而不是两个球体在判断
-		initCollisionModel({pos.x,pos.y+getCuboidHalf().y,pos.z}, getCuboidHalf(), { pos.x,pos.y+0.1,pos.z }, getCuboidHalf().y);
+		initCollisionModel({pos.x,pos.y+getCuboidHalf().y,pos.z}, getCuboidHalf(), { pos.x,pos.y,pos.z }, getCuboidHalf().y);
 	}
 	~Mecha() {
 	}
@@ -353,17 +353,17 @@ public:
 		static int y_counter = 0;
 		Keyboard k = Manager::instance().keyboard();
 		double dx = 0., dy = 0., dz = 0.;
-		if (k.isOn('w')) {
-			dz = 1.0;
+		if (k.isOn('w')) { // 这里设置坐标值为y轴的两倍似乎比较合理，但是没有严格的数学推导
+			dz = 2.0;
 		}
 		if (k.isOn('a')) {
-			dx = -1.0;
+			dx = -2.0;
 		}
 		if (k.isOn('s')) {
-			dz = -1.0;
+			dz = -2.0;
 		}
 		if (k.isOn('d')) {
-			dx = 1.0;
+			dx = 2.0;
 		}
 		// 这里的移动是在相机坐标系内移动
 		// 移动前坐标为Y，世界坐标X = AY+C，
@@ -375,7 +375,7 @@ public:
 		// 这里对于y的方向不需要根据相机的位置来决定，绝对和世界垂直
 		if (y_counter > 0) { // 跳跃过程中
 			move_vector.y = 1.0;
-			if (y_counter++ == 20)
+			if (y_counter++ == 32)
 				y_counter = 0;
 		}
 		else if(k.isTriggered(' ')){ // 按下空格键
@@ -387,7 +387,7 @@ public:
 		}
 		// 存在一个方向，使得和其他所有物体都不相撞，才可以移动
 		// 反之，存在一个物体，所有方向都和他相撞，则不可以移动
-		
+		// TODO 目前的处理存在抖动现象，相当于说每帧物体的移动方向都会发生改变，比如在爬很抖的坡的时候，一会儿向前，一会儿向后
 		if (getCollsionModel()->getType() == CollisionModel::Type::CUBOID) {
 			vector<Vector3> possible_move_vectors = {
 			move_vector,
@@ -399,7 +399,7 @@ public:
 			{move_vector.x,0.0,0.0}
 			};
 			for (auto& v : possible_move_vectors) {
-				updateCollisionModel(old_pos + v);
+				updateCollisionPos(old_pos + v);
 				bool could_move = true;
 				for (auto& other_model : getCollisionModels()) {
 					if (isCollision(other_model)) {
@@ -415,8 +415,9 @@ public:
 		}
 		else if (getCollsionModel()->getType() == CollisionModel::Type::SPHERE) {
 			Vector3 old_origin = getCollsionModel()->getOrigin();
+			bool keep_origin = false;
 			for (auto& other_model : getCollisionModels()) {
-				updateCollisionModel(old_pos + move_vector);
+				updateCollisionPos(old_origin + move_vector);
 				if (other_model->getCollsionModel()->getType() == CollisionModel::SPHERE && isCollision(other_model)) {
 					Vector3 t = other_model->getCollsionModel()->getOrigin() - old_origin;
 					double s = 1 / t.squareDist();
@@ -425,17 +426,42 @@ public:
 				else if (other_model->getCollsionModel()->getType() == CollisionModel::TRIANGLE) { // 碰撞检测的部分可以继续优化，这部分写的不太优雅
 					const Stage & o = dynamic_cast<const Stage&> (*other_model);
 					for (auto& tri : o.getTriangles()) {
-						if (tri.isCollision(old_pos, move_vector)) {
+						if (tri.isCollision(old_origin, move_vector)) {
 							Vector3 n = tri.getNorm();
 							double lambda = n.dot(move_vector) / n.dot(n);
 							move_vector -=n*lambda;
 						}
 					}
-
+					// (*) 三角形是数组，因此要循环，
+					// 为了避免间隙处的穿透问题，使用两次循环，第一次循环如果没有发生碰撞，则直接使用就可以
+					// 如果发生了碰撞，使用校正后的向量进行第二次循环，因此本次是不会和之前已经碰撞修复过的再碰撞，如果还是发生了碰撞则不可以使用这次的移动，否则会穿透之前的物体
+					for (auto& tri : o.getTriangles()) {
+						if (tri.isCollision(old_origin, move_vector)) {
+							keep_origin = true;
+							break;
+						}
+					}
 				}
-
 			}
-			setPos(old_pos + move_vector);
+			// 同注释（*），对多个物体循环两次
+			for (auto& other_model : getCollisionModels()) {
+				if (other_model->getCollsionModel()->getType() == CollisionModel::TRIANGLE) {
+					const Stage& o = dynamic_cast<const Stage&> (*other_model);
+					for (auto& tri : o.getTriangles()) {
+						if (tri.isCollision(old_origin, move_vector)) {
+							keep_origin = true;
+							break;
+						}
+					}
+				}
+			}
+			if (keep_origin) {
+				updateCollisionPos(old_origin); // 之前的bug是由与没有同步更新这个向量导致
+			}
+			else {
+				updateCollisionPos(old_origin + move_vector); 
+				setPos(old_pos + move_vector);
+			}
 		}
 	};
 private:

@@ -16,6 +16,7 @@ vector<Model*>gEnemys;
 const int gEnemyCnt = 10;
 // 静物
 Model* gStage;
+Model* gWall;
 Model* gAxis;
 // 变换矩阵
 Matrix44 gProjectionTransform;
@@ -38,7 +39,7 @@ namespace GameLib {
 		Keyboard k = Manager::instance().keyboard();
 		Mouse m = Manager::instance().mouse();
 		if (firstFrame) {
-			setFrameRate(144);
+			setFrameRate(180);
 			firstFrame = false;
 			gResource = new Resource("model.xml");
 			gPlayer = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");
@@ -46,11 +47,13 @@ namespace GameLib {
 				gEnemys.push_back(gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy_") + to_string(i+1)));
 			}
 			gStage = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "stage");
-			gAxis = gResource->createModel(Model::AXIS, CollisionModel::CUBOID, "axis");
+			gWall = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "wall");
+			gAxis = gResource->createModel(Model::AXIS, CollisionModel::SPHERE, "axis");
 			gCamera = new Camera(gEyePos, gTargetPos, gEyeUp, fov_y, near, far, aspec_ratio);
 			// 设置碰撞物体
 			gPlayer->setCollisionModels(gEnemys);
 			gPlayer->addCollisionModel(gStage);
+			gPlayer->addCollisionModel(gWall);
 		}
 		// 更新
 		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
@@ -61,6 +64,7 @@ namespace GameLib {
 		// 绘制
 		Matrix44 pv = gCamera->getViewProjectionMatrix();
 		gStage->draw(pv);
+		gWall->draw(pv);
 		gAxis->draw(pv);
 		gPlayer->draw(pv);
 		for (int i = 0; i < gEnemyCnt; i++) {
