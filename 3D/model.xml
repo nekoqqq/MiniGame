@@ -124,8 +124,8 @@
 	<Texture name="player" file_name="player.tga"></Texture>
 	<Texture name="stage" file_name="stage.tga"></Texture>
 
-	<Painter name="player" vertexBuffer="player" indexBuffer="player" texture="" blend="opaque"></Painter>
-	<Painter name="enemy" vertexBuffer="player" indexBuffer="player" blend="opaque"></Painter>
+	<Painter name="player" vertexBuffer="player" indexBuffer="player" texture="" blend="opaque" origin ="0.0,0.1,0.0"></Painter>
+	<Painter name="enemy" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,50.0"></Painter>
 	<Painter name="stage" vertexBuffer="stage" indexBuffer="stage" texture="stage" blend="opaque"></Painter>
 	<Painter name="axis" vertexBuffer="axis" indexBuffer="axis" texture="axis" blend="opaque"></Painter>
 </root>

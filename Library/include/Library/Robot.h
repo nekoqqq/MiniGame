@@ -488,6 +488,12 @@ public:
 				bool is_ztest = true;
 				Painter* painter = new Painter(vbs[vb_name], ibs[ib_name], textures[texture_name], is_ztest, blend_mode);
 				painters[name] = painter;
+				const string& origin = child->getAttr("origin");
+				vector<double> origin_array = Element::converToArray<double>(origin);
+				if (origin_array.empty()) {
+					origin_array = vector<double>{ 0.0,0.0,0.0 };
+				}
+				origins[name]  = new Vector3(origin_array[0],origin_array[1],origin_array[2]);
 			}
 		}
 	}
@@ -500,15 +506,18 @@ public:
 			delete kv.second;
 		for (auto& kv : painters)
 			delete kv.second;
+		for (auto& kv : origins)
+			delete kv.second;
 	}
 	Model* createModel(Model::Type type, CollisionModel::Type collision_type, const char* name) {
 		Model* new_model = nullptr;
 		if (painters.count(name)) {
 			Painter* p = painters[name];
+			const Vector3& origin = *origins[name];
 			if (type == Model::PLAYER)
-				new_model = new Mecha(type, { 0.0,0.1,0.0 }, p, collision_type); // 这里必须让他一开始的坐标大于0，设置碰撞中心比地面高一点，不然由于和地面重合，导致无法跳起来
+				new_model = new Mecha(type, origin, p, collision_type); // 这里必须让他一开始的坐标大于0，设置碰撞中心比地面高一点，不然由于和地面重合，导致无法跳起来
 			else if (type == Model::ENEMY)
-				new_model = new Mecha(type, { 0.0,0.0,50.0 }, p, collision_type);
+				new_model = new Mecha(type, origin, p, collision_type);
 			else if (type == Model::STAGE)
 				new_model = new Stage(type, p, collision_type);
 			else if (type == Model::AXIS)
@@ -521,6 +530,7 @@ private:
 	unordered_map<string,IndexBuffer*> ibs;
 	unordered_map<string,Texture*> textures;
 	unordered_map<string,Painter*> painters;
+	unordered_map<string, Vector3*> origins; // 各个物体位于世界坐标系中的坐标
 
 };
 
