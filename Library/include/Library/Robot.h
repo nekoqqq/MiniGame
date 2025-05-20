@@ -416,6 +416,16 @@ public:
 		else if (getCollsionModel()->getType() == CollisionModel::Type::SPHERE) {
 			Vector3 old_origin = getCollsionModel()->getOrigin();
 			bool keep_origin = false;
+			auto tri_loop_test = [&](Model*other_model) {
+				const Stage& o = dynamic_cast<const Stage&> (*other_model);
+				for (auto& tri : o.getTriangles()) {
+					if (tri.isCollision(old_origin, move_vector)) {
+						keep_origin = true;
+						break;
+					}
+				}
+				};
+
 			for (auto& other_model : getCollisionModels()) {
 				updateCollisionPos(old_origin + move_vector);
 				if (other_model->getCollsionModel()->getType() == CollisionModel::SPHERE && isCollision(other_model)) {
@@ -435,26 +445,15 @@ public:
 					// (*) 三角形是数组，因此要循环，
 					// 为了避免间隙处的穿透问题，使用两次循环，第一次循环如果没有发生碰撞，则直接使用就可以
 					// 如果发生了碰撞，使用校正后的向量进行第二次循环，因此本次是不会和之前已经碰撞修复过的再碰撞，如果还是发生了碰撞则不可以使用这次的移动，否则会穿透之前的物体
-					for (auto& tri : o.getTriangles()) {
-						if (tri.isCollision(old_origin, move_vector)) {
-							keep_origin = true;
-							break;
-						}
-					}
+					tri_loop_test(other_model);
 				}
 			}
 			// 同注释（*），对多个物体循环两次
 			for (auto& other_model : getCollisionModels()) {
 				if (other_model->getCollsionModel()->getType() == CollisionModel::TRIANGLE) {
-					const Stage& o = dynamic_cast<const Stage&> (*other_model);
-					for (auto& tri : o.getTriangles()) {
-						if (tri.isCollision(old_origin, move_vector)) {
-							keep_origin = true;
-							break;
-						}
+					tri_loop_test(other_model);
 					}
 				}
-			}
 			if (keep_origin) {
 				updateCollisionPos(old_origin); // 之前的bug是由与没有同步更新这个向量导致
 			}
