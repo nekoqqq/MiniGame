@@ -270,6 +270,9 @@ public:
 			dynamic_cast<Sphere*>(collision_model_)->center = center;
 		}
 	}
+	void addCollisionModel(Model* collision_model) {
+		test_collision_models.push_back(collision_model);
+	}
 	void setCollisionModels(const vector<Model*>& collision_model) {
 		test_collision_models = collision_model;
 	}
@@ -509,7 +512,7 @@ public:
 		for (auto& kv : origins)
 			delete kv.second;
 	}
-	Model* createModel(Model::Type type, CollisionModel::Type collision_type, const char* name) {
+	Model* createModel(Model::Type type, CollisionModel::Type collision_type, const string& name) {
 		Model* new_model = nullptr;
 		if (painters.count(name)) {
 			Painter* p = painters[name];

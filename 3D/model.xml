@@ -38,7 +38,7 @@
 	</VertexBuffer>
 	<VertexBuffer name="stage">
 		<Vertex position="-500,0,-500" uv="0.0,0.0" color="0xffffffff"></Vertex>
-		<Vertex position="-500,100,500" uv="1.0,0.0" color="0xffffffff"></Vertex>
+		<Vertex position="-500,0,500" uv="1.0,0.0" color="0xffffffff"></Vertex>
 		<Vertex position="500,0,500" uv="1.0,1.0" color="0xffffffff"></Vertex>
 		<Vertex position="500,0,-500" uv="0.0,1.0" color="0xffffffff"></Vertex>
 	</VertexBuffer>
@@ -124,8 +124,18 @@
 	<Texture name="player" file_name="player.tga"></Texture>
 	<Texture name="stage" file_name="stage.tga"></Texture>
 
-	<Painter name="player" vertexBuffer="player" indexBuffer="player" texture="" blend="opaque" origin ="0.0,0.1,0.0"></Painter>
-	<Painter name="enemy" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,50.0"></Painter>
+	<Painter name="player" vertexBuffer="player" indexBuffer="player" texture="" blend="opaque" origin="0.0,0.0,0.0"></Painter>
+	<Painter name="enemy_1" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,10.0"></Painter>
+	<Painter name="enemy_2" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,20.0"></Painter>
+	<Painter name="enemy_3" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,30.0"></Painter>
+	<Painter name="enemy_4" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,40.0"></Painter>
+	<Painter name="enemy_5" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,50.0"></Painter>
+	<Painter name="enemy_6" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,60.0"></Painter>
+	<Painter name="enemy_7" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,70.0"></Painter>
+	<Painter name="enemy_8" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,80.0"></Painter>
+	<Painter name="enemy_9" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,90.0"></Painter>
+	<Painter name="enemy_10" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,100.0"></Painter>
+
 	<Painter name="stage" vertexBuffer="stage" indexBuffer="stage" texture="stage" blend="opaque"></Painter>
 	<Painter name="axis" vertexBuffer="axis" indexBuffer="axis" texture="axis" blend="opaque"></Painter>
 </root>
