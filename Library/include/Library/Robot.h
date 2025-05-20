@@ -506,7 +506,7 @@ public:
 		if (painters.count(name)) {
 			Painter* p = painters[name];
 			if (type == Model::PLAYER)
-				new_model = new Mecha(type, { 0.0,0.1,-50.0 }, p, collision_type); // 这里必须让他一开始的坐标大于0，设置碰撞中心比地面高一点，不然由于和地面重合，导致无法跳起来
+				new_model = new Mecha(type, { 0.0,0.1,0.0 }, p, collision_type); // 这里必须让他一开始的坐标大于0，设置碰撞中心比地面高一点，不然由于和地面重合，导致无法跳起来
 			else if (type == Model::ENEMY)
 				new_model = new Mecha(type, { 0.0,0.0,50.0 }, p, collision_type);
 			else if (type == Model::STAGE)

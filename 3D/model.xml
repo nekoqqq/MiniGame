@@ -38,7 +38,7 @@
 	</VertexBuffer>
 	<VertexBuffer name="stage">
 		<Vertex position="-500,0,-500" uv="0.0,0.0" color="0xffffffff"></Vertex>
-		<Vertex position="-500,0,500" uv="1.0,0.0" color="0xffffffff"></Vertex>
+		<Vertex position="-500,100,500" uv="1.0,0.0" color="0xffffffff"></Vertex>
 		<Vertex position="500,0,500" uv="1.0,1.0" color="0xffffffff"></Vertex>
 		<Vertex position="500,0,-500" uv="0.0,1.0" color="0xffffffff"></Vertex>
 	</VertexBuffer>
