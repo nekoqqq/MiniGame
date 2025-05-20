@@ -33,7 +33,7 @@ const double far = 10000.0;
 Resource* gResource;
 namespace GameLib {
 	bool firstFrame = true;
-	void draw_coor(const Vector3&);
+	void draw_coor(const Vector3&,int,int);
 	void Framework::update() {
 		Keyboard k = Manager::instance().keyboard();
 		Mouse m = Manager::instance().mouse();
@@ -62,15 +62,16 @@ namespace GameLib {
 		gAxis->draw(pv);
 		gPlayer->draw(pv);
 		gEnemy->draw(pv);
-		draw_coor(gTargetPos);
+		draw_coor(gPlayer->getPos(),0, 1);
+		draw_coor(gPlayer->getCollsionModel()->getOrigin(),0,2);
 
 		if (k.isOn('q'))
 			GameLib::Framework::instance().requestEnd();
 
 	}
-	void draw_coor(const Vector3& v) {
+	void draw_coor(const Vector3& v,int i,int j) {
 		ostringstream oss;
 		oss << v.x << " " << v.y << " " << v.z << std::endl;;
-		Framework::instance().drawDebugString(0, 0, oss.str().c_str());
+		Framework::instance().drawDebugString(i,j, oss.str().c_str());
 	}
 }

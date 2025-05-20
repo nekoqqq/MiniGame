@@ -99,7 +99,7 @@ struct Triangle:public CollisionModel {
 		const Vector3& MN = N - M; // 直线l
 		// 先求出直线和平面的交点
 		double ln = MN.dot(n);
-		if (fabs(ln) < eps) // 在平面内和平面平行视为没有碰撞
+		if (fabs(ln) < eps) // 直线在平面内和平面平行视为没有碰撞
 			return false;
 		double lambda = AN.dot(n) / ln;
 		if (lambda < 0.0 || lambda > 1)

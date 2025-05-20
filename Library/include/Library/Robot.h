@@ -341,7 +341,8 @@ private:
 class Mecha :public Model {
 public:
 	Mecha(Type type, const Vector3& pos, Painter* painter,CollisionModel::Type collision_type, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, collision_type, m) {
-		initCollisionModel(pos, getCuboidHalf(),pos,getCuboidHalf().x);
+		// 中心点设置在脚底，因为现在实际上是线段在判断而不是两个球体在判断
+		initCollisionModel({pos.x,pos.y+getCuboidHalf().y,pos.z}, getCuboidHalf(), { pos.x,pos.y+0.1,pos.z }, getCuboidHalf().y);
 	}
 	~Mecha() {
 	}
@@ -376,7 +377,7 @@ public:
 		}
 		else if(k.isTriggered(' ')){ // 按下空格键
 			y_counter = 1;
-			move_vector.y = 1;
+			move_vector.y = 1.0;
 		}
 		else {
 			move_vector.y = -1.0;
@@ -416,7 +417,7 @@ public:
 				if (other_model->getCollsionModel()->getType() == CollisionModel::SPHERE && isCollision(other_model)) {
 					Vector3 t = other_model->getCollsionModel()->getOrigin() - old_origin;
 					double s = 1 / t.squareDist();
-					 move_vector -= t* (move_vector.dot(t)) *(1 / t.squareDist());
+					move_vector -= t* (move_vector.dot(t)) *(1 / t.squareDist());
 				}
 				else if (other_model->getCollsionModel()->getType() == CollisionModel::TRIANGLE) { // 碰撞检测的部分可以继续优化，这部分写的不太优雅
 					const Stage & o = dynamic_cast<const Stage&> (*other_model);
@@ -436,7 +437,7 @@ public:
 	};
 private:
 	Vector3 getCuboidHalf()const {
-		return { 10,10,10 };
+		return { 10.0,5.0,10.0 };
 	}
 };
 
@@ -505,9 +506,9 @@ public:
 		if (painters.count(name)) {
 			Painter* p = painters[name];
 			if (type == Model::PLAYER)
-				new_model = new Mecha(type, { 0.0,10.0,-50.0 }, p, collision_type);
+				new_model = new Mecha(type, { 0.0,0.1,-50.0 }, p, collision_type); // 这里必须让他一开始的坐标大于0，设置碰撞中心比地面高一点，不然由于和地面重合，导致无法跳起来
 			else if (type == Model::ENEMY)
-				new_model = new Mecha(type, { 0.0,10.0,50.0 }, p, collision_type);
+				new_model = new Mecha(type, { 0.0,0.0,50.0 }, p, collision_type);
 			else if (type == Model::STAGE)
 				new_model = new Stage(type, p, collision_type);
 			else if (type == Model::AXIS)

@@ -37,10 +37,10 @@
 		<Vertex position="10,0,-10" uv="0.25,0.375" color="0xff4f0000"></Vertex>
 	</VertexBuffer>
 	<VertexBuffer name="stage">
-		<Vertex position="-1000,0,-1000" uv="0.0,0.0" color="0xffffffff"></Vertex>
-		<Vertex position="-1000,0,1000" uv="1.0,0.0" color="0xffffffff"></Vertex>
-		<Vertex position="1000,0,1000" uv="1.0,1.0" color="0xffffffff"></Vertex>
-		<Vertex position="1000,100,-1000" uv="0.0,1.0" color="0xffffffff"></Vertex>
+		<Vertex position="-500,0,-500" uv="0.0,0.0" color="0xffffffff"></Vertex>
+		<Vertex position="-500,0,500" uv="1.0,0.0" color="0xffffffff"></Vertex>
+		<Vertex position="500,0,500" uv="1.0,1.0" color="0xffffffff"></Vertex>
+		<Vertex position="500,0,-500" uv="0.0,1.0" color="0xffffffff"></Vertex>
 	</VertexBuffer>
 	<VertexBuffer name="axis">
 		<!-- x轴 -->
@@ -124,7 +124,7 @@
 	<Texture name="player" file_name="player.tga"></Texture>
 	<Texture name="stage" file_name="stage.tga"></Texture>
 
-	<Painter name="player" vertexBuffer="player" indexBuffer="player" texture="player" blend="opaque"></Painter>
+	<Painter name="player" vertexBuffer="player" indexBuffer="player" texture="" blend="opaque"></Painter>
 	<Painter name="enemy" vertexBuffer="player" indexBuffer="player" blend="opaque"></Painter>
 	<Painter name="stage" vertexBuffer="stage" indexBuffer="stage" texture="stage" blend="opaque"></Painter>
 	<Painter name="axis" vertexBuffer="axis" indexBuffer="axis" texture="axis" blend="opaque"></Painter>
