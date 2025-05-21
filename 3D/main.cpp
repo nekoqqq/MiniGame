@@ -3,13 +3,15 @@
 #include "GameLib/Input/Manager.h"
 #include "GameLib/Input/Keyboard.h"
 #include "GameLib/Input/Mouse.h"
-#include "Library/Robot.h"
+#include "Library/Model.h"
+#include "Library/Graph.h"
 #include <sstream>
 using namespace std;
 using namespace GameLib::Input;
 const double PI = 3.141592653589793238;
 const int WIDTH = 640;
 const int HEIGHT = 480;
+const int FRAMES = 180;
 // 动物
 Model* gPlayer;
 vector<Model*>gEnemys;
@@ -39,7 +41,7 @@ namespace GameLib {
 		Keyboard k = Manager::instance().keyboard();
 		Mouse m = Manager::instance().mouse();
 		if (firstFrame) {
-			setFrameRate(180);
+			setFrameRate(FRAMES);
 			firstFrame = false;
 			gResource = new Resource("model.xml");
 			gPlayer = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");

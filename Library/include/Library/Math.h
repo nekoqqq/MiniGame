@@ -2,12 +2,13 @@
 #include <cmath>
 #include <array>
 #include <utility>
+extern const double eps;
 using std::array;
 class Vector3 {
 public:
 	double x, y, z;
 	double w;
-	Vector3():Vector3(0,0,0,0){}
+	Vector3():Vector3(0.0,0.0,0.0,1.0){}
 	Vector3(double x,double y, double z,double w=1):x(x),y(y),z(z),w(w){}
 	Vector3(const Vector3& other) = default;
 	Vector3& operator=(const Vector3& other) {
@@ -57,6 +58,16 @@ public:
 	Vector3 operator*(double t)const {
 		return Vector3(x * t, y * t, z * t);
 	}
+	Vector3& operator*=(double t) {
+		this->x *= t;
+		this->y *= t;
+		this->z *= t;
+		return *this;
+	}
+	Vector3 operator/(double t) {
+		assert(fabs(t) > eps);
+		return Vector3(x / t, y / t, z / t);
+	}
 
 	// 只读
 	double operator[](int i)const{
@@ -95,7 +106,10 @@ public:
 			x * b.y - y * b.x
 		};
 	}
-	Vector3& normalize() {
+	double norm()const {
+		return pow(squareDist(),0.5);
+	}
+	Vector3& normalize() { // 这个接口的设计不好
 		double r = pow((x * x + y * y + z * z), 0.5);
 		x /= r;
 		y /= r;

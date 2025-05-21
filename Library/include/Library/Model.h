@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <sstream>
 #include <vector>
 #include <array>
 #include <cassert>
@@ -8,7 +9,9 @@
 #include "Math.h"
 #include "Xml.h"
 #include "Collision.h"
+#include "Graph.h"
 
+using std::ostringstream;
 using namespace GameLib::Input;
 using GameLib::Framework;
 using std::vector;
@@ -16,218 +19,13 @@ using std::array;
 namespace GameLib {
 	class Texture;
 }
+extern const int FRAMES;
+const int MAX_ENEGY = 200;
+const int SKY_STAY = 20; // 滞空时间
 
-enum Color {
-	WHITE = 0xffffffff,
-	RED = 0xffff0000,
-	GREEN = 0xff00ff00,
-	BLUE = 0xff0000ff,
-	H0 = 0xff8f0000,
-	H1 = 0xff008f00,
-	H2 = 0xff00008f,
-	Q0 = 0xff4f0000,
-	Q1 = 0xff004f00,
-	Q2 = 0xff00004f
-};
-
-
-class VertexBuffer {
-public:
-	VertexBuffer() {}
-	VertexBuffer(int n) // 存了多少点的坐标
-	{
-		points_.resize(n);
-		uvs_.resize(n);
-		colors_.resize(n);
-	}
-	VertexBuffer(const vector<Vector3>& vertexes, const vector<array<double, 2>>& uvs, const vector<Color>& colors = {}) {
-		points_ = vertexes;
-		uvs_ = uvs;
-		if (colors.empty()) {
-			for (int i = 0; i < points_.size(); i++) {
-				colors_.push_back(WHITE);
-			}
-		}
-		else
-			colors_ = colors;
-	}
-	VertexBuffer(const Element* e) {
-		for (auto& child : e->getChildren()) {
-			string raw = child->getAttr("position");
-			vector<double> point = Element::converToArray<double>(raw);
-			assert(point.size() == 3);
-			points_.push_back({point[0], point[1], point[2]});
-
-			string raw_uv = child->getAttr("uv");
-			vector<double> uv = Element::converToArray<double>(raw_uv);
-			assert(uv.size() == 2);
-			uvs_.push_back({ uv[0],uv[1] });
-
-			string raw_color = child->getAttr("color");
-			unsigned color = Element::convertHexToUnsigned(raw_color);
-			colors_.push_back(static_cast<Color>(color));
-		}
-		this->name = e->getAttr("name");
-		GameLib::cout << "create vertex buffer: " << name.c_str() << GameLib::endl;
-	}
-	~VertexBuffer()
-	{
-		GameLib::cout << "delete vertex buffer: " << name.c_str() << GameLib::endl;
-	}
-	int size()const {
-		return points_.size();
-	}
-	void setInternal(const vector<Vector3>& vertexes,const vector<array<double, 2>>& uv){
-		points_ = vertexes;
-		uvs_ = uv;
-	}
-	void setPoint(int i, Vector3& v) {
-		assert(0 <= i && i < points_.size());
-		points_[i] = v;
-	}
-	const Vector3 vertex(int i)const {
-		assert(0 <= i && i < points_.size());
-		return points_[i];
-	}
-	Vector3& vertex(int i) {
-		return points_[i];
-	}
-	const array<double, 2> uv(int i)const {
-		assert(0 <= i && i < points_.size());
-		return uvs_[i];
-	}
-	array<double, 2>& uv(int i) {
-		return uvs_[i];
-	}
-	Color& color(int i) {
-		return colors_[i];
-	}
-	const Color& color(int i)const {
-		return colors_[i];
-	}
-
-private:
-	string name;
-	vector<Vector3> points_;
-	vector<array<double, 2>> uvs_;
-	vector<Color> colors_;
-};
-
-class IndexBuffer {
-public:
-	IndexBuffer() {}
-	IndexBuffer(int n) {
-		indices.resize(n);
-	}
-	IndexBuffer(const vector<array<unsigned, 3>>& arr) {
-		indices = arr;
-	}
-	IndexBuffer(const Element* e) {
-		for (auto& child : e->getChildren()) {
-			string raw = child->getAttr("indices");
-			vector<unsigned> point = Element::converToArray<unsigned>(raw);
-			assert(point.size() == 3);
-			indices.push_back({ point[0], point[1], point[2] });
-		}
-		this->name = e->getAttr("name");
-		GameLib::cout << "create index buffer: " << name.c_str() << GameLib::endl;
-	}
-	~IndexBuffer() {
-		GameLib::cout << "delete index buffer: " << name.c_str() << GameLib::endl;
-	}
-	void setIndex(int i, array<unsigned, 3> arr) {
-		assert(0 <= i && i < indices.size());
-		indices[i] = arr;
-	}
-	int size()const {
-		return indices.size();
-	}
-	const array<unsigned, 3> operator[](unsigned i)const {
-		return indices[i];
-	}
-	array<unsigned, 3>& operator[](unsigned i) {
-		return indices[i];
-	}
-private:
-	string name;
-	vector<array<unsigned, 3>> indices;
-};
-
-class Texture {
-public:
-	Texture(const Element* e) {
-		const string file_name = e->getAttr("file_name");
-		Framework::instance().createTexture(&texture, file_name.c_str());
-		this->name = e->getAttr("name");
-		GameLib::cout << "create texture: " << name.c_str() << GameLib::endl;
-	}
-	~Texture() {
-		Framework::instance().destroyTexture(&texture);
-		GameLib::cout << "delete texture: "<<name.c_str() << GameLib::endl;
-	}
-	void set()const {
-		Framework::instance().setTexture(texture);
-	}
-private:
-	string name;
-	GameLib::Texture* texture;
-};
-
-class Painter {
-public:
-	Painter(VertexBuffer*vb,IndexBuffer *ib,Texture* t,bool isZTest,GameLib::Framework::BlendMode mode):vb_(vb),ib_(ib),texture_(t),isZTest_(isZTest),blend_mode_(mode){}
-	~Painter() {
-		delete vb_;
-		vb_ = nullptr;
-
-		delete ib_;
-		ib_ = nullptr;
-
-		delete texture_;
-		texture_ = nullptr;
-	}
-	const string& getName()const {
-		return name;
-	}
-	vector<Triangle> getTriangles()const{
-		vector<Triangle> res;
-		for (int i = 0; i < ib_->size(); i++) {
-			int i0 = (*ib_)[i][0], i1 = (*ib_)[i][1], i2 = (*ib_)[i][2];
-			res.push_back(Triangle(vb_->vertex(i0), vb_->vertex(i1), vb_->vertex(i2)));
-		}
-		return res;
-	}
-	void draw(Matrix44 &pvm){
-		vector<Vector3> res(vb_->size());
-		for (int i = 0; i < vb_->size(); i++) {
-			res[i] = pvm.vecMul(vb_->vertex(i));
-		}
-		Framework f = Framework::instance();
-		if (blend_mode_ == Framework::BLEND_OPAQUE) {
-			f.enableDepthWrite(true);
-		}
-		else {
-			f.enableDepthWrite(false);
-		}
-		if (texture_)
-			texture_->set();
-		else
-			f.setTexture(nullptr); // TODO这里的封装不太优雅
-		f.enableDepthTest(isZTest_);
-		f.setBlendMode(blend_mode_);
-		for (int i = 0; i < ib_->size(); i++) {
-			int i0 = (*ib_)[i][0], i1 = (*ib_)[i][1], i2 = (*ib_)[i][2];
-			f.drawTriangle3DH(res[i0], res[i1], res[i2], vb_->uv(i0).data(), vb_->uv(i1).data(), vb_->uv(i2).data(),vb_->color(i0), vb_->color(i1), vb_->color(i2));
-		}
-	}
-private:
-	string name; // 文件中的名称
-	VertexBuffer* vb_;
-	IndexBuffer* ib_;
-	Texture* texture_;
-	bool isZTest_;
-	GameLib::Framework::BlendMode blend_mode_;
-};
+const double MAX_SPEED = 4.0;
+const double ACC_DURATION = 2.0; // 单位秒
+double FRAME_SPEED_ACC = MAX_SPEED / (ACC_DURATION * FRAMES);
 
 class Model {
 public:
@@ -340,63 +138,129 @@ private:
 	vector<Triangle> triangles_;
 };
 
-
 class Mecha :public Model {
 public:
+	enum State {
+		MOVE,
+		JUMP_UP,
+		JUMP_STAY,
+		JUMP_FALL,
+		QUICK_MOVE,
+	};
 	Mecha(Type type, const Vector3& pos, Painter* painter,CollisionModel::Type collision_type, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, collision_type, m) {
 		// 中心点设置在脚底，因为现在实际上是线段在判断而不是两个球体在判断
 		initCollisionModel({pos.x,pos.y+getCuboidHalf().y,pos.z}, getCuboidHalf(), { pos.x,pos.y,pos.z }, getCuboidHalf().y);
+		state_ = MOVE;
+		enegey_ = 100;
+		velocity_ =Vector3();
+
 	}
 	~Mecha() {
 	}
-	virtual void update(const Matrix44& vr)override {
-		static int y_counter = 0;
+	void state_change() {
 		Keyboard k = Manager::instance().keyboard();
-		double dx = 0., dy = 0., dz = 0.;
+		/*
+		* STILL: wasd->MOVE, space->JUMP_UP, z->QUICK_MOVE
+		* MOVE: wasd->MOVE, space->JUMP_UP, +z->QUICK_MOVE, no->STILL
+		* QUICK_MOVE: wasd->QUICK_MOVE, space->JUMP_UP, no->STILL, 简化，先去掉这个状态
+		* JUMP_UP: arrive top->JUMP_FALL
+		* JUMP_FALL: arrive down->STILL 
+		*/
+		
+		velocity_.y = -1.0; // 重力作用
+		switch (state_)
+		{
+		case MOVE:
+			if (k.isOn(' ')) {
+				velocity_.y = 1.0;
+				state_ = JUMP_UP;
+				jump_count_ = 1;
+			}
+			break;
+		case JUMP_UP:
+			if (jump_count_++ == MAX_ENEGY/4) {
+				state_ = JUMP_STAY;
+			}
+			else {
+				velocity_.y = 1;
+			}
+			break;
+		case JUMP_STAY:
+			if (jump_count_++ == MAX_ENEGY/2) {
+				velocity_.y = -1;
+				state_ = JUMP_FALL;
+			}
+			else {
+				velocity_.y = 0;
+			}
+			break;
+		case JUMP_FALL:
+			if (jump_count_++ == MAX_ENEGY)
+				state_ = MOVE;
+			break;
+		}
+		
+	}
+	void updateVelocity(const Matrix44&vr) {
+		Keyboard k = Manager::instance().keyboard();
+		Vector3 move;
 		if (k.isOn('w')) { // 这里设置坐标值为y轴的两倍似乎比较合理，但是没有严格的数学推导
-			dz = 2.0;
+			move.z = 1.0;
 		}
 		if (k.isOn('a')) {
-			dx = -2.0;
+			move.x= -1.0;
 		}
 		if (k.isOn('s')) {
-			dz = -2.0;
+			move.z= -1.0;
 		}
 		if (k.isOn('d')) {
-			dx = 2.0;
+			move.x= 1.0;
 		}
+		// 仅保留水平分量 |v|cos t * a/|a|  = v.dot(a) / |a|^2 *a
+		Vector3 viewMove = vr.vecMul(move);
+		double cur_speed = velocity_.norm();
+		if (viewMove.x == 0 && viewMove.z == 0 && cur_speed >FRAME_SPEED_ACC) {
+			velocity_ =velocity_.normalize()*(cur_speed - FRAME_SPEED_ACC);
+			return;
+		}
+
+		if (velocity_.dot(viewMove) == 0) {
+			velocity_ = viewMove* MAX_SPEED / (ACC_DURATION * FRAMES);
+			return;
+		}
+		// 当前因为相机是向y轴负方向的，所以沿着z方向的速度不可能达到最大值，他只会一直减少，所以下面没有除以他的范数，而是把y忽略掉了
+		double viewMoveSqureDist = (viewMove.x * viewMove.x + viewMove.z * viewMove.z);
+		velocity_ = viewMove * velocity_.dot(viewMove) / viewMoveSqureDist;
+		cur_speed = velocity_.norm();
+		if (cur_speed + FRAME_SPEED_ACC <= MAX_SPEED)
+			velocity_ =velocity_.normalize()* (cur_speed+FRAME_SPEED_ACC);
+	}
+
+	virtual void update(const Matrix44& vr)override {
+		static int y_counter = 0;
 		// 这里的移动是在相机坐标系内移动
 		// 移动前坐标为Y，世界坐标X = AY+C，
 		// 移动后坐标为Y',世界坐标X' = AY'+C,
 		// 两式相减X'-X = A(Y'-Y) => X'=X+A(Y'-Y) => X'=X+A delta，其中delta是相机坐标系中的位移量
 		// 或者 X=AY+C => X=A(Y+delta)+c => X=AY + c +A delta，增加量还是旋转*delta
-		const Vector3 old_pos = getPos();
-		Vector3 move_vector = vr.vecMul({ dx,dy,dz });
-		// 这里对于y的方向不需要根据相机的位置来决定，绝对和世界垂直
-		if (y_counter > 0) { // 跳跃过程中
-			move_vector.y = 1.0;
-			if (y_counter++ == 32)
-				y_counter = 0;
-		}
-		else if(k.isTriggered(' ')){ // 按下空格键
-			y_counter = 1;
-			move_vector.y = 1.0;
-		}
-		else {
-			move_vector.y = -1.0;
-		}
+		updateVelocity(vr);
+		ostringstream oss;
+		oss << "velocity_" << velocity_.norm() << "vector: " << *velocity_;
+		Framework::instance().drawDebugString(2, 4, oss.str().c_str());
+		state_change();
 		// 存在一个方向，使得和其他所有物体都不相撞，才可以移动
 		// 反之，存在一个物体，所有方向都和他相撞，则不可以移动
 		// TODO 目前的处理存在抖动现象，相当于说每帧物体的移动方向都会发生改变，比如在爬很抖的坡的时候，一会儿向前，一会儿向后
+		const Vector3 old_pos = getPos();
 		if (getCollsionModel()->getType() == CollisionModel::Type::CUBOID) {
 			vector<Vector3> possible_move_vectors = {
-			move_vector,
-			{0.0,move_vector.y,move_vector.z},
-			{move_vector.x,0.0,move_vector.z},
-			{move_vector.x,move_vector.y,0.0},
-			{0.0,0.0,move_vector.z},
-			{0.0,move_vector.y,0.0},
-			{move_vector.x,0.0,0.0}
+			velocity_,
+			{0.0,velocity_.y,velocity_.z},
+			{velocity_.x,0.0,velocity_.z},
+			{velocity_.x,velocity_.y,0.0},
+			{0.0,0.0,velocity_.z},
+			{0.0,velocity_.y,0.0},
+			{velocity_.x,0.0,0.0}
 			};
 			for (auto& v : possible_move_vectors) {
 				updateCollisionPos(old_pos + v);
@@ -419,7 +283,7 @@ public:
 			auto tri_loop_test = [&](Model*other_model) {
 				const Stage& o = dynamic_cast<const Stage&> (*other_model);
 				for (auto& tri : o.getTriangles()) {
-					if (tri.isCollision(old_origin, move_vector)) {
+					if (tri.isCollision(old_origin, velocity_)) {
 						keep_origin = true;
 						break;
 					}
@@ -427,19 +291,19 @@ public:
 				};
 
 			for (auto& other_model : getCollisionModels()) {
-				updateCollisionPos(old_origin + move_vector);
+				updateCollisionPos(old_origin + velocity_);
 				if (other_model->getCollsionModel()->getType() == CollisionModel::SPHERE && isCollision(other_model)) {
 					Vector3 t = other_model->getCollsionModel()->getOrigin() - old_origin;
 					double s = 1 / t.squareDist();
-					move_vector -= t* (move_vector.dot(t)) *(1 / t.squareDist());
+					velocity_ -= t* (velocity_.dot(t)) *(1 / t.squareDist());
 				}
 				else if (other_model->getCollsionModel()->getType() == CollisionModel::TRIANGLE) { // 碰撞检测的部分可以继续优化，这部分写的不太优雅
 					const Stage & o = dynamic_cast<const Stage&> (*other_model);
 					for (auto& tri : o.getTriangles()) {
-						if (tri.isCollision(old_origin, move_vector)) {
+						if (tri.isCollision(old_origin, velocity_)) {
 							Vector3 n = tri.getNorm();
-							double lambda = n.dot(move_vector) / n.dot(n);
-							move_vector -=n*lambda;
+							double lambda = n.dot(velocity_) / n.dot(n);
+							velocity_ -=n*lambda;
 						}
 					}
 					// (*) 三角形是数组，因此要循环，
@@ -458,12 +322,16 @@ public:
 				updateCollisionPos(old_origin); // 之前的bug是由与没有同步更新这个向量导致
 			}
 			else {
-				updateCollisionPos(old_origin + move_vector); 
-				setPos(old_pos + move_vector);
+				updateCollisionPos(old_origin + velocity_); 
+				setPos(old_pos + velocity_);
 			}
 		}
 	};
 private:
+	State state_;
+	Vector3 velocity_;
+	int jump_count_ = 0;
+	int enegey_; // 当前的能量条
 	Vector3 getCuboidHalf()const {
 		return { 10.0,5.0,10.0 };
 	}
@@ -477,7 +345,6 @@ public:
 	virtual void update(const Matrix44& pvm) override {}
 };
 
-
 class Resource
 {
 public:
@@ -487,11 +354,11 @@ public:
 
 		for (auto& child : root->getChildren()) {
 			const string& tag_name = child->getTagName();
-			const string& name = child->getAttr("name"); 
+			const string& name = child->getAttr("name");
 			if (name == "") // 没有name的被忽略了
 				continue;
 			if (tag_name == "VertexBuffer") {
-				vbs[name]=new VertexBuffer(child);
+				vbs[name] = new VertexBuffer(child);
 			}
 			else if (tag_name == "IndexBuffer") {
 				ibs[name] = (new IndexBuffer(child));
@@ -502,16 +369,17 @@ public:
 		}
 		// Painter依赖他们
 		for (auto& child : root->getChildren()) {
-			if (child->getTagName() == "Painter"){
+			if (child->getTagName() == "Painter") {
 				const string& name = child->getAttr("name");
 				const string& vb_name = child->getAttr("vertexBuffer");
 				const string& ib_name = child->getAttr("indexBuffer");
 				const string& texture_name = child->getAttr("texture");
 				const string& blend = child->getAttr("blend");
-				Framework::BlendMode blend_mode=Framework::BLEND_OPAQUE;
+				Framework::BlendMode blend_mode = Framework::BLEND_OPAQUE;
 				if (blend == "linear") {
 					blend_mode = Framework::BLEND_LINEAR;
-				}else if (blend == "additive")
+				}
+				else if (blend == "additive")
 					blend_mode = Framework::BLEND_ADDITIVE;
 				bool is_ztest = true;
 				Painter* painter = new Painter(vbs[vb_name], ibs[ib_name], textures[texture_name], is_ztest, blend_mode);
@@ -521,7 +389,7 @@ public:
 				if (origin_array.empty()) {
 					origin_array = vector<double>{ 0.0,0.0,0.0 };
 				}
-				origins[name]  = new Vector3(origin_array[0],origin_array[1],origin_array[2]);
+				origins[name] = new Vector3(origin_array[0], origin_array[1], origin_array[2]);
 			}
 		}
 	}
@@ -549,15 +417,15 @@ public:
 			else if (type == Model::STAGE)
 				new_model = new Stage(type, p, collision_type);
 			else if (type == Model::AXIS)
-				new_model = new Axis(type, p,collision_type);
+				new_model = new Axis(type, p, collision_type);
 		}
 		return new_model;
 	}
 private:
-	unordered_map<string,VertexBuffer*> vbs;
-	unordered_map<string,IndexBuffer*> ibs;
-	unordered_map<string,Texture*> textures;
-	unordered_map<string,Painter*> painters;
+	unordered_map<string, VertexBuffer*> vbs;
+	unordered_map<string, IndexBuffer*> ibs;
+	unordered_map<string, Texture*> textures;
+	unordered_map<string, Painter*> painters;
 	unordered_map<string, Vector3*> origins; // 各个物体位于世界坐标系中的坐标
 
 };

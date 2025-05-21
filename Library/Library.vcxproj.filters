@@ -21,7 +21,7 @@
     <ClInclude Include="include\Library\Math.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\Library\Robot.h">
+    <ClInclude Include="include\Library\Model.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\Library\ZBuffer.h">
@@ -31,6 +31,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\Library\Collision.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Library\Graph.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
