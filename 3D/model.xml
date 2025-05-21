@@ -37,10 +37,10 @@
 		<Vertex position="10,0,-10" uv="0.25,0.375" color="0xff4f0000"></Vertex>
 	</VertexBuffer>
 	<VertexBuffer name="stage">
-		<Vertex position="-500,0,-500" uv="0.0,0.0" color="0xffffffff"></Vertex>
-		<Vertex position="-500,0,500" uv="1.0,0.0" color="0xffffffff"></Vertex>
-		<Vertex position="500,0,500" uv="1.0,1.0" color="0xffffffff"></Vertex>
-		<Vertex position="500,0,-500" uv="0.0,1.0" color="0xffffffff"></Vertex>
+		<Vertex position="-5000,0,-5000" uv="0.0,0.0" color="0xffffffff"></Vertex>
+		<Vertex position="-5000,0,5000" uv="1.0,0.0" color="0xffffffff"></Vertex>
+		<Vertex position="5000,0,5000" uv="1.0,1.0" color="0xffffffff"></Vertex>
+		<Vertex position="5000,0,-5000" uv="0.0,1.0" color="0xffffffff"></Vertex>
 	</VertexBuffer>
 	<VertexBuffer name="axis">
 		<!-- x轴 -->

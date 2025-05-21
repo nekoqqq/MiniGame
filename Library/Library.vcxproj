@@ -153,8 +153,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\Library\Collision.h" />
+    <ClInclude Include="include\Library\Graph.h" />
     <ClInclude Include="include\Library\Math.h" />
-    <ClInclude Include="include\Library\Robot.h" />
+    <ClInclude Include="include\Library\Model.h" />
     <ClInclude Include="include\Library\Xml.h" />
     <ClInclude Include="include\Library\ZBuffer.h" />
     <ClInclude Include="pch.h" />
