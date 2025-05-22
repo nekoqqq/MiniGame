@@ -14,6 +14,7 @@ const int HEIGHT = 480;
 const int FRAMES = 180;
 // 动物
 Model* gPlayer;
+Model* gEnemy;
 vector<Model*>gEnemys;
 const int gEnemyCnt = 10;
 // 静物
@@ -36,7 +37,6 @@ const double far = 10000.0;
 Resource* gResource;
 namespace GameLib {
 	bool firstFrame = true;
-	void draw_coor(const Vector3&,int,int);
 	void Framework::update() {
 		Keyboard k = Manager::instance().keyboard();
 		Mouse m = Manager::instance().mouse();
@@ -45,6 +45,7 @@ namespace GameLib {
 			firstFrame = false;
 			gResource = new Resource("model.xml");
 			gPlayer = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");
+			gEnemy = gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy"));
 			for (int i = 0; i < gEnemyCnt; i++) {
 				gEnemys.push_back(gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy_") + to_string(i+1)));
 			}
@@ -54,6 +55,7 @@ namespace GameLib {
 			gCamera = new Camera(gEyePos, gTargetPos, gEyeUp, fov_y, near, far, aspec_ratio);
 			// 设置碰撞物体
 			gPlayer->setCollisionModels(gEnemys);
+			gPlayer->addCollisionModel(gEnemy);
 			gPlayer->addCollisionModel(gStage);
 			gPlayer->addCollisionModel(gWall);
 		}
@@ -69,19 +71,13 @@ namespace GameLib {
 		gWall->draw(pv);
 		gAxis->draw(pv);
 		gPlayer->draw(pv);
+		gEnemy->draw(pv);
 		for (int i = 0; i < gEnemyCnt; i++) {
 			gEnemys[i]->draw(pv);
 		}
-		draw_coor(gPlayer->getPos(),0, 1);
-		draw_coor(gPlayer->getCollsionModel()->getOrigin(),0,2);
 
 		if (k.isOn('q'))
 			GameLib::Framework::instance().requestEnd();
 
-	}
-	void draw_coor(const Vector3& v,int i,int j) {
-		ostringstream oss;
-		oss << v.x << " " << v.y << " " << v.z << std::endl;;
-		Framework::instance().drawDebugString(i,j, oss.str().c_str());
 	}
 }

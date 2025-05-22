@@ -153,6 +153,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\Library\Collision.h" />
+    <ClInclude Include="include\Library\Globals.h" />
     <ClInclude Include="include\Library\Graph.h" />
     <ClInclude Include="include\Library\Math.h" />
     <ClInclude Include="include\Library\Model.h" />

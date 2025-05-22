@@ -10,6 +10,7 @@
 #include "Xml.h"
 #include "Collision.h"
 #include "Graph.h"
+#include "Globals.h"
 
 using std::ostringstream;
 using namespace GameLib::Input;
@@ -20,12 +21,18 @@ namespace GameLib {
 	class Texture;
 }
 extern const int FRAMES;
-const int MAX_ENEGY = 200;
-const int SKY_STAY = 20; // 滞空时间
+extern const double PI;
+const int MAX_ENEGY = 1*FRAMES;
+const int SKY_STAY = 0.5*FRAMES; // 滞空时间
+const int FALL_DURATION = 0.5 * FRAMES;
 
+// 移动速度
 const double MAX_SPEED = 4.0;
 const double ACC_DURATION = 2.0; // 单位秒
 double FRAME_SPEED_ACC = MAX_SPEED / (ACC_DURATION * FRAMES);
+
+// 转身
+const double TURN_DURATION = (MAX_ENEGY+SKY_STAY+FALL_DURATION)/3; // 持续多少帧
 
 class Model {
 public:
@@ -42,7 +49,7 @@ public:
 		delete painter_;
 		painter_ = nullptr;
 	}
-	void draw(const Matrix44 &pv){
+	 void draw(const Matrix44 &pv) {
 		Matrix44 model_transform = getModelTransform();
 		Matrix44 pvm = pv.matMul(model_transform);
 		painter_->draw(pvm);
@@ -95,6 +102,13 @@ public:
 protected:
 	const Matrix44& getModelRotation()const{
 		return world_rotation_;
+	}
+	void setModelRotationY(double theta) { // 绕着Y轴旋转
+		double t = theta * PI / 180;
+		world_rotation_[0][0] = cos(t);
+		world_rotation_[0][2] = -sin(t);
+		world_rotation_[2][0] = sin(t);
+		world_rotation_[2][2] = cos(t);
 	}
 	void setPos(double x, double y, double z) {
 		setPos({ x,y,z });
@@ -153,9 +167,34 @@ public:
 		state_ = MOVE;
 		enegey_ = 100;
 		velocity_ =Vector3();
-
+		jump_count_ = 0;
+		enemy_theta_ = 0;
+		rotation_y_ = 0;
 	}
 	~Mecha() {
+	}
+	void setEnemyTheta() {
+		const Vector3& enemy_pos = gEnemy->getPos();
+		const Vector3& dir = enemy_pos - getPos(); // 该方向是世界坐标，而不是在模型里面的坐标，因为是两个原点相减
+		enemy_theta_ = atan2(dir.z, dir.x)*180.0/PI ; // z轴和x轴投影，用角度会比较清晰一点,由于一开始朝向的是z轴正方向，而这个是x到z的旋转角
+		if (enemy_theta_ > 360) {
+			enemy_theta_ -= 360;
+		}
+		else if (enemy_theta_ < 0) {
+			enemy_theta_ += 360;
+		}
+	}
+	void setRotationSpeed() {
+		double delta = enemy_theta_ - rotation_y_ - 90; // 两者夹角,要再减去90度是让z轴的正方向对着他
+		if (delta > 180.0) // 顺时针旋转rotation 180-delta
+			delta -= 360.0;
+		else if (delta < -180.0)
+			delta += 360.0;
+		rotation_speed_ =  delta / TURN_DURATION;
+	}
+	void incrRotationSpeed() {
+		if (jump_count_ < TURN_DURATION)
+			rotation_y_ += rotation_speed_;
 	}
 	void state_change() {
 		Keyboard k = Manager::instance().keyboard();
@@ -166,7 +205,6 @@ public:
 		* JUMP_UP: arrive top->JUMP_FALL
 		* JUMP_FALL: arrive down->STILL 
 		*/
-		
 		velocity_.y = -1.0; // 重力作用
 		switch (state_)
 		{
@@ -175,10 +213,13 @@ public:
 				velocity_.y = 1.0;
 				state_ = JUMP_UP;
 				jump_count_ = 1;
+				setRotationSpeed();
+				incrRotationSpeed();
 			}
 			break;
 		case JUMP_UP:
-			if (jump_count_++ == MAX_ENEGY/4) {
+			incrRotationSpeed();
+			if (jump_count_++ >= MAX_ENEGY) {
 				state_ = JUMP_STAY;
 			}
 			else {
@@ -186,7 +227,8 @@ public:
 			}
 			break;
 		case JUMP_STAY:
-			if (jump_count_++ == MAX_ENEGY/2) {
+			incrRotationSpeed();
+			if (jump_count_++ == MAX_ENEGY+SKY_STAY) {
 				velocity_.y = -1;
 				state_ = JUMP_FALL;
 			}
@@ -195,11 +237,12 @@ public:
 			}
 			break;
 		case JUMP_FALL:
-			if (jump_count_++ == MAX_ENEGY)
+			incrRotationSpeed();
+			if (jump_count_++ == MAX_ENEGY+SKY_STAY+FALL_DURATION) {
 				state_ = MOVE;
+			}
 			break;
 		}
-		
 	}
 	void updateVelocity(const Matrix44&vr) {
 		Keyboard k = Manager::instance().keyboard();
@@ -219,7 +262,7 @@ public:
 		// 仅保留水平分量 |v|cos t * a/|a|  = v.dot(a) / |a|^2 *a
 		Vector3 viewMove = vr.vecMul(move);
 		double cur_speed = velocity_.norm();
-		if (viewMove.x == 0 && viewMove.z == 0 && cur_speed >FRAME_SPEED_ACC) {
+		if (viewMove.x == 0 && viewMove.z == 0 && cur_speed >FRAME_SPEED_ACC || velocity_.dot(viewMove)<0) { // 修复反向的时候速度还是不减少的问题
 			velocity_ =velocity_.normalize()*(cur_speed - FRAME_SPEED_ACC);
 			return;
 		}
@@ -234,23 +277,12 @@ public:
 		cur_speed = velocity_.norm();
 		if (cur_speed + FRAME_SPEED_ACC <= MAX_SPEED)
 			velocity_ =velocity_.normalize()* (cur_speed+FRAME_SPEED_ACC);
-	}
 
-	virtual void update(const Matrix44& vr)override {
-		static int y_counter = 0;
-		// 这里的移动是在相机坐标系内移动
-		// 移动前坐标为Y，世界坐标X = AY+C，
-		// 移动后坐标为Y',世界坐标X' = AY'+C,
-		// 两式相减X'-X = A(Y'-Y) => X'=X+A(Y'-Y) => X'=X+A delta，其中delta是相机坐标系中的位移量
-		// 或者 X=AY+C => X=A(Y+delta)+c => X=AY + c +A delta，增加量还是旋转*delta
-		updateVelocity(vr);
-		ostringstream oss;
-		oss << "velocity_" << velocity_.norm() << "vector: " << *velocity_;
-		Framework::instance().drawDebugString(2, 4, oss.str().c_str());
-		state_change();
+	}
+	void collisionTest() {
 		// 存在一个方向，使得和其他所有物体都不相撞，才可以移动
-		// 反之，存在一个物体，所有方向都和他相撞，则不可以移动
-		// TODO 目前的处理存在抖动现象，相当于说每帧物体的移动方向都会发生改变，比如在爬很抖的坡的时候，一会儿向前，一会儿向后
+// 反之，存在一个物体，所有方向都和他相撞，则不可以移动
+// TODO 目前的处理存在抖动现象，相当于说每帧物体的移动方向都会发生改变，比如在爬很抖的坡的时候，一会儿向前，一会儿向后
 		const Vector3 old_pos = getPos();
 		if (getCollsionModel()->getType() == CollisionModel::Type::CUBOID) {
 			vector<Vector3> possible_move_vectors = {
@@ -280,7 +312,7 @@ public:
 		else if (getCollsionModel()->getType() == CollisionModel::Type::SPHERE) {
 			Vector3 old_origin = getCollsionModel()->getOrigin();
 			bool keep_origin = false;
-			auto tri_loop_test = [&](Model*other_model) {
+			auto tri_loop_test = [&](Model* other_model) {
 				const Stage& o = dynamic_cast<const Stage&> (*other_model);
 				for (auto& tri : o.getTriangles()) {
 					if (tri.isCollision(old_origin, velocity_)) {
@@ -295,15 +327,15 @@ public:
 				if (other_model->getCollsionModel()->getType() == CollisionModel::SPHERE && isCollision(other_model)) {
 					Vector3 t = other_model->getCollsionModel()->getOrigin() - old_origin;
 					double s = 1 / t.squareDist();
-					velocity_ -= t* (velocity_.dot(t)) *(1 / t.squareDist());
+					velocity_ -= t * (velocity_.dot(t)) * (1 / t.squareDist());
 				}
 				else if (other_model->getCollsionModel()->getType() == CollisionModel::TRIANGLE) { // 碰撞检测的部分可以继续优化，这部分写的不太优雅
-					const Stage & o = dynamic_cast<const Stage&> (*other_model);
+					const Stage& o = dynamic_cast<const Stage&> (*other_model);
 					for (auto& tri : o.getTriangles()) {
 						if (tri.isCollision(old_origin, velocity_)) {
 							Vector3 n = tri.getNorm();
 							double lambda = n.dot(velocity_) / n.dot(n);
-							velocity_ -=n*lambda;
+							velocity_ -= n * lambda;
 						}
 					}
 					// (*) 三角形是数组，因此要循环，
@@ -316,24 +348,54 @@ public:
 			for (auto& other_model : getCollisionModels()) {
 				if (other_model->getCollsionModel()->getType() == CollisionModel::TRIANGLE) {
 					tri_loop_test(other_model);
-					}
 				}
+			}
 			if (keep_origin) {
 				updateCollisionPos(old_origin); // 之前的bug是由与没有同步更新这个向量导致
 			}
 			else {
-				updateCollisionPos(old_origin + velocity_); 
+				updateCollisionPos(old_origin + velocity_);
 				setPos(old_pos + velocity_);
 			}
 		}
-	};
+	}
+	virtual void update(const Matrix44& vr)override {
+		static int y_counter = 0;
+		// 这里的移动是在相机坐标系内移动
+		// 移动前坐标为Y，世界坐标X = AY+C，
+		// 移动后坐标为Y',世界坐标X' = AY'+C,
+		// 两式相减X'-X = A(Y'-Y) => X'=X+A(Y'-Y) => X'=X+A delta，其中delta是相机坐标系中的位移量
+		// 或者 X=AY+C => X=A(Y+delta)+c => X=AY + c +A delta，增加量还是旋转*delta
+		updateVelocity(vr);
+		state_change();
+		collisionTest();
+		setEnemyTheta();
+		setModelRotationY(rotation_y_); 		// 更新旋转角度,这个似乎可以放在别的地方
+		printDebugInfo();
+	}
+
 private:
 	State state_;
 	Vector3 velocity_;
-	int jump_count_ = 0;
+	int jump_count_;
 	int enegey_; // 当前的能量条
+	double enemy_theta_; // 和敌人的角度
+	double rotation_y_; // 绕着Y轴的旋转角
+	double rotation_speed_; // 绕着Y轴旋转的速度
 	Vector3 getCuboidHalf()const {
 		return { 10.0,5.0,10.0 };
+	}
+	void printDebugInfo() {
+		ostringstream oss;
+		oss << "player pos: " << getPos()<<" , enemy_pos: "<<gEnemy->getPos();
+		Framework::instance().drawDebugString(0, 1, oss.str().c_str());
+		oss.str("");
+		oss << "rotation_y: " << rotation_y_ << ", enemy_theta: " << enemy_theta_;
+		Framework::instance().drawDebugString(0, 2, oss.str().c_str());
+		oss.str("");
+		oss << "velocity: "<< velocity_ << ", norm: " << velocity_.norm();
+		Framework::instance().drawDebugString(0, 3, oss.str().c_str());
+		oss.str("");
 	}
 };
 

@@ -153,6 +153,7 @@
 	<Texture name="stage" file_name="stage.tga"></Texture>
 
 	<Painter name="player" vertexBuffer="player" indexBuffer="player" texture="" blend="opaque" origin="0.0,0.1,0.0"></Painter>
+	<Painter name="enemy" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="20.0,50.0,30.0"></Painter>
 	<Painter name="enemy_1" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,30.0"></Painter>
 	<Painter name="enemy_2" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,20.0"></Painter>
 	<Painter name="enemy_3" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,30.0"></Painter>

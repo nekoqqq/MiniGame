@@ -2,8 +2,10 @@
 #include <cmath>
 #include <array>
 #include <utility>
+#include <sstream>
 extern const double eps;
 using std::array;
+using std::ostream;
 class Vector3 {
 public:
 	double x, y, z;
@@ -120,6 +122,10 @@ public:
 		return x * o.x + y * o.y + z * o.z;
 	}
 
+	friend std::ostream& operator<<(std::ostream& oss, const Vector3& a) {
+		oss << "<" << a.x << ", " << a.y << ", " << a.z<<">";
+		return oss;
+	}
 	friend Vector3 setAdd(const Vector3& a, const Vector3& b) {
 		return Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
 	}
