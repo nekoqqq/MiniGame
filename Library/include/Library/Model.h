@@ -104,6 +104,14 @@ public:
 	const CollisionModel* getCollsionModel()const {
 		return collision_model_;
 	}
+	Matrix44 getModelTransform() const {
+		Matrix44 r = getModelRotation();
+		r[0][3] = pos_.x;
+		r[1][3] = pos_.y;
+		r[2][3] = pos_.z;
+		return r;
+	}
+
 protected:
 	const Matrix44& getModelRotation()const{
 		return world_rotation_;
@@ -115,19 +123,35 @@ protected:
 		world_rotation_[2][0] = sin(t);
 		world_rotation_[2][2] = cos(t);
 	}
+	void setModelRotationZ(double theta) { // 绕着Z轴旋转
+		double t = theta * PI / 180;
+		world_rotation_[0][0] = cos(t);
+		world_rotation_[0][2] = -sin(t);
+		world_rotation_[1][0] = sin(t);
+		world_rotation_[1][2] = cos(t);
+	}
+
+	void rotateZ(double theta) { // 绕着自身的z轴旋转
+		Matrix44 Z;
+		double t = theta * PI / 180;
+		Z[0][0] = cos(t);
+		Z[0][2] = -sin(t);
+		Z[1][0] = sin(t);
+		Z[1][2] = cos(t);
+		Matrix44 r = getModelRotation();
+		world_rotation_ = Z.matMul(r.transpose());
+		world_rotation_[0][3] = -pos_.x;
+		world_rotation_[1][3] = -pos_.y;
+		world_rotation_[2][3] = -pos_.z;
+	}
+
 	void setPos(double x, double y, double z) {
 		setPos({ x,y,z });
 	}
 	void setPos(const Vector3& v) {
 		pos_ = v;
 	}
-	Matrix44 getModelTransform() const {
-		Matrix44 r = getModelRotation();
-		r[0][3] = pos_.x;
-		r[1][3] = pos_.y;
-		r[2][3] = pos_.z;
-		return r;
-	}
+
 private:
 	Type type_;
 	Vector3 pos_;
@@ -173,9 +197,13 @@ public:
 		dir.normalize();
 		velocity_ = (velocity_ * 0.95 + dir * 0.05).normalize()*speed;
 		setPos(getPos() + velocity_);
-		if (ttl_++ >= MISSLE_TTL)
+		
+		if (++ttl_ >= MISSLE_TTL)
 			ttl_ = 0;
 	}
+private:
+	double rotation_y;
+	double rotation_x;
 };
 
 
@@ -627,10 +655,8 @@ public:
 	void update(Model* player) {
 		const Vector3& origin = player->getPos();
 		const Vector3& z_dir = player->getZDirection();
-		eye_pos_ = origin;
-		eye_pos_ -= z_dir * 60;
-		eye_pos_.y += 20;
-		target_pos_ = origin + z_dir*10;
+		eye_pos_ = player->getModelTransform().vecMul({ 0,20,-60 });
+		target_pos_ = player->getModelTransform().vecMul({ 0,0,10 });
 	}
 private:
 	Vector3 eye_pos_;
