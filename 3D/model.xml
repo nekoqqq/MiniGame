@@ -91,6 +91,12 @@
 
 
 	</VertexBuffer>
+	<VertexBuffer name="missle">
+		<Vertex position="0, 0, 4" uv="0.0,0.0" color="0xfff00000"></Vertex>
+		<Vertex position="0, 4, 0" uv="0.25,0.0" color="0xff00f000"></Vertex>
+		<Vertex position="3, -2, 0" uv="0.25,0.25" color="0xff0000f0"></Vertex>
+		<Vertex position="-3, -2, 0" uv="0.0,0.25" color="0xffff0000"></Vertex>
+	</VertexBuffer>
 	
 	<IndexBuffer name="player">
 		<!-- +z面 -->
@@ -147,7 +153,10 @@
 
 
 	</IndexBuffer>
-	
+	<IndexBuffer name="missle">
+		<Triangle indices="0,1,2"></Triangle>
+		<Triangle indices="0,1,3"></Triangle>
+	</IndexBuffer>
 
 	<Texture name="player" file_name="player.tga"></Texture>
 	<Texture name="stage" file_name="stage.tga"></Texture>
@@ -169,4 +178,5 @@
 	<Painter name="wall" vertexBuffer="wall" indexBuffer="wall" texture="stage" blend="opaque"></Painter>
 
 	<Painter name="axis" vertexBuffer="axis" indexBuffer="axis" texture="axis" blend="opaque"></Painter>
+	<Painter name="missle" vertexBuffer="missle" indexBuffer="missle" texture="" blend="opaque"></Painter>
 </root>

@@ -45,6 +45,10 @@ namespace GameLib {
 			firstFrame = false;
 			gResource = new Resource("model.xml");
 			gPlayer = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");
+			for (int i = 0; i < MAX_MISSLES; i++) {
+				Model * missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "missle");
+				dynamic_cast<Mecha*>(gPlayer)->addMissle(*missle);
+			}
 			gEnemy = gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy"));
 			for (int i = 0; i < gEnemyCnt; i++) {
 				gEnemys.push_back(gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy_") + to_string(i+1)));
@@ -63,6 +67,7 @@ namespace GameLib {
 		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
 		Matrix44 vr = gCamera->getViewRotation();
 		gPlayer->update(vr);
+		gEnemy->update(vr);
 		gCamera->update(gPlayer);
 
 		// 绘制

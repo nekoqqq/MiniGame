@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <sstream>
 #include <vector>
+#include <list>
+#include <cmath>
 #include <array>
 #include <cassert>
 #include "GameLib/Framework.h"
@@ -26,6 +28,9 @@ const int MAX_ENEGY = 1*FRAMES;
 const int SKY_STAY = 0.5*FRAMES; // 滞空时间
 const int FALL_DURATION = 0.5 * FRAMES;
 
+const int MAX_MISSLES = 3;
+const int MISSLE_TTL = 5*FRAMES; // 5秒
+
 // 移动速度
 const double MAX_SPEED = 4.0;
 const double ACC_DURATION = 2.0; // 单位秒
@@ -41,15 +46,15 @@ public:
 		STAGE,
 		PLAYER,
 		ENEMY,
-		AXIS
+		AXIS,
+		MISSLE
 	};
-	Model(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m) :type_(UNKNOW), pos_(pos), painter_(painter),collision_type_(collision_type), world_rotation_(m) {
+	Model(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m) :type_(type), pos_(pos), painter_(painter),collision_type_(collision_type), world_rotation_(m) {
+		collision_model_ = nullptr;
 	}
 	virtual ~Model() {
-		delete painter_;
-		painter_ = nullptr;
 	}
-	 void draw(const Matrix44 &pv) {
+	virtual void draw(const Matrix44 &pv)=0 {
 		Matrix44 model_transform = getModelTransform();
 		Matrix44 pvm = pv.matMul(model_transform);
 		painter_->draw(pvm);
@@ -123,8 +128,6 @@ protected:
 		r[2][3] = pos_.z;
 		return r;
 	}
-
-
 private:
 	Type type_;
 	Vector3 pos_;
@@ -134,6 +137,47 @@ private:
 	CollisionModel::Type collision_type_;
 	vector<Model*> test_collision_models; // 会发生碰撞的其他物体
 };
+
+class Missle:public Model  {
+public:
+	Missle(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m):Model(MISSLE, pos, painter, collision_type, m) {
+		ttl_ = 0;
+	}
+
+	Vector3 velocity_; // 开始的速度和人的速度一样
+	long long ttl_;
+	bool isShoot()const {
+		return 0<ttl_&&ttl_<MISSLE_TTL; // 5秒
+	}
+	virtual void draw(const Matrix44& pv) override{ 
+		if(isShoot())
+			Model::draw(pv); 
+	}
+	virtual void update(const Matrix44& vr) override {}
+	void reset(const Vector3& pos, const Vector3& enemy_pos) {
+		setPos(pos);
+		velocity_ = (enemy_pos - getPos()).normalize() * 2;
+		ttl_ = 1;
+	}
+
+	void update(const Vector3& enemy_pos) {
+		if (!isShoot())
+			return;
+		// 初始速度v0，方向向量d,v0和d有一定的夹角，
+		Vector3 dir = enemy_pos - getPos();
+		if (dir.norm() < 1.0) {
+			ttl_ = 0;
+			return;
+		}
+		double speed = 1;
+		dir.normalize();
+		velocity_ = (velocity_ * 0.95 + dir * 0.05).normalize()*speed;
+		setPos(getPos() + velocity_);
+		if (ttl_++ >= MISSLE_TTL)
+			ttl_ = 0;
+	}
+};
+
 
 class Stage :public Model
 {
@@ -148,10 +192,15 @@ public:
 		return triangles_;
 	}
 	virtual void update(const Matrix44& vr)override {}
+	virtual void draw(const Matrix44& pvm)override {
+		Model::draw(pvm);
+	}
 private:
 	vector<Triangle> triangles_;
 };
-
+Vector3 getCuboidHalf() {
+	return { 10.0,5.0,10.0 };
+}
 class Mecha :public Model {
 public:
 	enum State {
@@ -170,6 +219,7 @@ public:
 		jump_count_ = 0;
 		enemy_theta_ = 0;
 		rotation_y_ = 0;
+		rotation_speed_ = 0;
 	}
 	~Mecha() {
 	}
@@ -196,7 +246,7 @@ public:
 		if (jump_count_ < TURN_DURATION)
 			rotation_y_ += rotation_speed_;
 	}
-	void state_change() {
+	void stateTransition() {
 		Keyboard k = Manager::instance().keyboard();
 		/*
 		* STILL: wasd->MOVE, space->JUMP_UP, z->QUICK_MOVE
@@ -359,21 +409,49 @@ public:
 			}
 		}
 	}
+	void attackHandle() {
+		Keyboard k = Manager::instance().keyboard();
+		if (k.isTriggered('j')) {
+			for (int i = 0; i < MAX_MISSLES; i++) {
+				if (!missles_[i].isShoot()) { 
+					missles_[i].reset(getPos(),gEnemy->getPos());
+					break;
+				}
+			}
+		}
+
+		for (int i = 0; i < MAX_MISSLES; i++) {
+			missles_[i].update(gEnemy->getPos());
+		}
+	}
 	virtual void update(const Matrix44& vr)override {
-		static int y_counter = 0;
 		// 这里的移动是在相机坐标系内移动
 		// 移动前坐标为Y，世界坐标X = AY+C，
 		// 移动后坐标为Y',世界坐标X' = AY'+C,
 		// 两式相减X'-X = A(Y'-Y) => X'=X+A(Y'-Y) => X'=X+A delta，其中delta是相机坐标系中的位移量
 		// 或者 X=AY+C => X=A(Y+delta)+c => X=AY + c +A delta，增加量还是旋转*delta
 		updateVelocity(vr);
-		state_change();
+		stateTransition();
 		collisionTest();
+		attackHandle();
 		setEnemyTheta();
 		setModelRotationY(rotation_y_); 		// 更新旋转角度,这个似乎可以放在别的地方
 		printDebugInfo();
 	}
+	void addMissle(Model& missle){
+		missles_.push_back(dynamic_cast<Missle&> (missle));
+	
+	}
+	virtual void draw(const Matrix44& pv)override {
+		Model::draw(pv);
+		for (int i = 0; i < MAX_MISSLES; i++) {
+			missles_[i].draw(pv);
+		}
 
+	}
+	void addMissle(Missle *missle) {
+		missles_.push_back(*missle);
+	}
 private:
 	State state_;
 	Vector3 velocity_;
@@ -382,9 +460,8 @@ private:
 	double enemy_theta_; // 和敌人的角度
 	double rotation_y_; // 绕着Y轴的旋转角
 	double rotation_speed_; // 绕着Y轴旋转的速度
-	Vector3 getCuboidHalf()const {
-		return { 10.0,5.0,10.0 };
-	}
+	vector<Missle> missles_;
+
 	void printDebugInfo() {
 		ostringstream oss;
 		oss << "player pos: " << getPos()<<" , enemy_pos: "<<gEnemy->getPos();
@@ -396,15 +473,37 @@ private:
 		oss << "velocity: "<< velocity_ << ", norm: " << velocity_.norm();
 		Framework::instance().drawDebugString(0, 3, oss.str().c_str());
 		oss.str("");
+		oss <<"missle pos: "<<missles_[0].getPos()<<", dis: "<<(missles_[0].getPos() - gEnemy->getPos()).norm();
+		Framework::instance().drawDebugString(0, 4, oss.str().c_str());
+		oss.str("");
 	}
 };
 
+class Enemy :public Model {
+public:
+	Enemy(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, collision_type, m) {
+		// 中心点设置在脚底，因为现在实际上是线段在判断而不是两个球体在判断
+		initCollisionModel({ pos.x,pos.y + getCuboidHalf().y,pos.z }, getCuboidHalf(), { pos.x,pos.y,pos.z }, getCuboidHalf().y);
+	}
+	~Enemy() {
+	}
+	virtual void update(const Matrix44& vr)override {
+		setPos(getPos().x + (rand()%100-50.0) /FRAMES, getPos().y, getPos().z+ (rand() % 100-50.0) / FRAMES);
+	
+	}
+	virtual void draw(const Matrix44& pv)override {
+		Model::draw(pv);
+	}
+};
 // 绘制辅助坐标轴
 class Axis :public Model {
 public:
 	Axis(Type type, Painter* painter, CollisionModel::Type collision_type) :Model(type, { 0.0,0.0,0.0 }, painter, collision_type, Matrix44::identity()) {}
 	~Axis() {}
 	virtual void update(const Matrix44& pvm) override {}
+	virtual void draw(const Matrix44& pv)override {
+		Model::draw(pv);
+	}
 };
 
 class Resource
@@ -475,11 +574,13 @@ public:
 			if (type == Model::PLAYER)
 				new_model = new Mecha(type, origin, p, collision_type); // 这里必须让他一开始的坐标大于0，设置碰撞中心比地面高一点，不然由于和地面重合，导致无法跳起来
 			else if (type == Model::ENEMY)
-				new_model = new Mecha(type, origin, p, collision_type);
+				new_model = new Enemy(type, origin, p, collision_type);
 			else if (type == Model::STAGE)
 				new_model = new Stage(type, p, collision_type);
 			else if (type == Model::AXIS)
 				new_model = new Axis(type, p, collision_type);
+			else if (type == Model::MISSLE)
+				new_model = new Missle(type,origin,p,collision_type, Matrix44::identity());
 		}
 		return new_model;
 	}
