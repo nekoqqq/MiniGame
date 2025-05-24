@@ -38,6 +38,14 @@ int gCounter = 0;
 Resource* gResource;
 namespace GameLib {
 	bool firstFrame = true;
+	void deleteAll() {
+		SAFE_DELETE(gPlayer);
+		SAFE_DELETE(gEnemy);
+		for (int i = 0; i < gEnemyCnt; i++)
+			SAFE_DELETE(gEnemys[i]);
+		SAFE_DELETE(gStage);
+		SAFE_DELETE(gWall);
+	}
 	void Framework::update() {
 		Keyboard k = Manager::instance().keyboard();
 		Mouse m = Manager::instance().mouse();
@@ -81,9 +89,18 @@ namespace GameLib {
 		for (int i = 0; i < gEnemyCnt; i++) {
 			gEnemys[i]->draw(pv);
 		}
-
+		if (!dynamic_cast<Enemy*>(gEnemy)->isAlive()) {
+			drawDebugString(1, 0, "Game Over!");
+			if (k.isOn(' ')) {
+				deleteAll();
+				firstFrame = true;
+			}
+		}
 		if (k.isOn('q'))
 			GameLib::Framework::instance().requestEnd();
+		if (isEndRequested()) {
+			deleteAll();
+		}
 		gCounter++;
 	}
 }

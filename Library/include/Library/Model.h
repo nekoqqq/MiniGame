@@ -68,7 +68,6 @@ public:
 		painter_->draw(pvm);
 	}
 	virtual void update(const Matrix44& vr) = 0;
-
 	void initCollisionModel(const Vector3&cuboid_origin,const Vector3 & half,const Vector3& sphere_origin,double r) {
 		if (collision_type_ == CollisionModel::Type::CUBOID) {
 			collision_model_ = new Cuboid(cuboid_origin,half);
@@ -180,6 +179,38 @@ private:
 	CollisionModel::Type collision_type_;
 	vector<Model*> test_collision_models; // 会发生碰撞的其他物体
 };
+Vector3 getCuboidHalf() {
+	return { 10.0,5.0,10.0 };
+}
+class Enemy :public Model {
+public:
+	Enemy(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, collision_type, m) {
+		// 中心点设置在脚底，因为现在实际上是线段在判断而不是两个球体在判断
+		initCollisionModel({ pos.x,pos.y + getCuboidHalf().y,pos.z }, getCuboidHalf(), { pos.x,pos.y,pos.z }, getCuboidHalf().y);
+		hp_ = 100;
+	}
+	~Enemy() {
+	}
+	virtual void update(const Matrix44& vr)override {
+		if(isAlive())
+			setPos(getPos().x + (rand() % 100 - 5.0) / FRAMES, getPos().y, getPos().z + (rand() % 100 - 5.0) / FRAMES);
+	}
+	virtual void draw(const Matrix44& pv)override {
+		if(isAlive())
+			Model::draw(pv);
+	}
+	bool isAlive()const {
+		return hp_ > 0;
+	}
+	int getHP()const {
+		return hp_;
+	}
+	void getDamage() {
+		hp_-=10;
+	}
+private:
+	int hp_; // 生命值
+};
 
 class Missle:public Model  {
 public:
@@ -245,8 +276,9 @@ public:
 			return;
 		// 初始速度v0，方向向量d,v0和d有一定的夹角，
 		Vector3 dir = enemy_pos - getPos();
-		if (dir.norm() < 1.0) {
+		if (dir.norm() < 5.0) {
 			ttl_ = 0;
+			dynamic_cast<Enemy*>(gEnemy)->getDamage();
 			return;
 		}
 		updateVelocity(dir, MISSLE_ROTATION_SPEED);
@@ -275,9 +307,6 @@ public:
 private:
 	vector<Triangle> triangles_;
 };
-Vector3 getCuboidHalf() {
-	return { 10.0,5.0,10.0 };
-}
 class Mecha :public Model {
 public:
 	enum State {
@@ -545,6 +574,7 @@ private:
 	double rotation_y_; // 绕着Y轴的旋转角
 	double rotation_speed_; // 绕着Y轴旋转的速度
 	vector<Missle> missles_;
+	int hp_; // 生命值
 
 	void printDebugInfo() {
 		ostringstream oss;
@@ -560,24 +590,12 @@ private:
 		oss <<"missle pos: "<<missles_[0].getPos()<<", dis: "<<(missles_[0].getPos() - gEnemy->getPos()).norm();
 		Framework::instance().drawDebugString(0, 4, oss.str().c_str());
 		oss.str("");
+		oss << "enemy hp: " << dynamic_cast<Enemy*>(gEnemy)->getHP();
+		Framework::instance().drawDebugString(0, 5, oss.str().c_str());
+		oss.str("");
 	}
 };
 
-class Enemy :public Model {
-public:
-	Enemy(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, collision_type, m) {
-		// 中心点设置在脚底，因为现在实际上是线段在判断而不是两个球体在判断
-		initCollisionModel({ pos.x,pos.y + getCuboidHalf().y,pos.z }, getCuboidHalf(), { pos.x,pos.y,pos.z }, getCuboidHalf().y);
-	}
-	~Enemy() {
-	}
-	virtual void update(const Matrix44& vr)override {
-		setPos(getPos().x + (rand()%100-5.0) /FRAMES, getPos().y, getPos().z+ (rand() % 100-5.0) / FRAMES);
-	}
-	virtual void draw(const Matrix44& pv)override {
-		Model::draw(pv);
-	}
-};
 // 绘制辅助坐标轴
 class Axis :public Model {
 public:
