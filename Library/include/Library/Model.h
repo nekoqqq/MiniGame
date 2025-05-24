@@ -37,7 +37,8 @@ const double ACC_DURATION = 2.0; // 单位秒
 double FRAME_SPEED_ACC = MAX_SPEED / (ACC_DURATION * FRAMES);
 
 // 转身
-const double TURN_DURATION = (MAX_ENEGY+SKY_STAY+FALL_DURATION)/3; // 持续多少帧
+const double ZOOM_DURATION = (MAX_ENEGY+SKY_STAY+FALL_DURATION)/3; // 持续多少帧
+const double TURN_DEGREE = 180.0 / FRAMES; // 每帧视角转换角度
 
 // 导弹
 const double MISSLE_ROTATION_SPEED = 360.0 / FRAMES; // 度/每帧
@@ -285,6 +286,8 @@ public:
 		JUMP_STAY,
 		JUMP_FALL,
 		QUICK_MOVE,
+		TURNING // 转身
+
 	};
 	Mecha(Type type, const Vector3& pos, Painter* painter,CollisionModel::Type collision_type, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, collision_type, m) {
 		// 中心点设置在脚底，因为现在实际上是线段在判断而不是两个球体在判断
@@ -316,10 +319,10 @@ public:
 			delta -= 360.0;
 		else if (delta < -180.0)
 			delta += 360.0;
-		rotation_speed_ = delta / TURN_DURATION;
+		rotation_speed_ = delta / ZOOM_DURATION;
 	}
 	void incrRotationSpeed() {
-		if (jump_count_ < TURN_DURATION) {
+		if (jump_count_ < ZOOM_DURATION) {
 			rotation_y_ -= rotation_speed_; // 这里要减去，因为是绕着y轴顺时针旋转
 			rotateY(rotation_speed_);  
 		}
@@ -344,6 +347,10 @@ public:
 				setRotationSpeed();
 				incrRotationSpeed();
 			}
+			if (k.isOn('u')) 
+				rotateY(TURN_DEGREE);
+			else if (k.isOn('i'))
+				rotateY(-TURN_DEGREE);
 			break;
 		case JUMP_UP:
 			incrRotationSpeed();
