@@ -39,6 +39,9 @@ double FRAME_SPEED_ACC = MAX_SPEED / (ACC_DURATION * FRAMES);
 // 转身
 const double TURN_DURATION = (MAX_ENEGY+SKY_STAY+FALL_DURATION)/3; // 持续多少帧
 
+// 导弹
+const double MISSLE_ROTATION_SPEED = 90.0 / FRAMES; // 度/每帧
+
 class Model {
 public:
 	enum Type {
@@ -49,7 +52,12 @@ public:
 		AXIS,
 		MISSLE
 	};
-	Model(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m) :type_(type), pos_(pos), painter_(painter),collision_type_(collision_type), world_rotation_(m) {
+	Model(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m) :type_(type), pos_(pos), painter_(painter),collision_type_(collision_type), world_transform_(m) {
+		world_transform_ = m;
+		world_transform_[0][3] = pos.x;
+		world_transform_[1][3] = pos.y;
+		world_transform_[2][3] = pos.z;
+		world_transform_[3][3] = 1;
 		collision_model_ = nullptr;
 	}
 	virtual ~Model() {
@@ -104,45 +112,41 @@ public:
 	const CollisionModel* getCollsionModel()const {
 		return collision_model_;
 	}
-	Matrix44 getModelTransform() const {
-		Matrix44 r = getModelRotation();
-		r[0][3] = pos_.x;
-		r[1][3] = pos_.y;
-		r[2][3] = pos_.z;
-		return r;
+	Matrix44 getModelTransform() { // 这里有些trick，会在get的时候设置这个值
+		world_transform_[0][3] = pos_.x;
+		world_transform_[1][3] = pos_.y;
+		world_transform_[2][3] = pos_.z;
+		return world_transform_;
 	}
 
 protected:
-	const Matrix44& getModelRotation()const{
-		return world_rotation_;
+	Matrix44 getModelRotation()const{
+		Matrix44 world_rotation = world_transform_;
+		world_rotation[0][3] = world_rotation[1][3] = world_rotation[2][3] = 0;
+		return world_rotation;
 	}
-	void setModelRotationY(double theta) { // 绕着Y轴旋转
-		double t = theta * PI / 180;
-		world_rotation_[0][0] = cos(t);
-		world_rotation_[0][2] = -sin(t);
-		world_rotation_[2][0] = sin(t);
-		world_rotation_[2][2] = cos(t);
+	void rotateX(double theta) {
+		const Vector3& dir{ 1,0,0 };
+		return rotateDirection(dir, theta);
 	}
-	void setModelRotationZ(double theta) { // 绕着Z轴旋转
-		double t = theta * PI / 180;
-		world_rotation_[0][0] = cos(t);
-		world_rotation_[0][2] = -sin(t);
-		world_rotation_[1][0] = sin(t);
-		world_rotation_[1][2] = cos(t);
+	void rotateY(double theta) {
+		const Vector3& dir{ 0,1,0 };
+		return rotateDirection(dir, theta);
 	}
-
-	void rotateZ(double theta) { // 绕着自身的z轴旋转
-		Matrix44 Z;
+	void rotateZ(double theta) {
+		const Vector3& dir{ 0,0,1 };
+		return rotateDirection(dir, theta);
+	}
+	void rotateDirection(const Vector3& direction,double theta) { // 绕着自身的任意方向顺时针旋转theta度
 		double t = theta * PI / 180;
-		Z[0][0] = cos(t);
-		Z[0][2] = -sin(t);
-		Z[1][0] = sin(t);
-		Z[1][2] = cos(t);
-		Matrix44 r = getModelRotation();
-		world_rotation_ = Z.matMul(r.transpose());
-		world_rotation_[0][3] = -pos_.x;
-		world_rotation_[1][3] = -pos_.y;
-		world_rotation_[2][3] = -pos_.z;
+		const Vector3 unit_dir = direction *1.0/ direction.norm(); // 这里需要检查一下是否为0
+		Matrix44 id = Matrix44::identity();
+		Matrix44 a = id * cos(t);
+		Matrix44 b = getOuterMatrix(unit_dir) * (1 - cos(t));
+		Matrix44 c = getCrossMatrix(unit_dir) * sin(t);
+		Matrix44 res= a+b+c;
+		res[3][3] = 1.0;
+		world_transform_ = getModelTransform().matMul(res.transpose()); // 这里的trick在于先get，从而更新世界矩阵
 	}
 
 	void setPos(double x, double y, double z) {
@@ -156,7 +160,7 @@ private:
 	Type type_;
 	Vector3 pos_;
 	Painter* painter_;
-	Matrix44 world_rotation_;
+	Matrix44 world_transform_;
 	CollisionModel *collision_model_;
 	CollisionModel::Type collision_type_;
 	vector<Model*> test_collision_models; // 会发生碰撞的其他物体
@@ -180,7 +184,7 @@ public:
 	virtual void update(const Matrix44& vr) override {}
 	void reset(const Vector3& pos, const Vector3& enemy_pos) {
 		setPos(pos);
-		velocity_ = (enemy_pos - getPos()).normalize() * 2;
+		velocity_ = (enemy_pos - getPos()).normalize() * 1;
 		ttl_ = 1;
 	}
 
@@ -196,16 +200,13 @@ public:
 		double speed = 1;
 		dir.normalize();
 		velocity_ = (velocity_ * 0.95 + dir * 0.05).normalize()*speed;
-		setPos(getPos() + velocity_);
 		
+		setPos(getPos() + velocity_);
+		rotateZ(MISSLE_ROTATION_SPEED); // 绕着自身的z轴方向旋转
 		if (++ttl_ >= MISSLE_TTL)
 			ttl_ = 0;
 	}
-private:
-	double rotation_y;
-	double rotation_x;
 };
-
 
 class Stage :public Model
 {
@@ -463,7 +464,7 @@ public:
 		collisionTest();
 		attackHandle();
 		setEnemyTheta();
-		setModelRotationY(rotation_y_); 		// 更新旋转角度,这个似乎可以放在别的地方
+		rotateY(rotation_y_); 		// 更新旋转角度,这个似乎可以放在别的地方
 		printDebugInfo();
 	}
 	void addMissle(Model& missle){
@@ -516,8 +517,7 @@ public:
 	~Enemy() {
 	}
 	virtual void update(const Matrix44& vr)override {
-		setPos(getPos().x + (rand()%100-50.0) /FRAMES, getPos().y, getPos().z+ (rand() % 100-50.0) / FRAMES);
-	
+		//setPos(getPos().x + (rand()%100-50.0) /FRAMES, getPos().y, getPos().z+ (rand() % 100-50.0) / FRAMES);
 	}
 	virtual void draw(const Matrix44& pv)override {
 		Model::draw(pv);
@@ -655,6 +655,7 @@ public:
 	void update(Model* player) {
 		const Vector3& origin = player->getPos();
 		const Vector3& z_dir = player->getZDirection();
+		// 从模型的后六米看向他前面的10米位置
 		eye_pos_ = player->getModelTransform().vecMul({ 0,20,-60 });
 		target_pos_ = player->getModelTransform().vecMul({ 0,0,10 });
 	}

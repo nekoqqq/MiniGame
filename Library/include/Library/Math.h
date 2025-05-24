@@ -70,7 +70,6 @@ public:
 		assert(fabs(t) > eps);
 		return Vector3(x / t, y / t, z / t);
 	}
-
 	// 只读
 	double operator[](int i)const{
 		if (i == 0)
@@ -177,6 +176,27 @@ public:
 	double* operator[](int row) {
 		return p[row];
 	}
+	Matrix44 operator+(const Matrix44& o) {
+		Matrix44 res;
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++)
+				res[i][j] = (*this)[i][j] + o[i][j];
+		}
+		return res;
+
+
+	}
+	Matrix44 operator*(double s) {
+		Matrix44 res;
+		for (int i = 0; i < N; i++) {
+			double cur = 0;
+			for (int j = 0; j < N; j++) {
+				res[i][j]= p[i][j] * s;
+			}
+		}
+		return res;
+	}
+
 	Vector3 vecMul(const Vector3& o)const {
 		Vector3 res;
 		for (int i = 0; i < N; i++) {
@@ -202,3 +222,22 @@ public:
 		return res;
 	}
 };
+Matrix44 getOuterMatrix(const Vector3& v) {
+	Matrix44 res;
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			res[i][j] = v[i] * v[j];
+		}
+	}
+	res[3][3] = 1.0;
+	return res;
+}
+Matrix44 getCrossMatrix(const Vector3& v) {
+	Matrix44 res;
+	res[0][0] = 0;     res[0][1] = -v.z;  res[0][2] = v.y;
+	res[1][0] = v.z;   res[1][1] = 0;     res[1][2] = -v.x;
+	res[2][0] = -v.y;  res[2][1] = v.x;   res[2][2] = 0;
+	// 第四行
+	res[3][3] = 1.0;
+	return res;
+}
