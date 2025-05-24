@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <sstream>
+#include <string>
 #include <vector>
 #include <list>
 #include <cmath>
@@ -49,7 +50,8 @@ const int MISSLE_ENGEY_COST = 25; // 每个导弹消耗的能量值
 
 // 人物
 const int ENEGY_RECOVER = 180/ FRAMES; // 每秒恢复的能量
-
+const int MAX_LOCK_ON = 30; // 锁定人物的角度范围
+const int MIN_LOCK_OFF = 40; // 人物跳出范围的角度,也就是说锁定后在0-60的范围内都算作锁定
 
 class Model {
 public:
@@ -202,8 +204,11 @@ public:
 	~Enemy() {
 	}
 	virtual void update(const Matrix44& vr)override {
-		if(isAlive())
+		if (isAlive())
+		{
 			setPos(getPos().x + (rand() % 100 - 5.0) / FRAMES, getPos().y, getPos().z + (rand() % 100 - 5.0) / FRAMES);
+
+		}
 	}
 	virtual void draw(const Matrix44& pv)override {
 		if(isAlive())
@@ -339,126 +344,78 @@ public:
 		rotation_y_ = 0;
 		rotation_speed_ = 0;
 		hp_ = MAX_HP;
+		lock_on_ = false;
 	}
 	~Mecha() {
 	}
-	void setEnemyTheta() {
-		const Vector3& enemy_pos = gEnemy->getPos();
-		const Vector3& dir = enemy_pos - getPos();
-		enemy_theta_ = atan2(dir.x, dir.z)*180.0/PI ;
-		if (enemy_theta_ > 360) {
-			enemy_theta_ -= 360;
-		}
-		else if (enemy_theta_ < 0) {
-			enemy_theta_ += 360;
-		}
+
+	virtual void update(const Matrix44& vr)override {
+		// 这里的移动是在相机坐标系内移动
+		// 移动前坐标为Y，世界坐标X = AY+C，
+		// 移动后坐标为Y',世界坐标X' = AY'+C,
+		// 两式相减X'-X = A(Y'-Y) => X'=X+A(Y'-Y) => X'=X+A delta，其中delta是相机坐标系中的位移量
+		// 或者 X=AY+C => X=A(Y+delta)+c => X=AY + c +A delta，增加量还是旋转*delta
+		updateVelocity(vr);
+		stateTransition();
+		attackHandle();
+		collisionTest();
+		setEnemyTheta();
+		lockOn();
+		printDebugInfo();
 	}
-	void setRotationSpeed() {
-		double delta =enemy_theta_ + rotation_y_; // 因为绕y轴旋转是正方向旋转，R(e)R(y) = R(e+y)
-		if (delta > 180.0) // 顺时针旋转rotation 180-delta
-			delta -= 360.0;
-		else if (delta < -180.0)
-			delta += 360.0;
-		rotation_speed_ = delta / ZOOM_DURATION;
+	void addMissle(Model& missle){
+		missles_.push_back(dynamic_cast<Missle&> (missle));
+	
 	}
-	void incrRotationSpeed() {
-		if (jump_count_ < ZOOM_DURATION) {
-			rotation_y_ -= rotation_speed_; // 这里要减去，因为是绕着y轴顺时针旋转
-			rotateY(rotation_speed_);  
-		}
-	}
-	void stateTransition() {
-		Keyboard k = Manager::instance().keyboard();
-		/*
-		* STILL: wasd->MOVE, space->JUMP_UP, z->QUICK_MOVE
-		* MOVE: wasd->MOVE, space->JUMP_UP, +z->QUICK_MOVE, no->STILL
-		* QUICK_MOVE: wasd->QUICK_MOVE, space->JUMP_UP, no->STILL, 简化，先去掉这个状态
-		* JUMP_UP: arrive top->JUMP_FALL
-		* JUMP_FALL: arrive down->STILL 
-		*/
-		velocity_.y = -1.0; // 重力作用
-		switch (state_)
-		{
-		case MOVE:
-			if (k.isOn(' ')) {
-				velocity_.y = 1.0;
-				state_ = JUMP_UP;
-				jump_count_ = 1;
-				setRotationSpeed();
-				incrRotationSpeed();
-			}
-			if (k.isOn('u')) 
-				rotateY(TURN_DEGREE);
-			else if (k.isOn('i'))
-				rotateY(-TURN_DEGREE);
-			break;
-		case JUMP_UP:
-			incrRotationSpeed();
-			if (jump_count_++ >= JUMP_UP_DURATION) {
-				state_ = JUMP_STAY;
-			}
-			else {
-				velocity_.y = 1;
-			}
-			break;
-		case JUMP_STAY:
-			incrRotationSpeed();
-			if (jump_count_++ == JUMP_UP_DURATION+SKY_STAY) {
-				velocity_.y = -1;
-				state_ = JUMP_FALL;
-			}
-			else {
-				velocity_.y = 0;
-			}
-			break;
-		case JUMP_FALL:
-			incrRotationSpeed();
-			if (jump_count_++ == JUMP_UP_DURATION+SKY_STAY+FALL_DURATION) {
-				state_ = MOVE;
-			}
-			break;
+	virtual void draw(const Matrix44& pv)override {
+		Model::draw(pv);
+		for (int i = 0; i < MAX_MISSLES; i++) {
+			missles_[i].draw(pv);
 		}
 
 	}
-	void updateVelocity(const Matrix44&vr) {
-		Keyboard k = Manager::instance().keyboard();
-		Vector3 move;
-		if (k.isOn('w')) { // 这里设置坐标值为y轴的两倍似乎比较合理，但是没有严格的数学推导
-			move.z = 1.0;
-		}
-		if (k.isOn('a')) {
-			move.x= -1.0;
-		}
-		if (k.isOn('s')) {
-			move.z= -1.0;
-		}
-		if (k.isOn('d')) {
-			move.x= 1.0;
-		}
-		// 仅保留水平分量 |v|cos t * a/|a|  = v.dot(a) / |a|^2 *a
-		Vector3 viewMove = vr.vecMul(move);
-		double cur_speed = velocity_.norm();
-		if (viewMove.x == 0 && viewMove.z == 0 && cur_speed >FRAME_SPEED_ACC || velocity_.dot(viewMove)<0) { // 修复反向的时候速度还是不减少的问题
-			velocity_ =velocity_.normalize()*(cur_speed - FRAME_SPEED_ACC);
-			return;
-		}
+private:
+	State state_;
+	Vector3 velocity_;
+	int jump_count_;
+	double enemy_theta_; // 和敌人的角度
+	double rotation_y_; // 绕着Y轴的旋转角
+	double rotation_speed_; // 绕着Y轴旋转的速度
+	vector<Missle> missles_;
+	int energy_; // 当前的能量条
+	int hp_;
+	bool lock_on_; // 是否锁定了敌人
+protected:
+	void printDebugInfo() {
+		int i = 0;
+		ostringstream oss;
+		oss << "player pos: " << getPos()<<" , enemy_pos: "<<gEnemy->getPos();
+		Framework::instance().drawDebugString(0, i++, oss.str().c_str());
+		oss.str("");
+		//oss << "rotation_y: " << rotation_y_ << ", enemy_theta: " << enemy_theta_<<"rotation speed: "<< rotation_speed_;
+		//Framework::instance().drawDebugString(0, 2, oss.str().c_str());
+		//oss.str("");
+		//oss << "velocity: "<< velocity_ << ", norm: " << velocity_.norm()<<", time: " << gCounter*1.0/FRAMES;
+		//Framework::instance().drawDebugString(0, 3, oss.str().c_str());
+		//oss.str("");
+		//oss <<"missle pos: "<<missles_[0].getPos()<<", dis: "<<(missles_[0].getPos() - gEnemy->getPos()).norm();
+		//Framework::instance().drawDebugString(0, 4, oss.str().c_str());
+		//oss.str("");
+		oss <<"player energe: "<<energy_<< ", enemy hp: " << dynamic_cast<Enemy*>(gEnemy)->getHP();
+		Framework::instance().drawDebugString(0, i++, oss.str().c_str());
+		oss.str("");
+		oss << "lock on: " << lock_on_;
+		Framework::instance().drawDebugString(0, i++, oss.str().c_str());
+		oss.str("");
 
-		if (velocity_.dot(viewMove) == 0) {
-			velocity_ = viewMove* MAX_SPEED / (ACC_DURATION * FRAMES);
-			return;
-		}
-		// 当前因为相机是向y轴负方向的，所以沿着z方向的速度不可能达到最大值，他只会一直减少，所以下面没有除以他的范数，而是把y忽略掉了
-		double viewMoveSqureDist = (viewMove.x * viewMove.x + viewMove.z * viewMove.z);
-		velocity_ = viewMove * velocity_.dot(viewMove) / viewMoveSqureDist;
-		cur_speed = velocity_.norm();
-		if (cur_speed + FRAME_SPEED_ACC <= MAX_SPEED)
-			velocity_ =velocity_.normalize()* (cur_speed+FRAME_SPEED_ACC);
-
+	}
+	void addMissle(Missle *missle) {
+		missles_.push_back(*missle);
 	}
 	void collisionTest() {
 		// 存在一个方向，使得和其他所有物体都不相撞，才可以移动
-// 反之，存在一个物体，所有方向都和他相撞，则不可以移动
-// TODO 目前的处理存在抖动现象，相当于说每帧物体的移动方向都会发生改变，比如在爬很抖的坡的时候，一会儿向前，一会儿向后
+		// 反之，存在一个物体，所有方向都和他相撞，则不可以移动
+		// TODO 目前的处理存在抖动现象，相当于说每帧物体的移动方向都会发生改变，比如在爬很抖的坡的时候，一会儿向前，一会儿向后
 		const Vector3 old_pos = getPos();
 		if (getCollsionModel()->getType() == CollisionModel::Type::CUBOID) {
 			vector<Vector3> possible_move_vectors = {
@@ -538,10 +495,10 @@ public:
 	void attackHandle() {
 		Keyboard k = Manager::instance().keyboard();
 		bool isAttack = k.isOn('j');
-		if (isAttack && !(state_==JUMP_UP || state_==JUMP_FALL)&&energy_>=MISSLE_ENGEY_COST) {
+		if (isAttack && !(state_ == JUMP_UP || state_ == JUMP_FALL) && energy_ >= MISSLE_ENGEY_COST) {
 			for (int i = 0; i < MAX_MISSLES; i++) {
-				if (!missles_[i].isShoot()) { 
-					missles_[i].reset(getPos(),gEnemy->getPos());
+				if (!missles_[i].isShoot()) {
+					missles_[i].reset(getPos(), gEnemy->getPos());
 					energy_ -= MISSLE_ENGEY_COST;
 					break;
 				}
@@ -553,64 +510,136 @@ public:
 		}
 	}
 	void recoverEnergy(bool isAttack) {
-		if(!isAttack && energy_ +ENEGY_RECOVER<=MAX_ENEGY)
+		if (!isAttack && energy_ + ENEGY_RECOVER <= MAX_ENEGY)
 			energy_ += ENEGY_RECOVER;
 	}
-	virtual void update(const Matrix44& vr)override {
-		// 这里的移动是在相机坐标系内移动
-		// 移动前坐标为Y，世界坐标X = AY+C，
-		// 移动后坐标为Y',世界坐标X' = AY'+C,
-		// 两式相减X'-X = A(Y'-Y) => X'=X+A(Y'-Y) => X'=X+A delta，其中delta是相机坐标系中的位移量
-		// 或者 X=AY+C => X=A(Y+delta)+c => X=AY + c +A delta，增加量还是旋转*delta
-		updateVelocity(vr);
-		stateTransition();
-		attackHandle();
-		collisionTest();
-		setEnemyTheta();
-		printDebugInfo();
+	void setEnemyTheta() {
+		const Vector3& enemy_pos = gEnemy->getPos();
+		const Vector3& dir = enemy_pos - getPos();
+		enemy_theta_ = atan2(dir.x, dir.z) * 180.0 / PI;
+		if (enemy_theta_ > 360) {
+			enemy_theta_ -= 360;
+		}
+		else if (enemy_theta_ < 0) {
+			enemy_theta_ += 360;
+		}
 	}
-	void addMissle(Model& missle){
-		missles_.push_back(dynamic_cast<Missle&> (missle));
-	
+	void setRotationSpeed() {
+		double delta = enemy_theta_ + rotation_y_; // 因为绕y轴旋转是正方向旋转，R(e)R(y) = R(e+y)
+		if (delta > 180.0) // 顺时针旋转rotation 180-delta
+			delta -= 360.0;
+		else if (delta < -180.0)
+			delta += 360.0;
+		rotation_speed_ = delta / ZOOM_DURATION;
 	}
-	virtual void draw(const Matrix44& pv)override {
-		Model::draw(pv);
-		for (int i = 0; i < MAX_MISSLES; i++) {
-			missles_[i].draw(pv);
+	void incrRotationSpeed() {
+		if (jump_count_ < ZOOM_DURATION) {
+			rotation_y_ -= rotation_speed_; // 这里要减去，因为是绕着y轴顺时针旋转
+			rotateY(rotation_speed_);
+		}
+	}
+	void stateTransition() {
+		Keyboard k = Manager::instance().keyboard();
+		/*
+		* STILL: wasd->MOVE, space->JUMP_UP, z->QUICK_MOVE
+		* MOVE: wasd->MOVE, space->JUMP_UP, +z->QUICK_MOVE, no->STILL
+		* QUICK_MOVE: wasd->QUICK_MOVE, space->JUMP_UP, no->STILL, 简化，先去掉这个状态
+		* JUMP_UP: arrive top->JUMP_FALL
+		* JUMP_FALL: arrive down->STILL
+		*/
+		velocity_.y = -1.0; // 重力作用
+		switch (state_)
+		{
+		case MOVE:
+			if (k.isOn(' ')) {
+				velocity_.y = 1.0;
+				state_ = JUMP_UP;
+				jump_count_ = 1;
+				setRotationSpeed();
+				incrRotationSpeed();
+			}
+			if (k.isOn('i')) { // 注意这里要同步更新rotation_y,不然后续不更新，按空格就没用了
+				rotateY(TURN_DEGREE);
+				rotation_y_ -= TURN_DEGREE;
+			}
+				
+			else if (k.isOn('u')) {
+				rotateY(-TURN_DEGREE);
+				rotation_y_ += TURN_DEGREE;
+			}
+			break;
+		case JUMP_UP:
+			incrRotationSpeed();
+			if (jump_count_++ >= JUMP_UP_DURATION) {
+				state_ = JUMP_STAY;
+			}
+			else {
+				velocity_.y = 1;
+			}
+			break;
+		case JUMP_STAY:
+			incrRotationSpeed();
+			if (jump_count_++ == JUMP_UP_DURATION + SKY_STAY) {
+				velocity_.y = -1;
+				state_ = JUMP_FALL;
+			}
+			else {
+				velocity_.y = 0;
+			}
+			break;
+		case JUMP_FALL:
+			incrRotationSpeed();
+			if (jump_count_++ == JUMP_UP_DURATION + SKY_STAY + FALL_DURATION) {
+				state_ = MOVE;
+			}
+			break;
+		}
+	}
+	void updateVelocity(const Matrix44& vr) {
+		Keyboard k = Manager::instance().keyboard();
+		Vector3 move;
+		if (k.isOn('w')) { // 这里设置坐标值为y轴的两倍似乎比较合理，但是没有严格的数学推导
+			move.z = 1.0;
+		}
+		if (k.isOn('a')) {
+			move.x = -1.0;
+		}
+		if (k.isOn('s')) {
+			move.z = -1.0;
+		}
+		if (k.isOn('d')) {
+			move.x = 1.0;
+		}
+		// 仅保留水平分量 |v|cos t * a/|a|  = v.dot(a) / |a|^2 *a
+		Vector3 viewMove = vr.vecMul(move);
+		double cur_speed = velocity_.norm();
+		if (viewMove.x == 0 && viewMove.z == 0 && cur_speed > FRAME_SPEED_ACC || velocity_.dot(viewMove) < 0) { // 修复反向的时候速度还是不减少的问题
+			velocity_ = velocity_.normalize() * (cur_speed - FRAME_SPEED_ACC);
+			return;
 		}
 
+		if (velocity_.dot(viewMove) == 0) {
+			velocity_ = viewMove * MAX_SPEED / (ACC_DURATION * FRAMES);
+			return;
+		}
+		// 当前因为相机是向y轴负方向的，所以沿着z方向的速度不可能达到最大值，他只会一直减少，所以下面没有除以他的范数，而是把y忽略掉了
+		double viewMoveSqureDist = (viewMove.x * viewMove.x + viewMove.z * viewMove.z);
+		velocity_ = viewMove * velocity_.dot(viewMove) / viewMoveSqureDist;
+		cur_speed = velocity_.norm();
+		if (cur_speed + FRAME_SPEED_ACC <= MAX_SPEED)
+			velocity_ = velocity_.normalize() * (cur_speed + FRAME_SPEED_ACC);
 	}
-	void addMissle(Missle *missle) {
-		missles_.push_back(*missle);
-	}
-private:
-	State state_;
-	Vector3 velocity_;
-	int jump_count_;
-	double enemy_theta_; // 和敌人的角度
-	double rotation_y_; // 绕着Y轴的旋转角
-	double rotation_speed_; // 绕着Y轴旋转的速度
-	vector<Missle> missles_;
-	int energy_; // 当前的能量条
-	int hp_;
+	void lockOn() { // 瞬时锁定功能
+		Vector3 enemy_dir = (gEnemy->getPos() - getPos());
+		Vector3 z_dir = getModelRotation().vecMul({ 0,0,1 }).normalize();
 
-	void printDebugInfo() {
-		ostringstream oss;
-		oss << "player pos: " << getPos()<<" , enemy_pos: "<<gEnemy->getPos();
-		Framework::instance().drawDebugString(0, 1, oss.str().c_str());
-		oss.str("");
-		oss << "rotation_y: " << rotation_y_ << ", enemy_theta: " << enemy_theta_<<"rotation speed: "<< rotation_speed_;
-		Framework::instance().drawDebugString(0, 2, oss.str().c_str());
-		oss.str("");
-		oss << "velocity: "<< velocity_ << ", norm: " << velocity_.norm()<<", time: " << gCounter*1.0/FRAMES;
-		Framework::instance().drawDebugString(0, 3, oss.str().c_str());
-		oss.str("");
-		oss <<"missle pos: "<<missles_[0].getPos()<<", dis: "<<(missles_[0].getPos() - gEnemy->getPos()).norm();
-		Framework::instance().drawDebugString(0, 4, oss.str().c_str());
-		oss.str("");
-		oss <<"player energe: "<<energy_<< ", enemy hp: " << dynamic_cast<Enemy*>(gEnemy)->getHP();
-		Framework::instance().drawDebugString(0, 5, oss.str().c_str());
-		oss.str("");
+		double theta = acos(enemy_dir.dot(z_dir) / enemy_dir.norm())*180.0/PI;
+		using std::to_string;
+		GameLib::Framework::instance().drawDebugString(1, 8, to_string(theta).c_str());
+		if (theta > MIN_LOCK_OFF && lock_on_)
+			lock_on_ = false;
+		else if (theta <= MAX_LOCK_ON && !lock_on_)
+			lock_on_ = true;
 	}
 };
 

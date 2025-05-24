@@ -14,7 +14,7 @@ const int WIDTH = 640;
 const int HEIGHT = 480;
 const int FRAMES = 180;
 // 游戏
-const int MAX_TIME = 30 * FRAMES; // 最大对局时间
+const int MAX_TIME = 120 * FRAMES; // 最大对局时间
 // 动物
 Model* gPlayer;
 Model* gEnemy;
