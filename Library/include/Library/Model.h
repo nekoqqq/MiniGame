@@ -22,6 +22,7 @@ using std::array;
 namespace GameLib {
 	class Texture;
 }
+extern int gCounter;
 extern const int FRAMES;
 extern const double PI;
 const int JUMP_UP_DURATION = 1*FRAMES;
@@ -48,6 +49,7 @@ const int MISSLE_ENGEY_COST = 25; // 每个导弹消耗的能量值
 
 // 人物
 const int ENEGY_RECOVER = 180/ FRAMES; // 每秒恢复的能量
+
 
 class Model {
 public:
@@ -600,7 +602,7 @@ private:
 		oss << "rotation_y: " << rotation_y_ << ", enemy_theta: " << enemy_theta_<<"rotation speed: "<< rotation_speed_;
 		Framework::instance().drawDebugString(0, 2, oss.str().c_str());
 		oss.str("");
-		oss << "velocity: "<< velocity_ << ", norm: " << velocity_.norm();
+		oss << "velocity: "<< velocity_ << ", norm: " << velocity_.norm()<<", time: " << gCounter*1.0/FRAMES;
 		Framework::instance().drawDebugString(0, 3, oss.str().c_str());
 		oss.str("");
 		oss <<"missle pos: "<<missles_[0].getPos()<<", dis: "<<(missles_[0].getPos() - gEnemy->getPos()).norm();

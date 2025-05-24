@@ -13,6 +13,8 @@ const double PI = 3.141592653589793238;
 const int WIDTH = 640;
 const int HEIGHT = 480;
 const int FRAMES = 180;
+// 游戏
+const int MAX_TIME = 30 * FRAMES; // 最大对局时间
 // 动物
 Model* gPlayer;
 Model* gEnemy;
@@ -73,6 +75,7 @@ namespace GameLib {
 			gPlayer->addCollisionModel(gEnemy);
 			gPlayer->addCollisionModel(gStage);
 			gPlayer->addCollisionModel(gWall);
+			++gCounter;
 		}
 		// 更新
 		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
@@ -91,11 +94,12 @@ namespace GameLib {
 		for (int i = 0; i < gEnemyCnt; i++) {
 			gEnemys[i]->draw(pv);
 		}
-		if (!dynamic_cast<Enemy*>(gEnemy)->isAlive()) {
+		if (!dynamic_cast<Enemy*>(gEnemy)->isAlive() || ++gCounter>=MAX_TIME) {
 			drawDebugString(1, 0, "Game Over!");
 			sleep(5000);
 			deleteAll();
 			firstFrame = true;
+			gCounter = 0;
 		}
 		if (k.isOn('q'))
 			GameLib::Framework::instance().requestEnd();
