@@ -66,7 +66,7 @@ public:
 		this->z *= t;
 		return *this;
 	}
-	Vector3 operator/(double t) {
+	Vector3 operator/(double t) const{
 		assert(fabs(t) > eps);
 		return Vector3(x / t, y / t, z / t);
 	}

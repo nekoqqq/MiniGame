@@ -40,8 +40,7 @@ double FRAME_SPEED_ACC = MAX_SPEED / (ACC_DURATION * FRAMES);
 const double TURN_DURATION = (MAX_ENEGY+SKY_STAY+FALL_DURATION)/3; // 持续多少帧
 
 // 导弹
-const double MISSLE_ROTATION_SPEED = 90.0 / FRAMES; // 度/每帧
-
+const double MISSLE_ROTATION_SPEED = 360.0 / FRAMES; // 度/每帧
 class Model {
 public:
 	enum Type {
@@ -123,22 +122,37 @@ protected:
 	Matrix44 getModelRotation()const{
 		Matrix44 world_rotation = world_transform_;
 		world_rotation[0][3] = world_rotation[1][3] = world_rotation[2][3] = 0;
+		world_rotation[3][3] = 1.0;
 		return world_rotation;
+	}
+	void setRotationZ(double theta) {
+		double t = theta * PI / 180.0;
+		world_transform_[0][0] = cos(t); world_transform_[0][1] = -sin(t); world_transform_[0][2] = 0.0; world_transform_[0][3] = 0.0;
+		world_transform_[1][0] = sin(t); world_transform_[1][1] = cos(t); world_transform_[1][2] = 0.0; world_transform_[1][3] = 0.0;
+		world_transform_[2][0] = 0.0; world_transform_[2][1] = 0.0; world_transform_[2][2] = 1.0; world_transform_[2][3] = 0.0;
+		world_transform_[3][0] = 0.0; world_transform_[3][1] = 0.0; world_transform_[3][2] = 0.0; world_transform_[3][3] = 1.0;
+	}
+	void setRotationY(double theta) { // 设置世界变换的旋转矩阵为绕Y轴转多少度，相当于初始化的操作
+		double t = theta * PI / 180.0;
+		world_transform_[0][0] = cos(t); world_transform_[0][1] = 0.0; world_transform_[0][2] = sin(t); world_transform_[0][3] = 0.0;
+		world_transform_[1][0] = 0.0; world_transform_[1][1] = 1.0; world_transform_[1][2] = 0.0; world_transform_[1][3] = 0.0;
+		world_transform_[2][0] = -sin(t); world_transform_[2][1] = 0.0; world_transform_[2][2] = cos(t); world_transform_[2][3] = 0.0;
+		world_transform_[3][0] = 0.0;world_transform_[3][1] = 0.0;world_transform_[3][2] = 0.0;world_transform_[3][3] = 1.0;
 	}
 	void rotateX(double theta) {
 		const Vector3& dir{ 1,0,0 };
-		return rotateDirection(dir, theta);
+		rotateDirection(dir, theta);
 	}
 	void rotateY(double theta) {
 		const Vector3& dir{ 0,1,0 };
-		return rotateDirection(dir, theta);
+		rotateDirection(dir, theta);
 	}
 	void rotateZ(double theta) {
 		const Vector3& dir{ 0,0,1 };
-		return rotateDirection(dir, theta);
+		rotateDirection(dir, theta);
 	}
-	void rotateDirection(const Vector3& direction,double theta) { // 绕着自身的任意方向顺时针旋转theta度
-		double t = theta * PI / 180;
+	void rotateDirection(const Vector3& direction,double theta) { // 绕着自身的任意方向，用左手，大拇指和轴的正方向一致，旋转theta度
+		double t = theta * PI / 180.0;
 		const Vector3 unit_dir = direction *1.0/ direction.norm(); // 这里需要检查一下是否为0
 		Matrix44 id = Matrix44::identity();
 		Matrix44 a = id * cos(t);
@@ -146,7 +160,7 @@ protected:
 		Matrix44 c = getCrossMatrix(unit_dir) * sin(t);
 		Matrix44 res= a+b+c;
 		res[3][3] = 1.0;
-		world_transform_ = getModelTransform().matMul(res.transpose()); // 这里的trick在于先get，从而更新世界矩阵
+		world_transform_ = getModelTransform().matMul(res); // 这里的trick在于先get，从而更新世界矩阵
 	}
 
 	void setPos(double x, double y, double z) {
@@ -168,26 +182,63 @@ private:
 
 class Missle:public Model  {
 public:
+
+	Vector3 velocity_; // 开始的速度和人的速度一样
+	long long ttl_;
+	Vector3 rotation; // 各个方向的旋转角度
+
 	Missle(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m):Model(MISSLE, pos, painter, collision_type, m) {
 		ttl_ = 0;
 	}
 
-	Vector3 velocity_; // 开始的速度和人的速度一样
-	long long ttl_;
 	bool isShoot()const {
 		return 0<ttl_&&ttl_<MISSLE_TTL; // 5秒
 	}
 	virtual void draw(const Matrix44& pv) override{ 
-		if(isShoot())
-			Model::draw(pv); 
+		if (isShoot()) {
+			Model::draw(pv);
+		}
 	}
 	virtual void update(const Matrix44& vr) override {}
 	void reset(const Vector3& pos, const Vector3& enemy_pos) {
 		setPos(pos);
-		velocity_ = (enemy_pos - getPos()).normalize() * 1;
+		rotation.x = 45.0;
 		ttl_ = 1;
 	}
+	void updateVelocity(const Vector3& dir, double rotation_speed) {
+		// 旧的代码
+		 //velocity_ = (velocity_ * 0.95 + dir * 0.05).normalize() * 1.0;
+		 //rotateZ(MISSLE_ROTATION_SPEED); // 旧的代码，绕着自身的速度方向旋转
 
+		// 可以按照先x再y的顺序，也可以按照先y再x的顺序，但是两次的角度是不一样的
+		double y_rotation = atan2(dir.x, dir.z) * 180 / PI;
+		double x_rotation = atan2(dir.y, sqrt((dir.x * dir.x + dir.z * dir.z))) * 180 / PI;
+		double offset =1.0;
+		if (fabs(rotation.y - y_rotation) < offset) {
+			rotation.y = y_rotation;
+		}
+		else if (rotation.y - y_rotation > 0.0) {
+			rotation.y -= offset;
+		}
+		else {
+			rotation.y += offset;
+		}
+
+		if (fabs(rotation.x - x_rotation) < offset) {
+			rotation.x = x_rotation;
+		}
+		else if (rotation.x - x_rotation > 0.0) {
+			rotation.x -= offset;
+		}
+		else {
+			rotation.x += offset;
+		}
+		rotation.z += rotation_speed;
+		setRotationY(rotation.y);
+		rotateX(-rotation.x);
+		rotateZ(rotation.z);
+		velocity_ = getModelRotation().vecMul({ 0,0,1 });
+	};
 	void update(const Vector3& enemy_pos) {
 		if (!isShoot())
 			return;
@@ -197,12 +248,8 @@ public:
 			ttl_ = 0;
 			return;
 		}
-		double speed = 1;
-		dir.normalize();
-		velocity_ = (velocity_ * 0.95 + dir * 0.05).normalize()*speed;
-		
+		updateVelocity(dir, MISSLE_ROTATION_SPEED);
 		setPos(getPos() + velocity_);
-		rotateZ(MISSLE_ROTATION_SPEED); // 绕着自身的z轴方向旋转
 		if (++ttl_ >= MISSLE_TTL)
 			ttl_ = 0;
 	}
@@ -254,8 +301,8 @@ public:
 	}
 	void setEnemyTheta() {
 		const Vector3& enemy_pos = gEnemy->getPos();
-		const Vector3& dir = enemy_pos - getPos(); // 该方向是世界坐标，而不是在模型里面的坐标，因为是两个原点相减
-		enemy_theta_ = atan2(dir.z, dir.x)*180.0/PI ; // z轴和x轴投影，用角度会比较清晰一点,由于一开始朝向的是z轴正方向，而这个是x到z的旋转角
+		const Vector3& dir = enemy_pos - getPos();
+		enemy_theta_ = atan2(dir.x, dir.z)*180.0/PI ;
 		if (enemy_theta_ > 360) {
 			enemy_theta_ -= 360;
 		}
@@ -264,17 +311,17 @@ public:
 		}
 	}
 	void setRotationSpeed() {
-		double delta = enemy_theta_ - rotation_y_ - 90; // 两者夹角,要再减去90度是让z轴的正方向对着他
+		double delta =enemy_theta_ + rotation_y_; // 因为绕y轴旋转是正方向旋转，R(e)R(y) = R(e+y)
 		if (delta > 180.0) // 顺时针旋转rotation 180-delta
 			delta -= 360.0;
 		else if (delta < -180.0)
 			delta += 360.0;
-		rotation_speed_ =  delta / TURN_DURATION;
+		rotation_speed_ = delta / TURN_DURATION;
 	}
 	void incrRotationSpeed() {
 		if (jump_count_ < TURN_DURATION) {
-			rotation_y_ += rotation_speed_;
-			rotateY(rotation_speed_);  // 旋转的角度计算似乎不太正确
+			rotation_y_ -= rotation_speed_; // 这里要减去，因为是绕着y轴顺时针旋转
+			rotateY(rotation_speed_);  
 		}
 	}
 	void stateTransition() {
@@ -518,7 +565,7 @@ public:
 	~Enemy() {
 	}
 	virtual void update(const Matrix44& vr)override {
-		//setPos(getPos().x + (rand()%100-50.0) /FRAMES, getPos().y, getPos().z+ (rand() % 100-50.0) / FRAMES);
+		setPos(getPos().x + (rand()%100-5.0) /FRAMES, getPos().y, getPos().z+ (rand() % 100-5.0) / FRAMES);
 	}
 	virtual void draw(const Matrix44& pv)override {
 		Model::draw(pv);
