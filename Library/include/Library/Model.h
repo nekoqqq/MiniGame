@@ -272,8 +272,10 @@ public:
 		rotation_speed_ =  delta / TURN_DURATION;
 	}
 	void incrRotationSpeed() {
-		if (jump_count_ < TURN_DURATION)
+		if (jump_count_ < TURN_DURATION) {
 			rotation_y_ += rotation_speed_;
+			rotateY(rotation_speed_);  // 旋转的角度计算似乎不太正确
+		}
 	}
 	void stateTransition() {
 		Keyboard k = Manager::instance().keyboard();
@@ -464,7 +466,6 @@ public:
 		collisionTest();
 		attackHandle();
 		setEnemyTheta();
-		rotateY(rotation_y_); 		// 更新旋转角度,这个似乎可以放在别的地方
 		printDebugInfo();
 	}
 	void addMissle(Model& missle){
@@ -496,7 +497,7 @@ private:
 		oss << "player pos: " << getPos()<<" , enemy_pos: "<<gEnemy->getPos();
 		Framework::instance().drawDebugString(0, 1, oss.str().c_str());
 		oss.str("");
-		oss << "rotation_y: " << rotation_y_ << ", enemy_theta: " << enemy_theta_;
+		oss << "rotation_y: " << rotation_y_ << ", enemy_theta: " << enemy_theta_<<"rotation speed: "<< rotation_speed_;
 		Framework::instance().drawDebugString(0, 2, oss.str().c_str());
 		oss.str("");
 		oss << "velocity: "<< velocity_ << ", norm: " << velocity_.norm();
