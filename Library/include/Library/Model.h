@@ -24,11 +24,11 @@ namespace GameLib {
 }
 extern const int FRAMES;
 extern const double PI;
-const int MAX_ENEGY = 1*FRAMES;
+const int JUMP_UP_DURATION = 1*FRAMES;
 const int SKY_STAY = 0.5*FRAMES; // 滞空时间
 const int FALL_DURATION = 0.5 * FRAMES;
 
-const int MAX_MISSLES = 3;
+const int MAX_MISSLES = 100;
 const int MISSLE_TTL = 5*FRAMES; // 5秒
 
 // 移动速度
@@ -37,11 +37,18 @@ const double ACC_DURATION = 2.0; // 单位秒
 double FRAME_SPEED_ACC = MAX_SPEED / (ACC_DURATION * FRAMES);
 
 // 转身
-const double ZOOM_DURATION = (MAX_ENEGY+SKY_STAY+FALL_DURATION)/3; // 持续多少帧
+const double ZOOM_DURATION = (JUMP_UP_DURATION+SKY_STAY+FALL_DURATION)/3; // 持续多少帧
 const double TURN_DEGREE = 180.0 / FRAMES; // 每帧视角转换角度
 
 // 导弹
 const double MISSLE_ROTATION_SPEED = 360.0 / FRAMES; // 度/每帧
+const int MAX_HP = 1000;
+const int MAX_ENEGY = 100;
+const int MISSLE_ENGEY_COST = 25; // 每个导弹消耗的能量值
+
+// 人物
+const int ENEGY_RECOVER = 180/ FRAMES; // 每秒恢复的能量
+
 class Model {
 public:
 	enum Type {
@@ -61,6 +68,7 @@ public:
 		collision_model_ = nullptr;
 	}
 	virtual ~Model() {
+		test_collision_models.clear();
 	}
 	virtual void draw(const Matrix44 &pv)=0 {
 		Matrix44 model_transform = getModelTransform();
@@ -187,7 +195,7 @@ public:
 	Enemy(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, collision_type, m) {
 		// 中心点设置在脚底，因为现在实际上是线段在判断而不是两个球体在判断
 		initCollisionModel({ pos.x,pos.y + getCuboidHalf().y,pos.z }, getCuboidHalf(), { pos.x,pos.y,pos.z }, getCuboidHalf().y);
-		hp_ = 100;
+		hp_ = MAX_HP;
 	}
 	~Enemy() {
 	}
@@ -206,7 +214,7 @@ public:
 		return hp_;
 	}
 	void getDamage() {
-		hp_-=10;
+		hp_-=MISSLE_ENGEY_COST;
 	}
 private:
 	int hp_; // 生命值
@@ -283,7 +291,7 @@ public:
 		}
 		updateVelocity(dir, MISSLE_ROTATION_SPEED);
 		setPos(getPos() + velocity_);
-		if (++ttl_ >= MISSLE_TTL)
+		if (++ttl_ >= MISSLE_TTL) // 子弹消失
 			ttl_ = 0;
 	}
 };
@@ -315,19 +323,20 @@ public:
 		JUMP_STAY,
 		JUMP_FALL,
 		QUICK_MOVE,
-		TURNING // 转身
-
+		TURNING, // 转身
+		ATTACKING, // 攻击状态
 	};
 	Mecha(Type type, const Vector3& pos, Painter* painter,CollisionModel::Type collision_type, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, collision_type, m) {
 		// 中心点设置在脚底，因为现在实际上是线段在判断而不是两个球体在判断
 		initCollisionModel({pos.x,pos.y+getCuboidHalf().y,pos.z}, getCuboidHalf(), { pos.x,pos.y,pos.z }, getCuboidHalf().y);
 		state_ = MOVE;
-		enegey_ = 100;
+		energy_ = MAX_ENEGY;
 		velocity_ =Vector3();
 		jump_count_ = 0;
 		enemy_theta_ = 0;
 		rotation_y_ = 0;
 		rotation_speed_ = 0;
+		hp_ = MAX_HP;
 	}
 	~Mecha() {
 	}
@@ -383,7 +392,7 @@ public:
 			break;
 		case JUMP_UP:
 			incrRotationSpeed();
-			if (jump_count_++ >= MAX_ENEGY) {
+			if (jump_count_++ >= JUMP_UP_DURATION) {
 				state_ = JUMP_STAY;
 			}
 			else {
@@ -392,7 +401,7 @@ public:
 			break;
 		case JUMP_STAY:
 			incrRotationSpeed();
-			if (jump_count_++ == MAX_ENEGY+SKY_STAY) {
+			if (jump_count_++ == JUMP_UP_DURATION+SKY_STAY) {
 				velocity_.y = -1;
 				state_ = JUMP_FALL;
 			}
@@ -402,11 +411,12 @@ public:
 			break;
 		case JUMP_FALL:
 			incrRotationSpeed();
-			if (jump_count_++ == MAX_ENEGY+SKY_STAY+FALL_DURATION) {
+			if (jump_count_++ == JUMP_UP_DURATION+SKY_STAY+FALL_DURATION) {
 				state_ = MOVE;
 			}
 			break;
 		}
+
 	}
 	void updateVelocity(const Matrix44&vr) {
 		Keyboard k = Manager::instance().keyboard();
@@ -525,18 +535,24 @@ public:
 	}
 	void attackHandle() {
 		Keyboard k = Manager::instance().keyboard();
-		if (k.isTriggered('j')) {
+		bool isAttack = k.isOn('j');
+		if (isAttack && !(state_==JUMP_UP || state_==JUMP_FALL)&&energy_>=MISSLE_ENGEY_COST) {
 			for (int i = 0; i < MAX_MISSLES; i++) {
 				if (!missles_[i].isShoot()) { 
 					missles_[i].reset(getPos(),gEnemy->getPos());
+					energy_ -= MISSLE_ENGEY_COST;
 					break;
 				}
 			}
 		}
-
+		recoverEnergy(isAttack);
 		for (int i = 0; i < MAX_MISSLES; i++) {
 			missles_[i].update(gEnemy->getPos());
 		}
+	}
+	void recoverEnergy(bool isAttack) {
+		if(!isAttack && energy_ +ENEGY_RECOVER<=MAX_ENEGY)
+			energy_ += ENEGY_RECOVER;
 	}
 	virtual void update(const Matrix44& vr)override {
 		// 这里的移动是在相机坐标系内移动
@@ -546,8 +562,8 @@ public:
 		// 或者 X=AY+C => X=A(Y+delta)+c => X=AY + c +A delta，增加量还是旋转*delta
 		updateVelocity(vr);
 		stateTransition();
-		collisionTest();
 		attackHandle();
+		collisionTest();
 		setEnemyTheta();
 		printDebugInfo();
 	}
@@ -569,12 +585,12 @@ private:
 	State state_;
 	Vector3 velocity_;
 	int jump_count_;
-	int enegey_; // 当前的能量条
 	double enemy_theta_; // 和敌人的角度
 	double rotation_y_; // 绕着Y轴的旋转角
 	double rotation_speed_; // 绕着Y轴旋转的速度
 	vector<Missle> missles_;
-	int hp_; // 生命值
+	int energy_; // 当前的能量条
+	int hp_;
 
 	void printDebugInfo() {
 		ostringstream oss;
@@ -590,7 +606,7 @@ private:
 		oss <<"missle pos: "<<missles_[0].getPos()<<", dis: "<<(missles_[0].getPos() - gEnemy->getPos()).norm();
 		Framework::instance().drawDebugString(0, 4, oss.str().c_str());
 		oss.str("");
-		oss << "enemy hp: " << dynamic_cast<Enemy*>(gEnemy)->getHP();
+		oss <<"player energe: "<<energy_<< ", enemy hp: " << dynamic_cast<Enemy*>(gEnemy)->getHP();
 		Framework::instance().drawDebugString(0, 5, oss.str().c_str());
 		oss.str("");
 	}
@@ -692,62 +708,4 @@ private:
 	unordered_map<string, Painter*> painters;
 	unordered_map<string, Vector3*> origins; // 各个物体位于世界坐标系中的坐标
 
-};
-
-class Camera {
-public:
-	Camera(const Vector3& eye_pos, const Vector3& target_pos, const Vector3& up, double fov_y, double near, double far, double aspect_ratio) :eye_pos_(eye_pos), target_pos_(target_pos), up_(up), fov_y(fov_y), near(near), far(far), aspect_ratio(aspect_ratio) {
-		setProjectionTransform();
-	}
-	~Camera() {}
-	Matrix44 getViewRotation() {
-		Vector3 e3 = (target_pos_ - eye_pos_).normalize();
-		Vector3 e1 = up_.cross(e3).normalize();
-		Vector3 e2 = e3.cross(e1).normalize();
-		const double rot_t[][4] = {
-			{e1.x,e2.x,e3.x,0},
-			{e1.y,e2.y,e3.y,0},
-			{e1.z,e2.z,e3.z,0},
-			{0,0,0,1}
-		};
-
-		return Matrix44(rot_t);
-	}
-
-	Matrix44 getViewProjectionMatrix() {
-		Matrix44 rotation = getViewRotation().transpose();
-		const double trans_t[][4] = {
-			{1.,0.,0.,-eye_pos_.x },
-			{0.,1.,0.,-eye_pos_.y },
-			{ 0.,0.,1.,-eye_pos_.z},
-			{0,0,0,1}
-		};
-		Matrix44 trans(trans_t);
-		return projectionTransform.matMul(rotation.matMul(trans));
-	}
-	void update(Model* player) {
-		const Vector3& origin = player->getPos();
-		const Vector3& z_dir = player->getZDirection();
-		// 从模型的后六米看向他前面的10米位置
-		eye_pos_ = player->getModelTransform().vecMul({ 0,20,-60 });
-		target_pos_ = player->getModelTransform().vecMul({ 0,0,10 });
-	}
-private:
-	Vector3 eye_pos_;
-	Vector3 target_pos_;
-	Vector3 up_;
-	double fov_y;
-	double near;
-	double far;
-	double aspect_ratio;
-	Matrix44 projectionTransform;
-
-	void setProjectionTransform() {
-		double(&p)[4][4] = projectionTransform.p;
-		p[1][1] = 1 / tan(fov_y * 0.5);
-		p[0][0] = p[1][1] / aspect_ratio;
-		p[2][2] = far / (far - near);
-		p[2][3] = -near * far / (far - near);
-		p[3][2] = 1;
-	}
 };

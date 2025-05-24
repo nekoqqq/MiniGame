@@ -5,6 +5,7 @@
 #include "GameLib/Input/Mouse.h"
 #include "Library/Model.h"
 #include "Library/Graph.h"
+#include "Library/Camera.h"
 #include <sstream>
 using namespace std;
 using namespace GameLib::Input;
@@ -43,6 +44,7 @@ namespace GameLib {
 		SAFE_DELETE(gEnemy);
 		for (int i = 0; i < gEnemyCnt; i++)
 			SAFE_DELETE(gEnemys[i]);
+		gEnemys.clear();
 		SAFE_DELETE(gStage);
 		SAFE_DELETE(gWall);
 	}
@@ -91,10 +93,9 @@ namespace GameLib {
 		}
 		if (!dynamic_cast<Enemy*>(gEnemy)->isAlive()) {
 			drawDebugString(1, 0, "Game Over!");
-			if (k.isOn(' ')) {
-				deleteAll();
-				firstFrame = true;
-			}
+			sleep(5000);
+			deleteAll();
+			firstFrame = true;
 		}
 		if (k.isOn('q'))
 			GameLib::Framework::instance().requestEnd();

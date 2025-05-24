@@ -152,6 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Library\Camera.h" />
     <ClInclude Include="include\Library\Collision.h" />
     <ClInclude Include="include\Library\Globals.h" />
     <ClInclude Include="include\Library\Graph.h" />
