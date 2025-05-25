@@ -72,6 +72,8 @@ namespace GameLib {
 			for (int i = 0; i < gEnemyCnt; i++) {
 				gEnemys.push_back(gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy_") + to_string(i+1)));
 			}
+			dynamic_cast<Mecha*>(gPlayer)->addEnemy(gEnemy);
+			dynamic_cast<Mecha*>(gEnemy)->addEnemy(gPlayer);
 			gStage = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "stage");
 			gWall = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "wall");
 			gAxis = gResource->createModel(Model::AXIS, CollisionModel::SPHERE, "axis");
@@ -87,6 +89,7 @@ namespace GameLib {
 		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
 		Matrix44 vr = gCamera->getViewRotation();
 		gPlayer->update(vr); // 玩家和敌人共用一套逻辑
+		gEnemy->update(vr);
 		gCamera->update(gPlayer);
 
 		// 绘制
@@ -101,7 +104,7 @@ namespace GameLib {
 		}
 		if (!dynamic_cast<Mecha*>(gEnemy)->isAlive() || ++gCounter>=MAX_TIME) {
 			drawDebugString(1, 0, "Game Over!");
-			sleep(5000);
+			sleep(1000);
 			deleteAll();
 			firstFrame = true;
 			gCounter = 0;

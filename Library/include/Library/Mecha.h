@@ -25,15 +25,16 @@ public:
 		rotation_speed_ = 0;
 		hp_ = MAX_HP;
 		lock_on_ = false;
+		enemy_ = nullptr;
 	}
 	~Mecha() {}
 	void update(const Matrix44& vr)override;
 	void addMissle(Model& missle);
+	void addEnemy(Model* enemy);
 	void draw(const Matrix44& pv)override;
 	bool isAlive()const;
 	int getHP()const;
 	void getDamage();
-
 private:
 	State state_;
 	Vector3 velocity_;
@@ -45,16 +46,18 @@ private:
 	int energy_; // 当前的能量条
 	int hp_;
 	bool lock_on_; // 是否锁定了敌人
+	Model* enemy_; // 敌人
 protected:
-	void printDebugInfo() const;
+	void printDebugInfo()const ;
 	void collisionTest();
-	void attackHandle();
-	void recoverEnergy(bool isAttack);
+	void fire();
+	void attackHandle(bool isAttack);
+	void recoverEnergy();
 	void setEnemyTheta();
 	void setRotationSpeed();
 	void incrRotationSpeed();
 	void stateTransition();
 	void updateVelocity(const Matrix44& vr);
 	void lockOn();
+	void AI();
 };
-

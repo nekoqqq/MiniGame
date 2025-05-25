@@ -174,6 +174,10 @@ protected:
 	void setPos(const Vector3& v) {
 		pos_ = v;
 	}
+	Type getType()const
+	{
+		return type_;
+	}
 
 private:
 	Type type_;

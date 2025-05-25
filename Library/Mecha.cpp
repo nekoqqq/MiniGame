@@ -6,33 +6,42 @@
 // 移动速度
 const double MAX_SPEED = 4.0;
 const double ACC_DURATION = 2.0; // 单位秒
-
 double FRAME_SPEED_ACC = MAX_SPEED / (ACC_DURATION * FRAMES);
 
-// 下面的两个函数不能加上inline关键字
+// 下面的两个函数不能加上inline关键字,因为是public函数，内联函数的定义必须放在
 void Mecha::update(const Matrix44& vr)
 {
 	if (!isAlive())
 		return;
-	// 这里的移动是在相机坐标系内移动
-	// 移动前坐标为Y，世界坐标X = AY+C，
-	// 移动后坐标为Y',世界坐标X' = AY'+C,
-	// 两式相减X'-X = A(Y'-Y) => X'=X+A(Y'-Y) => X'=X+A delta，其中delta是相机坐标系中的位移量
-	// 或者 X=AY+C => X=A(Y+delta)+c => X=AY + c +A delta，增加量还是旋转*delta
-	updateVelocity(vr);
-	stateTransition();
-	attackHandle();
-	collisionTest();
-	setEnemyTheta();
-	lockOn();
-	printDebugInfo();
-}
+		// 这里的移动是在相机坐标系内移动
+		// 移动前坐标为Y，世界坐标X = AY+C，
+		// 移动后坐标为Y',世界坐标X' = AY'+C,
+		// 两式相减X'-X = A(Y'-Y) => X'=X+A(Y'-Y) => X'=X+A delta，其中delta是相机坐标系中的位移量
+		// 或者 X=AY+C => X=A(Y+delta)+c => X=AY + c +A delta，增加量还是旋转*delta
+	if (getType()==PLAYER)
+	{
+		updateVelocity(vr);
+		stateTransition();
+		Keyboard k = Manager::instance().keyboard();
+		bool isAttack = k.isTriggered('j');
+		attackHandle(isAttack);
+		collisionTest();
+		setEnemyTheta();
+		lockOn();
+		printDebugInfo();
+	}
+	else
+		AI();
 
+}
 void Mecha::addMissle(Model& missle)
 {
 	missles_.push_back(dynamic_cast<Missle&> (missle));
 }
-
+void Mecha::addEnemy(Model* enemy)
+{
+	enemy_ = enemy;
+}
 void Mecha::draw(const Matrix44& pv)
 {
 	Model::draw(pv);
@@ -40,23 +49,19 @@ void Mecha::draw(const Matrix44& pv)
 		missles_[i].draw(pv);
 	}
 }
-
 bool Mecha::isAlive() const
 {
 	return hp_ > 0;
 }
-
 int Mecha::getHP() const
 {
 	return hp_;
 }
-
 void Mecha::getDamage()
 {
 	hp_ -= MISSLE_ENGEY_COST;
 }
-
-inline void Mecha::printDebugInfo() const
+void Mecha::printDebugInfo() const
 {
 	int i = 0;
 	ostringstream oss;
@@ -72,7 +77,7 @@ inline void Mecha::printDebugInfo() const
 	//oss <<"missle pos: "<<missles_[0].getPos()<<", dis: "<<(missles_[0].getPos() - gEnemy->getPos()).norm();
 	//Framework::instance().drawDebugString(0, 4, oss.str().c_str());
 	//oss.str("");
-	oss << "player energe: " << energy_ << ", enemy hp: " << dynamic_cast<Mecha*>(gEnemy)->getHP();
+	oss << "player hp: " << dynamic_cast<Mecha*>(gPlayer)->getHP() << "player energy: "<< dynamic_cast<Mecha*>(gPlayer)->energy_ <<", enemy hp: " << dynamic_cast<Mecha*>(gEnemy)->getHP()<<", enermy energe: "<< dynamic_cast<Mecha*>(gEnemy)->energy_;
 	Framework::instance().drawDebugString(0, i++, oss.str().c_str());
 	oss.str("");
 	oss << "lock on: " << lock_on_;
@@ -80,9 +85,7 @@ inline void Mecha::printDebugInfo() const
 	oss.str("");
 
 }
-
-
-inline void Mecha::collisionTest()
+void Mecha::collisionTest()
 {
 	// 存在一个方向，使得和其他所有物体都不相撞，才可以移动
 	// 反之，存在一个物体，所有方向都和他相撞，则不可以移动
@@ -163,35 +166,25 @@ inline void Mecha::collisionTest()
 		}
 	}
 }
-
-inline void Mecha::attackHandle()
+void Mecha::attackHandle(bool isAttack)
 {
-	Keyboard k = Manager::instance().keyboard();
-	bool isAttack = k.isOn('j');
-	if (isAttack && !(state_ == JUMP_UP || state_ == JUMP_FALL) && energy_ >= MISSLE_ENGEY_COST) {
-		for (int i = 0; i < MAX_MISSLES; i++) {
-			if (!missles_[i].isShoot()) {
-				missles_[i].reset(getPos(), gEnemy->getPos());
-				energy_ -= MISSLE_ENGEY_COST;
-				break;
-			}
-		}
-	}
-	recoverEnergy(isAttack);
+	isAttack = isAttack && !(state_ == JUMP_UP || state_ == JUMP_FALL) && energy_ >= MISSLE_ENGEY_COST;
+	if (isAttack)
+		fire();
+	else
+		recoverEnergy();
 	for (int i = 0; i < MAX_MISSLES; i++) {
-		missles_[i].update(gEnemy->getPos());
+		missles_[i].update(enemy_);
 	}
 }
-
-inline void Mecha::recoverEnergy(bool isAttack)
+void Mecha::recoverEnergy()
 {
-	if (!isAttack && energy_ + ENEGY_RECOVER <= MAX_ENEGY)
+	if (energy_ + ENEGY_RECOVER <= MAX_ENEGY)
 		energy_ += ENEGY_RECOVER;
 }
-
-inline void Mecha::setEnemyTheta()
+void Mecha::setEnemyTheta()
 {
-	const Vector3& enemy_pos = gEnemy->getPos();
+	const Vector3& enemy_pos = enemy_->getPos();
 	const Vector3& dir = enemy_pos - getPos();
 	enemy_theta_ = atan2(dir.x, dir.z) * 180.0 / PI;
 	if (enemy_theta_ > 360) {
@@ -201,8 +194,7 @@ inline void Mecha::setEnemyTheta()
 		enemy_theta_ += 360;
 	}
 }
-
-inline void Mecha::setRotationSpeed()
+void Mecha::setRotationSpeed()
 {
 	double delta = enemy_theta_ + rotation_y_; // 因为绕y轴旋转是正方向旋转，R(e)R(y) = R(e+y)
 	if (delta > 180.0) // 顺时针旋转rotation 180-delta
@@ -211,16 +203,14 @@ inline void Mecha::setRotationSpeed()
 		delta += 360.0;
 	rotation_speed_ = delta / ZOOM_DURATION;
 }
-
-inline void Mecha::incrRotationSpeed()
+void Mecha::incrRotationSpeed()
 {
 	if (jump_count_ < ZOOM_DURATION) {
 		rotation_y_ -= rotation_speed_; // 这里要减去，因为是绕着y轴顺时针旋转
 		rotateY(rotation_speed_);
 	}
 }
-
-inline void Mecha::stateTransition()
+void Mecha::stateTransition()
 {
 	Keyboard k = Manager::instance().keyboard();
 	/*
@@ -278,8 +268,7 @@ inline void Mecha::stateTransition()
 		break;
 	}
 }
-
-inline void Mecha::updateVelocity(const Matrix44& vr)
+void Mecha::updateVelocity(const Matrix44& vr)
 {
 	Keyboard k = Manager::instance().keyboard();
 	Vector3 move;
@@ -314,10 +303,9 @@ inline void Mecha::updateVelocity(const Matrix44& vr)
 	if (cur_speed + FRAME_SPEED_ACC <= MAX_SPEED)
 		velocity_ = velocity_.normalize() * (cur_speed + FRAME_SPEED_ACC);
 }
-
-inline void Mecha::lockOn()
+void Mecha::lockOn()
 { // 瞬时锁定功能
-	Vector3 enemy_dir = (gEnemy->getPos() - getPos());
+	Vector3 enemy_dir = (enemy_->getPos() - getPos());
 	Vector3 z_dir = getModelRotation().vecMul({ 0,0,1 }).normalize();
 
 	double theta = acos(enemy_dir.dot(z_dir) / enemy_dir.norm()) * 180.0 / PI;
@@ -327,4 +315,32 @@ inline void Mecha::lockOn()
 		lock_on_ = false;
 	else if (theta <= MAX_LOCK_ON && !lock_on_)
 		lock_on_ = true;
+}
+void Mecha::fire()
+{
+	for (int i = 0; i < MAX_MISSLES; i++) {
+		if (!missles_[i].isShoot()) {
+			missles_[i].reset(getPos(), enemy_->getPos());
+			energy_ -= MISSLE_ENGEY_COST;
+			break;
+		}
+	}
+}
+void Mecha::AI()
+{
+	static int s_ai_counter= 0;
+	if (getType() != ENEMY)
+		return;
+	bool isAttack = false;
+	if (++s_ai_counter%(FRAMES)==0)
+	{
+		isAttack = true;
+		Vector3 new_pos =getPos()+ Vector3(rand() % 20-10,rand() % 20 - 10, rand() % 20 - 10);
+		if (new_pos.y < 0.0)
+			new_pos.y = 0.0;
+		setPos(new_pos);
+
+	}
+	attackHandle(isAttack);
+	recoverEnergy();
 }

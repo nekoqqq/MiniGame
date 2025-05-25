@@ -19,5 +19,5 @@ public:
 	void reset(const Vector3& pos, const Vector3& enemy_pos);
 
 	void updateVelocity(const Vector3& dir, double rotation_speed);
-	void update(const Vector3& enemy_pos);
+	void update(Model* enemy);
 };

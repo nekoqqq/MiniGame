@@ -14,8 +14,7 @@ void Missle::draw(const Matrix44& pv)
 	}
 }
 
-void Missle::update(const Matrix44& vr)
-{}
+void Missle::update(const Matrix44& vr){}
 
 void Missle::reset(const Vector3& pos, const Vector3& enemy_pos)
 {
@@ -24,15 +23,15 @@ void Missle::reset(const Vector3& pos, const Vector3& enemy_pos)
 	ttl_ = 1;
 }
 
-void Missle::update(const Vector3& enemy_pos)
+void Missle::update( Model*enemy)
 {
 	if (!isShoot())
 		return;
 	// 初始速度v0，方向向量d,v0和d有一定的夹角，
-	Vector3 dir = enemy_pos - getPos();
+	Vector3 dir = enemy->getPos() - getPos();
 	if (dir.norm() < 5.0) {
 		ttl_ = 0;
-		dynamic_cast<Mecha*>(gEnemy)->getDamage();
+		dynamic_cast<Mecha*>(enemy)->getDamage();
 		return;
 	}
 	updateVelocity(dir, MISSLE_ROTATION_SPEED);
