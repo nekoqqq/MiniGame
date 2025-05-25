@@ -43,7 +43,6 @@ void Mecha::update(const Matrix44& vr)
 	collisionTest();
 	setEnemyTheta();
 	lockOn();
-
 	printDebugInfo();
 }
 void Mecha::addMissle(Model& missle)
@@ -77,26 +76,26 @@ void Mecha::printDebugInfo() const
 {
 	if (getType() != PLAYER)
 		return;
-	int i = 0;
-	ostringstream oss;
-	oss << "player pos: " << getPos() << " , enemy_pos: " << gEnemy->getPos();
-	Framework::instance().drawDebugString(0, i++, oss.str().c_str());
-	oss.str("");
-	//oss << "rotation_y: " << rotation_y_ << ", enemy_theta: " << enemy_theta_<<"rotation speed: "<< rotation_speed_;
-	//Framework::instance().drawDebugString(0, 2, oss.str().c_str());
+	//int i = 0;
+	//ostringstream oss;
+	//oss << "player pos: " << getPos() << " , enemy_pos: " << gEnemy->getPos();
+	//Framework::instance().drawDebugString(0, i++, oss.str().c_str());
 	//oss.str("");
-	//oss << "velocity: "<< velocity_ << ", norm: " << velocity_.norm()<<", time: " << gCounter*1.0/FRAMES;
-	//Framework::instance().drawDebugString(0, 3, oss.str().c_str());
+	////oss << "rotation_y: " << rotation_y_ << ", enemy_theta: " << enemy_theta_<<"rotation speed: "<< rotation_speed_;
+	////Framework::instance().drawDebugString(0, 2, oss.str().c_str());
+	////oss.str("");
+	////oss << "velocity: "<< velocity_ << ", norm: " << velocity_.norm()<<", time: " << gCounter*1.0/FRAMES;
+	////Framework::instance().drawDebugString(0, 3, oss.str().c_str());
+	////oss.str("");
+	////oss <<"missle pos: "<<missles_[0].getPos()<<", dis: "<<(missles_[0].getPos() - gEnemy->getPos()).norm();
+	////Framework::instance().drawDebugString(0, 4, oss.str().c_str());
+	////oss.str("");
+	//oss << "player hp: " << dynamic_cast<Mecha*>(gPlayer)->getHP() << "player energy: "<< dynamic_cast<Mecha*>(gPlayer)->energy_ <<", enemy hp: " << dynamic_cast<Mecha*>(gEnemy)->getHP()<<", enermy energe: "<< dynamic_cast<Mecha*>(gEnemy)->energy_;
+	//Framework::instance().drawDebugString(0, i++, oss.str().c_str());
 	//oss.str("");
-	//oss <<"missle pos: "<<missles_[0].getPos()<<", dis: "<<(missles_[0].getPos() - gEnemy->getPos()).norm();
-	//Framework::instance().drawDebugString(0, 4, oss.str().c_str());
+	//oss << "lock on: " << lock_on_;
+	//Framework::instance().drawDebugString(0, i++, oss.str().c_str());
 	//oss.str("");
-	oss << "player hp: " << dynamic_cast<Mecha*>(gPlayer)->getHP() << "player energy: "<< dynamic_cast<Mecha*>(gPlayer)->energy_ <<", enemy hp: " << dynamic_cast<Mecha*>(gEnemy)->getHP()<<", enermy energe: "<< dynamic_cast<Mecha*>(gEnemy)->energy_;
-	Framework::instance().drawDebugString(0, i++, oss.str().c_str());
-	oss.str("");
-	oss << "lock on: " << lock_on_;
-	Framework::instance().drawDebugString(0, i++, oss.str().c_str());
-	oss.str("");
 
 }
 void Mecha::collisionTest()
@@ -352,8 +351,6 @@ void Mecha::AI()
 	{
 		frame_input_->is_JUMP = true;
 	}
-
-
 	int up = rand() % 2;
 	int left = rand() % 2;
 	int right = rand() % 2;

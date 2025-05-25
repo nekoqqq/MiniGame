@@ -8,8 +8,7 @@
 extern const double eps;
 using std::array;
 using std::ostream;
-class Vector3 {
-public:
+struct Vector3 {
 	double x, y, z;
 	double w;
 	Vector3():Vector3(0.0,0.0,0.0,1.0){}
@@ -76,24 +75,22 @@ public:
 	double operator[](int i)const{
 		if (i == 0)
 			return x;
-		else if (i == 1)
+		if (i == 1)
 			return y;
-		else if (i == 2)
+		if (i == 2)
 			return z;
-		else
-			return w;
+		return w;
 	}
 	// 修改
 	 double& operator[](int i) {
 		if (i == 0)
 			return x;
-		else if (i == 1)
+		if (i == 1)
 			return y;
-		else if (i == 2)
+		if (i == 2)
 			return z;
-		else
-			return w;
-	}
+		return w;
+	 }
 	operator double* () {
 		return &this->x;
 	}
@@ -124,7 +121,7 @@ public:
 	}
 
 	friend std::ostream& operator<<(std::ostream& oss, const Vector3& a) {
-		oss << "<" << a.x << ", " << a.y << ", " << a.z<<">";
+		oss << "<" << a.x << ", " << a.y << ", " << a.z << ", " << a.w << ">";
 		return oss;
 	}
 	friend Vector3 setAdd(const Vector3& a, const Vector3& b) {
@@ -135,7 +132,11 @@ public:
 	}
 	operator array<double, 3>();
 };
-
+struct Vector2D: Vector3
+{
+	Vector2D():Vector2D(0.0,0.0){}
+	Vector2D(double x,double y):Vector3(x,y,0.0,1){}
+};
 class Matrix44 { // 4阶齐次矩阵
 public:
 	double p[4][4];
@@ -223,6 +224,17 @@ public:
 			}
 		return res;
 	}
+	friend std::ostream& operator<<(std::ostream& oss, const Matrix44& a) {
+		for (int i =0;i<N;i++)
+		{
+			oss << "<";
+			for (int j =0;j<N;j++)
+				oss<<a.p[i][j] << ", ";
+			oss << ">\n";
+		}
+		return oss;
+	}
+
 };
 
 inline Matrix44 getOuterMatrix(const Vector3& v) {

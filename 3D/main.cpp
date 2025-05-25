@@ -35,10 +35,12 @@ Vector3 gEyeUp(0., 1., 0.); // 一般是向上
 const double fov_y = PI / 3;
 const double aspec_ratio = 1.0 * WIDTH / HEIGHT;
 const double near = 1.0;
-const double far = 10000.0;
+const double far = 1000.0;
 int gCounter = 0;
 // 资源类
 Resource* gResource;
+FrontEnd* gFrontEnd;
+MechaInfo* gMechaInfo;
 namespace GameLib {
 	bool firstFrame = true;
 	void deleteAll() {
@@ -85,6 +87,8 @@ namespace GameLib {
 			gEnemy->addCollisionModel(gPlayer);
 			gEnemy->addCollisionModel(gStage);
 			gEnemy->addCollisionModel(gWall);
+			gMechaInfo = new MechaInfo;
+			gFrontEnd = new FrontEnd(gMechaInfo);
 			++gCounter;
 		}
 		// 更新
@@ -93,9 +97,9 @@ namespace GameLib {
 		gPlayer->update(vr); // 玩家和敌人共用一套逻辑
 		gEnemy->update(vr);
 		gCamera->update(gPlayer);
-
 		// 绘制
 		Matrix44 pv = gCamera->getViewProjectionMatrix();
+		gFrontEnd->update(dynamic_cast<Mecha*>(gPlayer), dynamic_cast<Mecha*>(gEnemy), dynamic_cast<Stage*>(gStage), gCamera);
 		gStage->draw(pv);
 		gWall->draw(pv);
 		gAxis->draw(pv);
@@ -104,6 +108,8 @@ namespace GameLib {
 		for (int i = 0; i < gEnemyCnt; i++) {
 			gEnemys[i]->draw(pv);
 		}
+		gFrontEnd->draw();
+		
 		if (!dynamic_cast<Mecha*>(gEnemy)->isAlive() || ++gCounter>=MAX_TIME) {
 			drawDebugString(1, 0, "Game Over!");
 			sleep(1000);

@@ -2,6 +2,8 @@
 #include "Model.h"
 #include "Missle.h"
 #include "Mecha.h"
+extern const int MAX_TIME;
+using std::pair;
 class Resource
 {
 public:
@@ -86,5 +88,235 @@ private:
 	unordered_map<string, Texture*> textures;
 	unordered_map<string, Painter*> painters;
 	unordered_map<string, Vector3*> origins; // 各个物体位于世界坐标系中的坐标
+};
+struct MechaInfo
+{
 
+	int player_hp;
+	int player_energy;
+	bool player_lock_on;
+	int enemy_hp;
+	int enemy_energy;
+	double map_half; // 地图的一半
+	Vector3 player_pos;
+	Vector3 enemy_pos;
+
+	Vector2D enemy_nvi_pos; // 敌人的二维坐标
+
+
+	void update(Mecha *player,Mecha*enemy,Stage *stage,Camera *camera)
+	{
+		player_hp = player->getHP();
+		player_energy = player->energy_;
+		player_lock_on = player->lock_on_;
+
+		enemy_hp = enemy->getHP();
+		enemy_energy = enemy->energy_;
+
+		map_half = stage->getHalf();
+		player_pos = player->getPos();
+		enemy_pos = enemy->getPos();
+
+		Vector3 enemy_pvm = camera->getViewProjectionMatrix().matMul(enemy->getModelTransform()).vecMul(enemy_pos);
+		enemy_nvi_pos = { enemy_pvm.x/enemy_pvm.w,enemy_pvm.y/enemy_pvm.w };
+		ostringstream oss;
+		oss << enemy_pvm <<","<<"\n"<<enemy_nvi_pos<<"\n";
+		oss << enemy->getModelTransform();
+		Framework::instance().drawDebugString(10, 10, oss.str().c_str(),0xffff0000);
+	}
+};
+
+class FrontEnd
+{
+public:
+	FrontEnd(MechaInfo*mech_info):mecha_info_(mech_info){}
+	void draw()
+	{
+		drawHP();
+		drawEnergy();
+		drawMap();
+		drawTimer();
+		drawLockOn();
+	}
+	void update(Mecha*player,Mecha*enemy,Stage*stage,Camera*camera)
+	{
+		mecha_info_->update(player, enemy,stage,camera);
+	}
+
+	void drawRect(vector<Vector2D> xy_points, unsigned c1 = 0xffffffff, unsigned c2 = 0xffffffff) // 实现从左边到右边的渐变效果
+	{
+		vector<Vector3> points;
+		for (auto& xy_point : xy_points)
+			points.push_back({xy_point.x, xy_point.y,0,1, });
+		assert(points.size() == 4);
+		Framework f = Framework::instance();
+		f.enableDepthTest(false);
+		f.enableDepthWrite(false);
+		f.setTexture(nullptr);
+		f.drawTriangle3DH(&points[0].x, &points[1].x, &points[2].x, nullptr, nullptr, nullptr, c1, c1, c2);
+		f.drawTriangle3DH(&points[0].x, &points[2].x, &points[3].x, nullptr, nullptr, nullptr, c1, c2, c2);
+	}
+	void drawPlayerHP()
+	{
+		vector<Vector2D> background = {
+		{-0.9,0.9}, // 0 
+		{-0.9,0.8}, // 1
+		{-0.2,0.8}, // 2
+		{-0.2,0.9}, // 3
+		};
+		unsigned raw_c1 = 0xF000C000;
+		unsigned raw_c2 = 0xF000ff00;
+		unsigned c1 = 0xffffffff;
+		unsigned c2 = 0xffffffff;
+		double rate = 1.0 * mecha_info_->player_hp / MAX_HP;
+		drawProgerss(background, rate, raw_c1, raw_c2, c1, c2, { {2,1},"MY HP" });
+	}
+	void drawEnemyHp()
+	{
+		vector<Vector2D> background = {
+			{0.2,0.8}, // 3
+			{0.2,0.9}, // 2
+			{0.9,0.9}, // 1
+			{0.9,0.8}, // 0
+
+		};
+		unsigned raw_c1 = 0xF00000C0;
+		unsigned raw_c2 = 0xF00000ff;
+		unsigned c1 = 0xffffffff;
+		unsigned c2 = 0xffffffff;
+		double rate = 1.0 * mecha_info_->enemy_hp / MAX_HP;
+		drawProgerss(background, rate, raw_c1, raw_c2, c1, c2, { {2,40},"YOUR HP" });
+		
+	}
+	void drawHP()
+	{
+		Framework::instance().setBlendMode(Framework::BLEND_LINEAR);
+		drawPlayerHP();
+		drawEnemyHp();
+	}
+	void drawEnergy()
+	{
+		Framework::instance().setBlendMode(Framework::BLEND_ADDITIVE);
+		vector<Vector2D> background = {
+			{-0.9,0.7},
+			{-0.9,0.6},
+			{-0.1,0.6},
+			{-0.1,0.7}
+		};
+		unsigned raw_c1 = 0xff884422;
+		unsigned raw_c2 = 0xffDD4422;
+		unsigned c1 = 0xffffffff;
+		unsigned c2 = 0xffffffff;
+		double rate = 1.0 * mecha_info_->player_energy / MAX_ENEGY;
+		drawProgerss(background, rate, raw_c1, raw_c2, c1, c2,{{5,1},"EN"});
+	}
+	void drawProgerss(const vector<Vector2D> &background,double rate,unsigned raw_c1,unsigned raw_c2,unsigned c1,unsigned c2,pair<pair<int,int>,const char* > texture)
+	{
+		drawRect(background, raw_c1, raw_c2);
+		vector<Vector2D> eliminated(4);
+		eliminated[0] = { background[0].x * (1 - rate) + background[3].x * rate,background[0].y * (1 - rate) + background[3].y * rate };
+		eliminated[1] = { background[1].x * (1 - rate) + background[2].x * rate,background[1].y * (1 - rate) + background[2].y * rate };
+		eliminated[2] = background[2];
+		eliminated[3] = background[3];
+		drawRect(eliminated, c1, c2);
+		Framework::instance().drawDebugString(texture.first.second, texture.first.first, texture.second);
+	}
+	void drawTimer()
+	{
+		Framework::instance().setBlendMode(Framework::BLEND_LINEAR);
+		vector<Vector2D> background = {
+			{-0.8,-0.9},
+			{-0.8,-0.95},
+			{0.8,-0.95},
+			{0.8,-0.9}
+		};
+		unsigned raw_c1 = 0xff884422;
+		unsigned raw_c2 = 0xffDD4422;
+		unsigned c1 = 0xffffffff;
+		unsigned c2 = 0xffffffff;
+		double rate = 1.0-1.0*gCounter/ MAX_TIME;
+		drawProgerss(background, rate, raw_c1, raw_c2, c1, c2,{{28,0},"Timer"});
+	}
+	void drawMap()
+	{
+		Framework::instance().setBlendMode(Framework::BLEND_LINEAR);
+		Vector2D center = { 0.75,-0.6 };
+		double a = 0.20; // 宽的一半
+		double b = 0.20; // 高的一半
+		vector<Vector2D> background = {
+			{center.x - b,center.y + a},
+			{center.x - b,center.y - a},
+			{center.x + b,center.y - a},
+			{center.x + b,center.y + a},
+		};
+
+		double r = 0.01;
+		Vector2D player_center = { center.x +b*mecha_info_->player_pos.x / mecha_info_->map_half, center.y + a*mecha_info_->player_pos.z / mecha_info_->map_half };
+		vector<Vector2D> player_rect = {
+			{player_center.x -r,player_center.y + r},
+			{player_center.x - r,player_center.y - r},
+			{player_center.x + r,player_center.y - r},
+			{player_center.x + r,player_center.y + r},
+		};
+
+		Vector2D enemy_center = { center.x + b*mecha_info_->enemy_pos.x / mecha_info_->map_half, center.y + a*mecha_info_->enemy_pos.z / mecha_info_->map_half };
+		vector<Vector2D> enemy_rect = {
+			{enemy_center.x - r,enemy_center.y + r},
+			{enemy_center.x - r,enemy_center.y - r},
+			{enemy_center.x + r,enemy_center.y - r},
+			{enemy_center.x + r,enemy_center.y + r},
+		};
+		unsigned bg_color = 0x7f402020;
+		drawRect(background,bg_color,bg_color);
+		unsigned player_color = 0xff009f00;
+		unsigned enemy_color = 0xf0ff2000;
+		drawRect(player_rect,player_color,player_color);
+		drawRect(enemy_rect,enemy_color,enemy_color);
+	}
+	void drawLockOn()
+	{
+		if (!mecha_info_->player_lock_on)
+			return;
+		Framework::instance().setBlendMode(Framework::BLEND_ADDITIVE);
+
+		double a_half = 0.3; // 宽
+		double b_half = 0.5; // 长
+
+		double r_a = 0.01; // 宽的一半
+		double r_b = 0.2; // 长的一半
+		vector<Vector2D> left = {
+			{mecha_info_->enemy_nvi_pos.x-a_half - r_b,mecha_info_->enemy_nvi_pos.y + r_a},
+			{mecha_info_->enemy_nvi_pos.x-a_half - r_b,mecha_info_->enemy_nvi_pos.y  - r_a},
+			{mecha_info_->enemy_nvi_pos.x-a_half + r_b,mecha_info_->enemy_nvi_pos.y  - r_a},
+			{mecha_info_->enemy_nvi_pos.x-a_half + r_b,mecha_info_->enemy_nvi_pos.y + r_a},
+		};
+		vector<Vector2D> right = {
+			{mecha_info_->enemy_nvi_pos.x + a_half - r_b,mecha_info_->enemy_nvi_pos.y + r_a},
+			{mecha_info_->enemy_nvi_pos.x + a_half - r_b,mecha_info_->enemy_nvi_pos.y - r_a},
+			{mecha_info_->enemy_nvi_pos.x + a_half + r_b,mecha_info_->enemy_nvi_pos.y - r_a},
+			{mecha_info_->enemy_nvi_pos.x + a_half + r_b,mecha_info_->enemy_nvi_pos.y + r_a},
+		};
+		vector<Vector2D> down = {
+			{mecha_info_->enemy_nvi_pos.x - r_a,mecha_info_->enemy_nvi_pos.y - b_half + r_b},
+			{mecha_info_->enemy_nvi_pos.x - r_a,mecha_info_->enemy_nvi_pos.y - b_half - r_b},
+			{mecha_info_->enemy_nvi_pos.x + r_a,mecha_info_->enemy_nvi_pos.y - b_half - r_b},
+			{mecha_info_->enemy_nvi_pos.x + r_a,mecha_info_->enemy_nvi_pos.y - b_half + r_b},
+		};		
+		vector<Vector2D> up = {
+			{mecha_info_->enemy_nvi_pos.x - r_a,mecha_info_->enemy_nvi_pos.y + b_half + r_b},
+			{mecha_info_->enemy_nvi_pos.x - r_a,mecha_info_->enemy_nvi_pos.y + b_half - r_b},
+			{mecha_info_->enemy_nvi_pos.x + r_a,mecha_info_->enemy_nvi_pos.y + b_half - r_b},
+			{mecha_info_->enemy_nvi_pos.x + r_a,mecha_info_->enemy_nvi_pos.y + b_half + r_b},
+		};
+
+		unsigned c1 = 0xff00ff0f;
+		unsigned c2 = c1;
+		drawRect(left, c1, c2);
+		drawRect(right, c1, c2);
+		drawRect(up, c1, c2);
+		drawRect(down, c1, c2);
+	}
+
+private:
+	MechaInfo* mecha_info_;
 };

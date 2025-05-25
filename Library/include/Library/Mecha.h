@@ -40,6 +40,7 @@ struct FrameInput
 };
 class Mecha :public Model {
 public:
+	friend class MechaInfo; //TODO 这里最好不要用友元类实现
 	enum State {
 		MOVE,
 		JUMP_UP,

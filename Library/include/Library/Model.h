@@ -193,12 +193,17 @@ class Stage :public Model
 public:
 	Stage(Type type, Painter* painter, CollisionModel::Type collision_type) :Model(type, { 0.0,0.0,0.0 }, painter, collision_type, Matrix44::identity()) {
 		triangles_ = painter->getTriangles();
-		initCollisionModel({ 0.0,0.0,0.0 }, { 1000.0, 0.0, 1000.0 }, { 0.0,-10000.0,0.0 }, 10000);
+		double r = getHalf();
+		initCollisionModel({ 0.0,0.0,0.0 }, { 1000.0, 0.0, 1000.0 }, { 0.0,-r,0.0 }, r);
 	};
 	~Stage() {
 	};
 	const vector<Triangle>& getTriangles()const {
 		return triangles_;
+	}
+	double getHalf()const
+	{
+		return 5000.0;
 	}
 	virtual void update(const Matrix44& vr)override {}
 	virtual void draw(const Matrix44& pvm)override {
@@ -219,4 +224,3 @@ public:
 		Model::draw(pv);
 	}
 };
-
