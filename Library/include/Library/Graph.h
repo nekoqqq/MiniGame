@@ -4,11 +4,9 @@
 #include <cassert>
 #include "GameLib/Framework.h"
 #include "GameLib/Input/Keyboard.h"
-#include "GameLib/Input/Manager.h"
 #include "Math.h"
 #include "Xml.h"
 #include "Collision.h"
-#include "Model.h"
 
 using namespace GameLib::Input;
 using GameLib::Framework;

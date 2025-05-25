@@ -157,13 +157,18 @@
     <ClInclude Include="include\Library\Globals.h" />
     <ClInclude Include="include\Library\Graph.h" />
     <ClInclude Include="include\Library\Math.h" />
+    <ClInclude Include="include\Library\Mecha.h" />
+    <ClInclude Include="include\Library\Missle.h" />
     <ClInclude Include="include\Library\Model.h" />
+    <ClInclude Include="include\Library\Resource.h" />
     <ClInclude Include="include\Library\Xml.h" />
     <ClInclude Include="include\Library\ZBuffer.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Library.cpp" />
+    <ClCompile Include="Mecha.cpp" />
+    <ClCompile Include="Missle.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

@@ -1,6 +1,5 @@
 #pragma once
 #include "Math.h"
-const double eps = 1e-16;
 
 struct CollisionModel {
 	enum Type {
@@ -26,7 +25,7 @@ struct Cuboid:public CollisionModel {
 	Cuboid(const Vector3 &center,const Vector3 &half) :CollisionModel(type), center(center),half(half){
 		type = CUBOID;
 	}
-	virtual const Vector3& getOrigin()const override {
+	const Vector3& getOrigin()const override {
 		return center;
 	}
 
@@ -57,7 +56,7 @@ struct Cuboid:public CollisionModel {
 	}
 };
 
-struct Sphere:public CollisionModel {
+struct Sphere: CollisionModel {
 	Vector3 center;
 	double r;
 	Sphere():CollisionModel(SPHERE) {}

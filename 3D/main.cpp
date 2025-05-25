@@ -1,25 +1,26 @@
 #include "GameLib/Framework.h"
-#include "GameLib/Framework.h"
 #include "GameLib/Input/Manager.h"
 #include "GameLib/Input/Keyboard.h"
 #include "GameLib/Input/Mouse.h"
 #include "Library/Model.h"
 #include "Library/Graph.h"
 #include "Library/Camera.h"
-#include <sstream>
+#include "Library/Resource.h"
+#include "Library/Mecha.h"
+#include "Library/Missle.h"
 using namespace std;
 using namespace GameLib::Input;
 const double PI = 3.141592653589793238;
 const int WIDTH = 640;
 const int HEIGHT = 480;
-const int FRAMES = 180;
+
 // 游戏
 const int MAX_TIME = 120 * FRAMES; // 最大对局时间
 // 动物
 Model* gPlayer;
 Model* gEnemy;
 vector<Model*>gEnemys;
-const int gEnemyCnt = 10;
+const int gEnemyCnt = 1;
 // 静物
 Model* gStage;
 Model* gWall;
@@ -63,6 +64,11 @@ namespace GameLib {
 				dynamic_cast<Mecha*>(gPlayer)->addMissle(*missle);
 			}
 			gEnemy = gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy"));
+			for (int i= 0;i<MAX_MISSLES;i++)
+			{
+				Model* missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "missle");
+				dynamic_cast<Mecha*>(gEnemy)->addMissle(*missle);
+			}
 			for (int i = 0; i < gEnemyCnt; i++) {
 				gEnemys.push_back(gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy_") + to_string(i+1)));
 			}
@@ -80,8 +86,7 @@ namespace GameLib {
 		// 更新
 		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
 		Matrix44 vr = gCamera->getViewRotation();
-		gPlayer->update(vr);
-		gEnemy->update(vr);
+		gPlayer->update(vr); // 玩家和敌人共用一套逻辑
 		gCamera->update(gPlayer);
 
 		// 绘制
@@ -94,7 +99,7 @@ namespace GameLib {
 		for (int i = 0; i < gEnemyCnt; i++) {
 			gEnemys[i]->draw(pv);
 		}
-		if (!dynamic_cast<Enemy*>(gEnemy)->isAlive() || ++gCounter>=MAX_TIME) {
+		if (!dynamic_cast<Mecha*>(gEnemy)->isAlive() || ++gCounter>=MAX_TIME) {
 			drawDebugString(1, 0, "Game Over!");
 			sleep(5000);
 			deleteAll();

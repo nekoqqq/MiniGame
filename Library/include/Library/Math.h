@@ -3,6 +3,8 @@
 #include <array>
 #include <utility>
 #include <sstream>
+#include "Globals.h"
+
 extern const double eps;
 using std::array;
 using std::ostream;
@@ -222,7 +224,8 @@ public:
 		return res;
 	}
 };
-Matrix44 getOuterMatrix(const Vector3& v) {
+
+inline Matrix44 getOuterMatrix(const Vector3& v) {
 	Matrix44 res;
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
@@ -232,7 +235,7 @@ Matrix44 getOuterMatrix(const Vector3& v) {
 	res[3][3] = 1.0;
 	return res;
 }
-Matrix44 getCrossMatrix(const Vector3& v) {
+inline Matrix44 getCrossMatrix(const Vector3& v) {
 	Matrix44 res;
 	res[0][0] = 0;     res[0][1] = -v.z;  res[0][2] = v.y;
 	res[1][0] = v.z;   res[1][1] = 0;     res[1][2] = -v.x;
