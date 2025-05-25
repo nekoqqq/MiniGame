@@ -7,7 +7,6 @@
 #include "Library/Camera.h"
 #include "Library/Resource.h"
 #include "Library/Mecha.h"
-#include "Library/Missle.h"
 using namespace std;
 using namespace GameLib::Input;
 const double PI = 3.141592653589793238;
@@ -83,6 +82,9 @@ namespace GameLib {
 			gPlayer->addCollisionModel(gEnemy);
 			gPlayer->addCollisionModel(gStage);
 			gPlayer->addCollisionModel(gWall);
+			gEnemy->addCollisionModel(gPlayer);
+			gEnemy->addCollisionModel(gStage);
+			gEnemy->addCollisionModel(gWall);
 			++gCounter;
 		}
 		// 更新

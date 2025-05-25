@@ -8,6 +8,23 @@ const double MAX_SPEED = 4.0;
 const double ACC_DURATION = 2.0; // 单位秒
 double FRAME_SPEED_ACC = MAX_SPEED / (ACC_DURATION * FRAMES);
 
+Mecha::Mecha(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m):Model(type, pos, painter, collision_type, m)
+{
+	// 中心点设置在脚底，因为现在实际上是线段在判断而不是两个球体在判断
+	initCollisionModel({ pos.x,pos.y + getCuboidHalf().y,pos.z }, getCuboidHalf(), { pos.x,pos.y,pos.z }, getCuboidHalf().y);
+	state_ = MOVE;
+	energy_ = MAX_ENEGY;
+	velocity_ = Vector3();
+	jump_count_ = 0;
+	enemy_theta_ = 0;
+	rotation_y_ = 0;
+	rotation_speed_ = 0;
+	hp_ = MAX_HP;
+	lock_on_ = false;
+	enemy_ = nullptr;
+	frame_input_ = new FrameInput;
+}
+
 // 下面的两个函数不能加上inline关键字,因为是public函数，内联函数的定义必须放在
 void Mecha::update(const Matrix44& vr)
 {
@@ -18,21 +35,16 @@ void Mecha::update(const Matrix44& vr)
 		// 移动后坐标为Y',世界坐标X' = AY'+C,
 		// 两式相减X'-X = A(Y'-Y) => X'=X+A(Y'-Y) => X'=X+A delta，其中delta是相机坐标系中的位移量
 		// 或者 X=AY+C => X=A(Y+delta)+c => X=AY + c +A delta，增加量还是旋转*delta
-	if (getType()==PLAYER)
-	{
-		updateVelocity(vr);
-		stateTransition();
-		Keyboard k = Manager::instance().keyboard();
-		bool isAttack = k.isTriggered('j');
-		attackHandle(isAttack);
-		collisionTest();
-		setEnemyTheta();
-		lockOn();
-		printDebugInfo();
-	}
-	else
-		AI();
+	frame_input_->update();
+	AI();
+	updateVelocity(vr);
+	stateTransition();
+	attackHandle();
+	collisionTest();
+	setEnemyTheta();
+	lockOn();
 
+	printDebugInfo();
 }
 void Mecha::addMissle(Model& missle)
 {
@@ -63,6 +75,8 @@ void Mecha::getDamage()
 }
 void Mecha::printDebugInfo() const
 {
+	if (getType() != PLAYER)
+		return;
 	int i = 0;
 	ostringstream oss;
 	oss << "player pos: " << getPos() << " , enemy_pos: " << gEnemy->getPos();
@@ -166,9 +180,9 @@ void Mecha::collisionTest()
 		}
 	}
 }
-void Mecha::attackHandle(bool isAttack)
+void Mecha::attackHandle()
 {
-	isAttack = isAttack && !(state_ == JUMP_UP || state_ == JUMP_FALL) && energy_ >= MISSLE_ENGEY_COST;
+	bool isAttack = frame_input_->is_FIRE && !(state_ == JUMP_UP || state_ == JUMP_FALL) && energy_ >= MISSLE_ENGEY_COST;
 	if (isAttack)
 		fire();
 	else
@@ -212,7 +226,6 @@ void Mecha::incrRotationSpeed()
 }
 void Mecha::stateTransition()
 {
-	Keyboard k = Manager::instance().keyboard();
 	/*
 		* STILL: wasd->MOVE, space->JUMP_UP, z->QUICK_MOVE
 		* MOVE: wasd->MOVE, space->JUMP_UP, +z->QUICK_MOVE, no->STILL
@@ -224,19 +237,19 @@ void Mecha::stateTransition()
 	switch (state_)
 	{
 	case MOVE:
-		if (k.isOn(' ')) {
+		if (frame_input_->is_JUMP) {
 			velocity_.y = 1.0;
 			state_ = JUMP_UP;
 			jump_count_ = 1;
 			setRotationSpeed();
 			incrRotationSpeed();
 		}
-		if (k.isOn('i')) { // 注意这里要同步更新rotation_y,不然后续不更新，按空格就没用了
+		if (frame_input_->is_LEFT_ROTATE) { // 注意这里要同步更新rotation_y,不然后续不更新，按空格就没用了
 			rotateY(TURN_DEGREE);
 			rotation_y_ -= TURN_DEGREE;
 		}
 
-		else if (k.isOn('u')) {
+		else if (frame_input_->is_RIGHT_ROTATE) {
 			rotateY(-TURN_DEGREE);
 			rotation_y_ += TURN_DEGREE;
 		}
@@ -270,18 +283,17 @@ void Mecha::stateTransition()
 }
 void Mecha::updateVelocity(const Matrix44& vr)
 {
-	Keyboard k = Manager::instance().keyboard();
 	Vector3 move;
-	if (k.isOn('w')) { // 这里设置坐标值为y轴的两倍似乎比较合理，但是没有严格的数学推导
+	if (frame_input_->is_UP) { // 这里设置坐标值为y轴的两倍似乎比较合理，但是没有严格的数学推导
 		move.z = 1.0;
 	}
-	if (k.isOn('a')) {
+	if (frame_input_->is_LEFT) {
 		move.x = -1.0;
 	}
-	if (k.isOn('s')) {
+	if (frame_input_->is_DOWN) {
 		move.z = -1.0;
 	}
-	if (k.isOn('d')) {
+	if (frame_input_->is_RIGHT) {
 		move.x = 1.0;
 	}
 	// 仅保留水平分量 |v|cos t * a/|a|  = v.dot(a) / |a|^2 *a
@@ -328,19 +340,36 @@ void Mecha::fire()
 }
 void Mecha::AI()
 {
-	static int s_ai_counter= 0;
-	if (getType() != ENEMY)
+	if (getType() == PLAYER)
 		return;
-	bool isAttack = false;
-	if (++s_ai_counter%(FRAMES)==0)
+	frame_input_->reset();
+	Mecha *enemy =dynamic_cast<Mecha*>(enemy_);
+	if (enemy->frame_input_->is_JUMP) // 玩家跳跃则攻击
 	{
-		isAttack = true;
-		Vector3 new_pos =getPos()+ Vector3(rand() % 20-10,rand() % 20 - 10, rand() % 20 - 10);
-		if (new_pos.y < 0.0)
-			new_pos.y = 0.0;
-		setPos(new_pos);
-
+		frame_input_->is_FIRE = true;
 	}
-	attackHandle(isAttack);
-	recoverEnergy();
+	if (enemy->frame_input_->is_FIRE) // 玩家攻击则跳跃
+	{
+		frame_input_->is_JUMP = true;
+	}
+
+
+	int up = rand() % 2;
+	int left = rand() % 2;
+	int right = rand() % 2;
+	int down = rand() % 2;
+	Vector3 move = enemy_->getPos() - getPos();
+	if (move.x > 0)
+		right = true;
+	else
+		left = true;
+	if (move.z > 0)
+		up = true;
+	else
+		down = true;
+	frame_input_->is_UP = up;
+	frame_input_->is_LEFT = left;
+	frame_input_->is_RIGHT= right;
+	frame_input_->is_DOWN = down;
+	frame_input_->is_FIRE = rand()%1000==0;
 }

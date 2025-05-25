@@ -23,13 +23,10 @@ extern const int FRAMES;
 extern const double PI;
 const int JUMP_UP_DURATION = 1*FRAMES;
 const int SKY_STAY = 0.5*FRAMES; // 滞空时间
-const int FALL_DURATION = 0.5 * FRAMES;
+const int FALL_DURATION = 1 * FRAMES;
 
 const int MAX_MISSLES = 100;
 const int MISSLE_TTL = 5*FRAMES; // 5秒
-
-
-
 
 // 转身
 const double ZOOM_DURATION = (JUMP_UP_DURATION+SKY_STAY+FALL_DURATION)/3; // 持续多少帧

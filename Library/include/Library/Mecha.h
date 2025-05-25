@@ -1,7 +1,43 @@
 ﻿#pragma once
+#include <GameLib/Input/Manager.h>
+
 #include "Model.h"
 #include "Missle.h"
-
+struct FrameInput
+{
+	FrameInput():is_UP(false),is_LEFT(false),is_DOWN(false),is_RIGHT(false),is_JUMP(false),is_FIRE(false),is_LEFT_ROTATE(false),is_RIGHT_ROTATE(false){}
+	void reset()
+	{
+		is_UP = false;
+		is_LEFT = false;
+		is_DOWN = false;
+		is_RIGHT = false;
+		is_JUMP = false;
+		is_FIRE = false;
+		is_LEFT_ROTATE = false;
+		is_RIGHT_ROTATE = false;
+	}
+	void update()
+	{
+		Keyboard k = Manager::instance().keyboard();
+		is_UP = k.isOn('w');
+		is_LEFT = k.isOn('a');
+		is_DOWN = k.isOn('s');
+		is_RIGHT = k.isOn('d');
+		is_JUMP = k.isOn(' ');
+		is_FIRE = k.isOn('j');
+		is_LEFT_ROTATE = k.isOn('i');
+		is_RIGHT_ROTATE = k.isOn('u');
+	}
+	bool is_UP;
+	bool is_LEFT;
+	bool is_DOWN;
+	bool is_RIGHT;
+	bool is_JUMP;
+	bool is_FIRE;
+	bool is_LEFT_ROTATE;
+	bool is_RIGHT_ROTATE;
+};
 class Mecha :public Model {
 public:
 	enum State {
@@ -13,21 +49,12 @@ public:
 		TURNING, // 转身
 		ATTACKING, // 攻击状态
 	};
-	Mecha(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m = Matrix44::identity()) :Model(type, pos, painter, collision_type, m) {
-		// 中心点设置在脚底，因为现在实际上是线段在判断而不是两个球体在判断
-		initCollisionModel({ pos.x,pos.y + getCuboidHalf().y,pos.z }, getCuboidHalf(), { pos.x,pos.y,pos.z }, getCuboidHalf().y);
-		state_ = MOVE;
-		energy_ = MAX_ENEGY;
-		velocity_ = Vector3();
-		jump_count_ = 0;
-		enemy_theta_ = 0;
-		rotation_y_ = 0;
-		rotation_speed_ = 0;
-		hp_ = MAX_HP;
-		lock_on_ = false;
-		enemy_ = nullptr;
+	Mecha(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m = Matrix44::identity());
+
+	~Mecha()
+	{
+		SAFE_DELETE(frame_input_);
 	}
-	~Mecha() {}
 	void update(const Matrix44& vr)override;
 	void addMissle(Model& missle);
 	void addEnemy(Model* enemy);
@@ -47,11 +74,12 @@ private:
 	int hp_;
 	bool lock_on_; // 是否锁定了敌人
 	Model* enemy_; // 敌人
+	FrameInput* frame_input_; // 当前帧的输入
 protected:
 	void printDebugInfo()const ;
 	void collisionTest();
 	void fire();
-	void attackHandle(bool isAttack);
+	void attackHandle();
 	void recoverEnergy();
 	void setEnemyTheta();
 	void setRotationSpeed();
