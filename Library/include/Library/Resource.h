@@ -119,10 +119,11 @@ struct MechaInfo
 
 		Vector3 enemy_pvm = camera->getViewProjectionMatrix().matMul(enemy->getModelTransform()).vecMul(enemy_pos);
 		enemy_nvi_pos = { enemy_pvm.x/enemy_pvm.w,enemy_pvm.y/enemy_pvm.w };
-		ostringstream oss;
-		oss << enemy_pvm <<","<<"\n"<<enemy_nvi_pos<<"\n";
-		oss << enemy->getModelTransform();
-		Framework::instance().drawDebugString(10, 10, oss.str().c_str(),0xffff0000);
+		// TODO 这里对动态的物体就会失效锁定功能
+		//ostringstream oss;
+		//oss << enemy_pvm <<","<<"\n"<<enemy_nvi_pos<<"\n";
+		//oss << enemy->getModelTransform();
+		//Framework::instance().drawDebugString(10, 10, oss.str().c_str(),0xffff0000);
 	}
 };
 

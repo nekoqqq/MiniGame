@@ -53,11 +53,11 @@ void Mecha::addEnemy(Model* enemy)
 {
 	enemy_ = enemy;
 }
-void Mecha::draw(const Matrix44& pv)
+void Mecha::draw(const Matrix44& pv, const Light* light)
 {
-	Model::draw(pv);
+	Model::draw(pv, light);
 	for (int i = 0; i < missles_.size(); i++) {
-		missles_[i].draw(pv);
+		missles_[i].draw(pv, light);
 	}
 }
 bool Mecha::isAlive() const

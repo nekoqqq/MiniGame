@@ -14,6 +14,7 @@ const int WIDTH = 640;
 const int HEIGHT = 480;
 
 // 游戏
+const int FRAMES = 60;
 const int MAX_TIME = 120 * FRAMES; // 最大对局时间
 // 动物
 Model* gPlayer;
@@ -41,6 +42,11 @@ int gCounter = 0;
 Resource* gResource;
 FrontEnd* gFrontEnd;
 MechaInfo* gMechaInfo;
+// 光源
+Vector3 gLightColor = { 1.0, 1.0,1.0 };
+Vector3 gAmbient = { 0.01,0.01,0.01};
+Vector3 gLightDir = { 0.0,0.0,0.0 };
+Light* gLight = nullptr;
 namespace GameLib {
 	bool firstFrame = true;
 	void deleteAll() {
@@ -90,6 +96,9 @@ namespace GameLib {
 			gMechaInfo = new MechaInfo;
 			gFrontEnd = new FrontEnd(gMechaInfo);
 			++gCounter;
+			// 设置光源,模拟太阳东升西落
+			gLight = new Light(gLightDir, gLightColor, gAmbient);
+
 		}
 		// 更新
 		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
@@ -100,13 +109,18 @@ namespace GameLib {
 		// 绘制
 		Matrix44 pv = gCamera->getViewProjectionMatrix();
 		gFrontEnd->update(dynamic_cast<Mecha*>(gPlayer), dynamic_cast<Mecha*>(gEnemy), dynamic_cast<Stage*>(gStage), gCamera);
-		gStage->draw(pv);
-		gWall->draw(pv);
-		gAxis->draw(pv);
-		gPlayer->draw(pv);
-		gEnemy->draw(pv);
+		// 光处理
+		double theta = gCounter * PI / 180.0;
+		double t = 1.0*gCounter / FRAMES/6;
+		gLight->updateLight({cos(t)*cos(t),cos(t)*sin(t)*sin(t),sin(t)});
+
+		gStage->draw(pv, gLight);
+		gWall->draw(pv, gLight);
+		gAxis->draw(pv, gLight);
+		gPlayer->draw(pv, gLight);
+		gEnemy->draw(pv, gLight);
 		for (int i = 0; i < gEnemyCnt; i++) {
-			gEnemys[i]->draw(pv);
+			gEnemys[i]->draw(pv, gLight);
 		}
 		gFrontEnd->draw();
 		

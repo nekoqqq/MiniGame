@@ -28,6 +28,9 @@
     <Image Include="player.tga">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="stage2.tga">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Text Include="model.xml">

@@ -5,5 +5,5 @@ extern Model* gPlayer;
 
 const double eps = 1e-16;
 
-const int FRAMES = 180;
+extern const int FRAMES;
 

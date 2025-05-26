@@ -119,7 +119,10 @@ struct Vector3 {
 	double dot(const Vector3& o) const{
 		return x * o.x + y * o.y + z * o.z;
 	}
-
+	Vector3 elementMul(const Vector3 &o)const
+	{
+		return Vector3(this->x * o.x, this->y * o.y, this->z * o.z);
+	}
 	friend std::ostream& operator<<(std::ostream& oss, const Vector3& a) {
 		oss << "<" << a.x << ", " << a.y << ", " << a.z << ", " << a.w << ">";
 		return oss;

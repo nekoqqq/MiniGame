@@ -7,10 +7,10 @@ bool Missle::isShoot() const
 	return 0 < ttl_ && ttl_ < MISSLE_TTL; // 5秒
 }
 
-void Missle::draw(const Matrix44& pv)
+void Missle::draw(const Matrix44& pv, const Light* light)
 {
 	if (isShoot()) {
-		Model::draw(pv);
+		Model::draw(pv, light);
 	}
 }
 

@@ -13,7 +13,7 @@ public:
 
 	bool isShoot()const;
 
-	void draw(const Matrix44& pv) override;
+	void draw(const Matrix44& pv, const Light* light) override;
 	void update(const Matrix44& vr) override;
 
 	void reset(const Vector3& pos, const Vector3& enemy_pos);

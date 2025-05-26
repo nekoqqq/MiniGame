@@ -7,6 +7,8 @@
 #include "Math.h"
 #include "Xml.h"
 #include "Collision.h"
+using std::min;
+using std::max;
 
 using namespace GameLib::Input;
 using GameLib::Framework;
@@ -29,7 +31,37 @@ enum Color {
 	Q2 = 0xff00004f
 };
 
-
+struct Light
+{
+	Light(const Vector3& light_dir, const Vector3& light_color,const Vector3&ambient)
+	{
+		this->light_dir = light_dir;
+		this->light_color = light_color;
+		this->ambient = ambient;
+	}
+	void updateLight(const Vector3&new_dir)
+	{
+		light_dir = new_dir;
+	}
+	unsigned calculate(const Vector3& norm, unsigned diffuse_color)const
+	{
+		Vector3 diffuse = { (diffuse_color >> 16 & 0xff)/255.0, ((diffuse_color >> 8) &0xff)/255.0, (diffuse_color & 0xff)/255.0 };
+		// 三角形表面法向量, n
+		// diffuse 物体本身的性质,漫反射率,反射RGB三种颜色的强度,0到1,1最大, R
+		double c = light_dir.dot(norm)/light_dir.norm();
+		c = max(0.0, c);
+		Vector3 color = light_color.elementMul(diffuse) * c + ambient; // RGB
+		unsigned r = max(0.0, min(1.0, color.x))*255.0;
+		unsigned g = max(0.0, min(1.0, color.y))*255.0;
+		unsigned b = max(0.0, min(1.0, color.z))*255.0;
+		return (0xff << 24) | (r << 16) | (g << 8) | b;
+	}
+	// 基础光照模型, I = I0*R*(n.l)/ d^2 +a ，由于距离较远，可以将分母忽略
+	// 这里为了复用Vector3这个类库，所以设置了归一化的RGB值
+	Vector3 light_dir; // 光线的方向向量，由物体指向光源, l
+	Vector3 light_color; // 光源的性质,RGB三种颜色的强度,0到1,1最强，表示光的强度, I0
+	Vector3 ambient; // 环境光，各个颜色的分量强度其实就是一个unsigned, a
+};
 class VertexBuffer {
 public:
 	VertexBuffer() {}
@@ -196,10 +228,14 @@ public:
 		}
 		return res;
 	}
-	void draw(Matrix44& pvm) {
+	void draw(const Matrix44& pvm, const Matrix44& m, const Light* light) {
 		vector<Vector3> res(vb_->size());
+		vector<Vector3> world_coords(vb_->size());
 		for (int i = 0; i < vb_->size(); i++) {
 			res[i] = pvm.vecMul(vb_->vertex(i));
+		}
+		for (int i = 0; i < vb_->size(); i++) {
+			world_coords[i] = m.vecMul(vb_->vertex(i));
 		}
 		Framework f = Framework::instance();
 		if (blend_mode_ == Framework::BLEND_OPAQUE) {
@@ -216,7 +252,15 @@ public:
 		f.setBlendMode(blend_mode_);
 		for (int i = 0; i < ib_->size(); i++) {
 			int i0 = (*ib_)[i][0], i1 = (*ib_)[i][1], i2 = (*ib_)[i][2];
-			f.drawTriangle3DH(res[i0], res[i1], res[i2], vb_->uv(i0).data(), vb_->uv(i1).data(), vb_->uv(i2).data(), vb_->color(i0), vb_->color(i1), vb_->color(i2));
+			unsigned c0 = vb_->color(i0);
+			unsigned c1 = vb_->color(i1);
+			unsigned c2 = vb_->color(i2);
+			Vector3 norm = (world_coords[i1]- world_coords[i0]).cross(world_coords[i2]- world_coords[i0]).normalize(); // 光照的计算使用世界坐标
+			c0 = light->calculate(norm, c0);
+			c1 = light->calculate(norm, c1);
+			c2 = light->calculate(norm, c2);
+
+			f.drawTriangle3DH(res[i0], res[i1], res[i2], vb_->uv(i0).data(), vb_->uv(i1).data(), vb_->uv(i2).data(), c0,c1,c2);
 		}
 	}
 private:

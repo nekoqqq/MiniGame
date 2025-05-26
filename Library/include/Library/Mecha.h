@@ -59,7 +59,7 @@ public:
 	void update(const Matrix44& vr)override;
 	void addMissle(Model& missle);
 	void addEnemy(Model* enemy);
-	void draw(const Matrix44& pv)override;
+	void draw(const Matrix44& pv, const Light* light)override;
 	bool isAlive()const;
 	int getHP()const;
 	void getDamage();

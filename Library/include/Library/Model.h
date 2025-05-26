@@ -15,6 +15,8 @@ using namespace GameLib::Input;
 using GameLib::Framework;
 using std::vector;
 using std::array;
+using std::max;
+using std::min;
 namespace GameLib {
 	class Texture;
 }
@@ -43,6 +45,8 @@ const int ENEGY_RECOVER = 180/ FRAMES; // 每秒恢复的能量
 const int MAX_LOCK_ON = 30; // 锁定人物的角度范围
 const int MIN_LOCK_OFF = 40; // 人物跳出范围的角度,也就是说锁定后在0-60的范围内都算作锁定
 
+
+
 class Model {
 public:
 	enum Type {
@@ -64,10 +68,10 @@ public:
 	virtual ~Model() {
 		test_collision_models.clear();
 	}
-	virtual void draw(const Matrix44 &pv)=0 {
+	virtual void draw(const Matrix44 &pv, const Light* light)=0 {
 		Matrix44 model_transform = getModelTransform();
 		Matrix44 pvm = pv.matMul(model_transform);
-		painter_->draw(pvm);
+		painter_->draw(pvm, getModelTransform(), light);
 	}
 	virtual void update(const Matrix44& vr) = 0;
 	void initCollisionModel(const Vector3&cuboid_origin,const Vector3 & half,const Vector3& sphere_origin,double r) {
@@ -113,7 +117,7 @@ public:
 	const CollisionModel* getCollsionModel()const {
 		return collision_model_;
 	}
-	Matrix44 getModelTransform() { // 这里有些trick，会在get的时候设置这个值
+	const Matrix44& getModelTransform() { // 这里有些trick，会在get的时候设置这个值
 		world_transform_[0][3] = pos_.x;
 		world_transform_[1][3] = pos_.y;
 		world_transform_[2][3] = pos_.z;
@@ -206,8 +210,8 @@ public:
 		return 5000.0;
 	}
 	virtual void update(const Matrix44& vr)override {}
-	virtual void draw(const Matrix44& pvm)override {
-		Model::draw(pvm);
+	virtual void draw(const Matrix44& pvm, const Light* light)override {
+		Model::draw(pvm, light);
 	}
 private:
 	vector<Triangle> triangles_;
@@ -220,7 +224,7 @@ public:
 	Axis(Type type, Painter* painter, CollisionModel::Type collision_type) :Model(type, { 0.0,0.0,0.0 }, painter, collision_type, Matrix44::identity()) {}
 	~Axis() {}
 	virtual void update(const Matrix44& pvm) override {}
-	virtual void draw(const Matrix44& pv)override {
-		Model::draw(pv);
+	virtual void draw(const Matrix44& pv, const Light* light)override {
+		Model::draw(pv, light);
 	}
 };
