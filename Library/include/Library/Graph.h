@@ -206,7 +206,9 @@ private:
 
 class Painter {
 public:
-	Painter(VertexBuffer* vb, IndexBuffer* ib, Texture* t, bool isZTest, GameLib::Framework::BlendMode mode) :vb_(vb), ib_(ib), texture_(t), isZTest_(isZTest), blend_mode_(mode) {}
+	Painter(VertexBuffer* vb, IndexBuffer* ib, Texture* t, bool isZTest, GameLib::Framework::BlendMode mode) :vb_(vb), ib_(ib), texture_(t), isZTest_(isZTest), blend_mode_(mode) {
+		calculate();
+	}
 	~Painter() {
 		delete vb_;
 		vb_ = nullptr;
@@ -227,6 +229,19 @@ public:
 			res.push_back(Triangle(vb_->vertex(i0), vb_->vertex(i1), vb_->vertex(i2)));
 		}
 		return res;
+	}
+	void calculate() { // 初始化的时候计算法线贴图
+		norms_.resize(vb_->size());
+		for (int i = 0; i < ib_->size(); i++) {
+			int i0 = (*ib_)[i][0], i1 = (*ib_)[i][1], i2 = (*ib_)[i][2];
+			Vector3 norm = (vb_->vertex(i1) - vb_->vertex(i0)).cross(vb_->vertex(i2) - vb_->vertex(i0)).normalize();
+			norms_[i0] += norm;
+			norms_[i1] += norm;
+			norms_[i2] += norm;
+		}
+		for (int i = 0; i < vb_->size(); i++) {
+			norms_[i].normalize();
+		}
 	}
 	void draw(const Matrix44& pvm, const Matrix44& m, const Light* light) {
 		vector<Vector3> res(vb_->size());
@@ -250,16 +265,19 @@ public:
 			f.setTexture(nullptr); // TODO这里的封装不太优雅
 		f.enableDepthTest(isZTest_);
 		f.setBlendMode(blend_mode_);
+		vector<unsigned> colors(vb_->size());
+		for (int i = 0; i < vb_->size(); i++) {
+			colors[i] = light->calculate(m.vecMul(norms_[i]),vb_->color(i));
+		}
 		for (int i = 0; i < ib_->size(); i++) {
 			int i0 = (*ib_)[i][0], i1 = (*ib_)[i][1], i2 = (*ib_)[i][2];
 			unsigned c0 = vb_->color(i0);
 			unsigned c1 = vb_->color(i1);
 			unsigned c2 = vb_->color(i2);
 			Vector3 norm = (world_coords[i1]- world_coords[i0]).cross(world_coords[i2]- world_coords[i0]).normalize(); // 光照的计算使用世界坐标
-			c0 = light->calculate(norm, c0);
-			c1 = light->calculate(norm, c1);
-			c2 = light->calculate(norm, c2);
-
+			c0 = colors[i0];
+			c1 = colors[i1];
+			c2 = colors[i2];
 			f.drawTriangle3DH(res[i0], res[i1], res[i2], vb_->uv(i0).data(), vb_->uv(i1).data(), vb_->uv(i2).data(), c0,c1,c2);
 		}
 	}
@@ -270,4 +288,5 @@ private:
 	Texture* texture_;
 	bool isZTest_;
 	GameLib::Framework::BlendMode blend_mode_;
+	vector<Vector3> norms_; // 法线贴图
 };

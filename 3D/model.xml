@@ -165,9 +165,6 @@
 
 
 	</IndexBuffer>
-
-
-
 	<IndexBuffer name="missle">
 		<!-- 锥形头部侧面 -->
 		<Triangle indices="0,1,2"></Triangle>
@@ -185,7 +182,6 @@
 		<Triangle indices="2,3,4"></Triangle>
 		<!-- 右尾翼到顶部到底部 -->
 	</IndexBuffer>
-	
 	
 	<Texture name="player" file_name="player.tga"></Texture>
 	<Texture name="stage" file_name="stage.tga"></Texture>
