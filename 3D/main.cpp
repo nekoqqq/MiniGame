@@ -47,6 +47,10 @@ Vector3 gLightColor = { 1.0, 1.0,1.0 };
 Vector3 gAmbient = { 0.01,0.01,0.01};
 Vector3 gLightDir = { 0.0,0.0,0.0 };
 Light* gLight = nullptr;
+// 太阳系模拟
+Model* gSun;
+Model* gMoon;
+Model* gEarth;
 namespace GameLib {
 	bool firstFrame = true;
 	void deleteAll() {
@@ -57,6 +61,62 @@ namespace GameLib {
 		gEnemys.clear();
 		SAFE_DELETE(gStage);
 		SAFE_DELETE(gWall);
+	}
+	void solarSystem() {
+		gEyePos.set(0, 200, 100);
+		gTargetPos.set(0, 0, 0);
+		gEyeUp.set(0., 1., 0.); // 一般是向上
+		Keyboard k = Manager::instance().keyboard();
+		Mouse m = Manager::instance().mouse();
+		if (firstFrame) {
+			Framework::instance().setFrameRate(FRAMES);
+			firstFrame = false;
+			gResource = new Resource("model.xml");
+			gSun = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");
+			gEarth = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");
+			gMoon = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");
+			gStage = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "stage");
+			++gCounter;
+			// 设置光源,模拟太阳东升西落
+			gLight = new Light(gLightDir, gLightColor, gAmbient);
+			gCamera = new Camera(gEyePos, gTargetPos, gEyeUp, fov_y, near, far, aspec_ratio);
+
+		}
+		// 更新
+		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
+		// 绘制
+		Matrix44 pv = gCamera->getViewProjectionMatrix();
+		// 光处理
+		double theta = gCounter;
+		double t = 1.0 * gCounter / FRAMES / 6;
+		//gLight->updateLight({cos(t)*cos(t),cos(t)*sin(t)*sin(t),sin(t)});
+		gLight->updateLight({ 1,1,1 });
+		Matrix44 R_solar;
+
+		R_solar.setRotationY(gCounter * 100.0 / 365.0);
+
+		Matrix44 T_earth;
+		T_earth[0][3] = 100.0;
+		T_earth[0][0] = T_earth[1][1] = T_earth[2][2] = T_earth[3][3] = 1.0;
+
+		Matrix44 R_earth;
+		R_earth.setRotationY(gCounter * 100.0 / 1.0);
+
+		Matrix44 R_moon;
+		R_moon.setRotationY(gCounter * 100.0 / 30.0);
+
+		Matrix44 T_moon;
+		T_moon[0][3] = 30.0;
+		T_moon[0][0] = T_moon[1][1] = T_moon[2][2] = T_moon[3][3] = 1.0;
+
+		gStage->draw(pv, gLight);
+		gSun->draw(pv.matMul(R_solar), gLight);
+		gEarth->draw(pv.matMul(R_solar).matMul(T_earth).matMul(R_earth), gLight); // 地球自转的同时绕着太阳公转
+		gMoon->draw(pv.matMul(R_solar).matMul(T_earth).matMul(R_moon).matMul(T_moon), gLight); // 月球自转的同时绕着地球公转
+
+		if (k.isOn('q'))
+			GameLib::Framework::instance().requestEnd();
+		gCounter++;
 	}
 	void Framework::update() {
 		Keyboard k = Manager::instance().keyboard();

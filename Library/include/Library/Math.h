@@ -6,6 +6,7 @@
 #include "Globals.h"
 
 extern const double eps;
+extern const double PI;
 using std::array;
 using std::ostream;
 struct Vector3 {
@@ -226,6 +227,13 @@ public:
 				res[i][j] = tmp; 
 			}
 		return res;
+	}
+	void setRotationY(double theta) {
+		double t = theta / 180.0 * PI;
+		p[0][0] = cos(t); p[0][2] = -sin(t);
+		p[1][1] = 1.0;
+		p[2][0] = sin(t); p[2][2] = cos(t);
+		p[3][3] = 1.0;
 	}
 	friend std::ostream& operator<<(std::ostream& oss, const Matrix44& a) {
 		for (int i =0;i<N;i++)
