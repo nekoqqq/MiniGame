@@ -228,6 +228,54 @@ public:
 			}
 		return res;
 	}
+	Matrix44 dropRotation()const {
+		Matrix44 res;
+		res[0][3] = res[1][3] = res[2][3] = 0.0;
+		return res;
+	}
+	void rotateY(double theta) {
+		const Vector3& dir{ 0,1,0 };
+		rotateDirection(dir, theta);
+	}
+	void rotateX(double theta) {
+		const Vector3& dir{ 1,0,0 };
+		rotateDirection(dir, theta);
+	}
+	void rotateZ(double theta) {
+		const Vector3& dir{ 0,0,1 };
+		rotateDirection(dir, theta);
+	}
+
+	void rotateDirection(const Vector3& direction,double theta) {
+		double t = theta * PI / 180.0;
+		const Vector3 unit_dir = direction * 1.0 / direction.norm(); // 这里需要检查一下是否为0
+		Matrix44 id = Matrix44::identity();
+		Matrix44 a = id * cos(t);
+		Matrix44 b = getOuterMatrix(unit_dir) * (1 - cos(t));
+		Matrix44 c = getCrossMatrix(unit_dir) * sin(t);
+		Matrix44 res = a + b + c;
+		res[3][3] = 1.0;
+		*this = res.matMul(*this);
+	}
+	void scale(const Vector3& v) {
+		p[0][0] *= v.x;
+		p[1][0] *= v.x;
+		p[2][0] *= v.x;
+
+		p[0][1] *= v.y;
+		p[1][1] *= v.y;
+		p[2][1] *= v.y;
+
+		p[0][2] *= v.z;
+		p[1][2] *= v.z;
+		p[2][2] *= v.z;
+	}
+	void setTranslation(const Vector3 &v) {
+		p[0][3] = v.x;
+		p[1][3] = v.y;
+		p[2][3] = v.z;
+		p[0][0]=p[1][1]=p[2][2]= p[3][3] = 1.0;
+	}
 	void setRotationY(double theta) {
 		double t = theta / 180.0 * PI;
 		p[0][0] = cos(t); p[0][2] = -sin(t);
@@ -245,25 +293,23 @@ public:
 		}
 		return oss;
 	}
-
-};
-
-inline Matrix44 getOuterMatrix(const Vector3& v) {
-	Matrix44 res;
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			res[i][j] = v[i] * v[j];
+	static Matrix44 getOuterMatrix(const Vector3& v) {
+		Matrix44 res;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				res[i][j] = v[i] * v[j];
+			}
 		}
+		res[3][3] = 1.0;
+		return res;
 	}
-	res[3][3] = 1.0;
-	return res;
-}
-inline Matrix44 getCrossMatrix(const Vector3& v) {
-	Matrix44 res;
-	res[0][0] = 0;     res[0][1] = -v.z;  res[0][2] = v.y;
-	res[1][0] = v.z;   res[1][1] = 0;     res[1][2] = -v.x;
-	res[2][0] = -v.y;  res[2][1] = v.x;   res[2][2] = 0;
-	// 第四行
-	res[3][3] = 1.0;
-	return res;
-}
+	static Matrix44 getCrossMatrix(const Vector3& v) {
+		Matrix44 res;
+		res[0][0] = 0;     res[0][1] = -v.z;  res[0][2] = v.y;
+		res[1][0] = v.z;   res[1][1] = 0;     res[1][2] = -v.x;
+		res[2][0] = -v.y;  res[2][1] = v.x;   res[2][2] = 0;
+		// 第四行
+		res[3][3] = 1.0;
+		return res;
+	}
+};

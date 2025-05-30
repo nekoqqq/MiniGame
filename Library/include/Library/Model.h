@@ -162,8 +162,8 @@ protected:
 		const Vector3 unit_dir = direction *1.0/ direction.norm(); // 这里需要检查一下是否为0
 		Matrix44 id = Matrix44::identity();
 		Matrix44 a = id * cos(t);
-		Matrix44 b = getOuterMatrix(unit_dir) * (1 - cos(t));
-		Matrix44 c = getCrossMatrix(unit_dir) * sin(t);
+		Matrix44 b = Matrix44::getOuterMatrix(unit_dir) * (1 - cos(t));
+		Matrix44 c = Matrix44::getCrossMatrix(unit_dir) * sin(t);
 		Matrix44 res= a+b+c;
 		res[3][3] = 1.0;
 		world_transform_ = getModelTransform().matMul(res); // 这里的trick在于先get，从而更新世界矩阵

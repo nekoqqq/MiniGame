@@ -243,14 +243,14 @@ public:
 			norms_[i].normalize();
 		}
 	}
-	void draw(const Matrix44& pvm, const Matrix44& m, const Light* light) {
+	void draw(const Matrix44& pv, const Matrix44& wm, const Light* light)const {
 		vector<Vector3> res(vb_->size());
 		vector<Vector3> world_coords(vb_->size());
 		for (int i = 0; i < vb_->size(); i++) {
-			res[i] = pvm.vecMul(vb_->vertex(i));
+			world_coords[i] = wm.vecMul(vb_->vertex(i));
 		}
 		for (int i = 0; i < vb_->size(); i++) {
-			world_coords[i] = m.vecMul(vb_->vertex(i));
+			res[i] = pv.vecMul(world_coords[i]);
 		}
 		Framework f = Framework::instance();
 		if (blend_mode_ == Framework::BLEND_OPAQUE) {
@@ -267,17 +267,21 @@ public:
 		f.setBlendMode(blend_mode_);
 		vector<unsigned> colors(vb_->size());
 		for (int i = 0; i < vb_->size(); i++) {
-			colors[i] = light->calculate(m.vecMul(norms_[i]),vb_->color(i));
+			Matrix44 wm_tmp = wm.dropRotation(); // 这里需要剔除掉法线向量平移的分量
+			Vector3 transformed_norm = wm.vecMul(norms_[i]).normalize(); 
+			colors[i] = light->calculate(transformed_norm,vb_->color(i));
 		}
 		for (int i = 0; i < ib_->size(); i++) {
 			int i0 = (*ib_)[i][0], i1 = (*ib_)[i][1], i2 = (*ib_)[i][2];
 			unsigned c0 = vb_->color(i0);
 			unsigned c1 = vb_->color(i1);
 			unsigned c2 = vb_->color(i2);
-			Vector3 norm = (world_coords[i1]- world_coords[i0]).cross(world_coords[i2]- world_coords[i0]).normalize(); // 光照的计算使用世界坐标
-			c0 = colors[i0];
-			c1 = colors[i1];
-			c2 = colors[i2];
+			Vector3 norm = (world_coords[i1] - world_coords[i0]).cross(world_coords[i2] - world_coords[i0]).normalize(); // 光照的计算使用世界坐标 
+			
+			// 注意这里不能用提前算好的法向量，因为wm矩阵有旋转成分
+			c0=light->calculate(norm, c0);
+			c1 = light->calculate(norm, c1);
+			c2 = light->calculate(norm, c2);
 			f.drawTriangle3DH(res[i0], res[i1], res[i2], vb_->uv(i0).data(), vb_->uv(i1).data(), vb_->uv(i2).data(), c0,c1,c2);
 		}
 	}
@@ -289,4 +293,50 @@ private:
 	bool isZTest_;
 	GameLib::Framework::BlendMode blend_mode_;
 	vector<Vector3> norms_; // 法线贴图
+};
+
+// 实现物体之间的相对运动
+class TransformDraw {
+public:
+	TransformDraw():TransformDraw(nullptr) {}
+	TransformDraw(const Painter* painter) {
+		painter_ = painter;
+		scale_ = { 1,1,1 };
+	}
+	void draw(const Matrix44&pv,const Matrix44& parent_m,Light*light){
+		Matrix44 m;
+		m.setTranslation(translation_);
+		m.rotateY(rotation_.y);
+		m.rotateX(rotation_.x);
+		m.rotateZ(rotation_.z);
+		m.scale(scale_);
+		m = parent_m.matMul(m);
+		if(painter_)
+			painter_->draw(pv, m, light);
+		for (int i = 0; i < children_.size(); i++)
+			children_[i]->draw(pv, m, light);
+	}
+	TransformDraw* getChild(int i) {
+		return children_[i];
+	}
+	void setChild(int i, TransformDraw* child) {
+		children_.resize(i+1);
+		children_[i]=child;
+	}
+	void setTranslation(const Vector3& v) {
+		translation_ = v;
+	}
+	void setRotation(const Vector3& v) {
+		rotation_ = v;
+	}
+	TransformDraw* addChild(TransformDraw* child) {
+		children_.push_back(child);
+		return this;
+	}
+private:
+	vector<TransformDraw*> children_;
+	Vector3 rotation_;
+	Vector3 translation_;
+	Vector3 scale_;
+	const Painter* painter_;
 };

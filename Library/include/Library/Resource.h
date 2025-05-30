@@ -82,6 +82,13 @@ public:
 		}
 		return new_model;
 	}
+	const Painter* getPainter(const string& name)const {
+		auto it = painters.find(name);
+		if (it!=painters.end()) {
+			return it->second;
+		}
+		return nullptr;
+	}
 private:
 	unordered_map<string, VertexBuffer*> vbs;
 	unordered_map<string, IndexBuffer*> ibs;

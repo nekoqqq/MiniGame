@@ -49,8 +49,14 @@ Vector3 gLightDir = { 0.0,0.0,0.0 };
 Light* gLight = nullptr;
 // 太阳系模拟
 Model* gSun;
-Model* gMoon;
 Model* gEarth;
+Model* gMoon;
+TransformDraw* gSunRotation;
+TransformDraw* gSunTranslation;
+TransformDraw* gEarthRotation;
+TransformDraw* gEarthTranslation;
+TransformDraw* gMoonRotation;
+TransformDraw* gMoonTranslation;
 namespace GameLib {
 	bool firstFrame = true;
 	void deleteAll() {
@@ -118,84 +124,136 @@ namespace GameLib {
 			GameLib::Framework::instance().requestEnd();
 		gCounter++;
 	}
-	void Framework::update() {
+	void solarSystemV2() {
+		gEyePos.set(0, 200, 100);
+		gTargetPos.set(0, 0, 0);
+		gEyeUp.set(0., 1., 0.); // 一般是向上
 		Keyboard k = Manager::instance().keyboard();
 		Mouse m = Manager::instance().mouse();
 		if (firstFrame) {
-			setFrameRate(FRAMES);
+			Framework::instance().setFrameRate(FRAMES);
 			firstFrame = false;
 			gResource = new Resource("model.xml");
-			gPlayer = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");
-			for (int i = 0; i < MAX_MISSLES; i++) {
-				Model * missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "missle");
-				dynamic_cast<Mecha*>(gPlayer)->addMissle(*missle);
-			}
-			gEnemy = gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy"));
-			for (int i= 0;i<MAX_MISSLES;i++)
-			{
-				Model* missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "missle");
-				dynamic_cast<Mecha*>(gEnemy)->addMissle(*missle);
-			}
-			for (int i = 0; i < gEnemyCnt; i++) {
-				gEnemys.push_back(gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy_") + to_string(i+1)));
-			}
-			dynamic_cast<Mecha*>(gPlayer)->addEnemy(gEnemy);
-			dynamic_cast<Mecha*>(gEnemy)->addEnemy(gPlayer);
 			gStage = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "stage");
-			gWall = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "wall");
-			gAxis = gResource->createModel(Model::AXIS, CollisionModel::SPHERE, "axis");
-			gCamera = new Camera(gEyePos, gTargetPos, gEyeUp, fov_y, near, far, aspec_ratio);
-			// 设置碰撞物体
-			gPlayer->setCollisionModels(gEnemys);
-			gPlayer->addCollisionModel(gEnemy);
-			gPlayer->addCollisionModel(gStage);
-			gPlayer->addCollisionModel(gWall);
-			gEnemy->addCollisionModel(gPlayer);
-			gEnemy->addCollisionModel(gStage);
-			gEnemy->addCollisionModel(gWall);
-			gMechaInfo = new MechaInfo;
-			gFrontEnd = new FrontEnd(gMechaInfo);
+
+			gSunRotation = new TransformDraw(gResource->getPainter("player"));
+			gEarthRotation = new TransformDraw(gResource->getPainter("player"));
+			gEarthTranslation = new TransformDraw();
+			gMoonRotation = new TransformDraw();
+			gMoonTranslation = new TransformDraw(gResource->getPainter("player"));
+
+			gSunRotation->addChild(gEarthTranslation);
+			gEarthTranslation->addChild(gEarthRotation);
+			gEarthTranslation->addChild(gMoonRotation);
+			gMoonRotation->addChild(gMoonTranslation);
 			++gCounter;
 			// 设置光源,模拟太阳东升西落
 			gLight = new Light(gLightDir, gLightColor, gAmbient);
+			gCamera = new Camera(gEyePos, gTargetPos, gEyeUp, fov_y, near, far, aspec_ratio);
 
 		}
 		// 更新
 		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
-		Matrix44 vr = gCamera->getViewRotation();
-		gPlayer->update(vr); // 玩家和敌人共用一套逻辑
-		gEnemy->update(vr);
-		gCamera->update(gPlayer);
 		// 绘制
 		Matrix44 pv = gCamera->getViewProjectionMatrix();
-		gFrontEnd->update(dynamic_cast<Mecha*>(gPlayer), dynamic_cast<Mecha*>(gEnemy), dynamic_cast<Stage*>(gStage), gCamera);
 		// 光处理
-		double theta = gCounter * PI / 180.0;
-		double t = 1.0*gCounter / FRAMES/6;
-		gLight->updateLight({cos(t)*cos(t),cos(t)*sin(t)*sin(t),sin(t)});
+		double theta = gCounter;
+		double t = 1.0 * gCounter / FRAMES / 6;
+		gLight->updateLight({cos(t),sin(t),1});
+		//gLight->updateLight({ 1,1,1 });
+
+		gSunRotation->setRotation({ 0,gCounter * 100.0 / 365.0 ,0 });
+		gEarthRotation->setRotation({ 0,gCounter * 100.0 / 1.0 ,0 });
+		gEarthTranslation->setTranslation({ 100,0,0 });
+		gMoonTranslation->setTranslation({ 30.0,0,0 });
+		gMoonRotation->setRotation({ 0,gCounter * 100.0 / 30.0 ,0 });
+
+		gSunRotation->draw(pv, Matrix44::identity(), gLight);
 
 		gStage->draw(pv, gLight);
-		gWall->draw(pv, gLight);
-		gAxis->draw(pv, gLight);
-		gPlayer->draw(pv, gLight);
-		gEnemy->draw(pv, gLight);
-		for (int i = 0; i < gEnemyCnt; i++) {
-			gEnemys[i]->draw(pv, gLight);
-		}
-		gFrontEnd->draw();
-		
-		if (!dynamic_cast<Mecha*>(gEnemy)->isAlive() || ++gCounter>=MAX_TIME) {
-			drawDebugString(1, 0, "Game Over!");
-			sleep(1000);
-			deleteAll();
-			firstFrame = true;
-			gCounter = 0;
-		}
 		if (k.isOn('q'))
 			GameLib::Framework::instance().requestEnd();
-		if (isEndRequested()) {
-			deleteAll();
-		}
 		gCounter++;
+	}
+	void Framework::update() {
+		//Keyboard k = Manager::instance().keyboard();
+		//Mouse m = Manager::instance().mouse();
+		//if (firstFrame) {
+		//	setFrameRate(FRAMES);
+		//	firstFrame = false;
+		//	gResource = new Resource("model.xml");
+		//	gPlayer = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");
+		//	for (int i = 0; i < MAX_MISSLES; i++) {
+		//		Model * missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "missle");
+		//		dynamic_cast<Mecha*>(gPlayer)->addMissle(*missle);
+		//	}
+		//	gEnemy = gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy"));
+		//	for (int i= 0;i<MAX_MISSLES;i++)
+		//	{
+		//		Model* missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "missle");
+		//		dynamic_cast<Mecha*>(gEnemy)->addMissle(*missle);
+		//	}
+		//	for (int i = 0; i < gEnemyCnt; i++) {
+		//		gEnemys.push_back(gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy_") + to_string(i+1)));
+		//	}
+		//	dynamic_cast<Mecha*>(gPlayer)->addEnemy(gEnemy);
+		//	dynamic_cast<Mecha*>(gEnemy)->addEnemy(gPlayer);
+		//	gStage = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "stage");
+		//	gWall = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "wall");
+		//	gAxis = gResource->createModel(Model::AXIS, CollisionModel::SPHERE, "axis");
+		//	gCamera = new Camera(gEyePos, gTargetPos, gEyeUp, fov_y, near, far, aspec_ratio);
+		//	// 设置碰撞物体
+		//	gPlayer->setCollisionModels(gEnemys);
+		//	gPlayer->addCollisionModel(gEnemy);
+		//	gPlayer->addCollisionModel(gStage);
+		//	gPlayer->addCollisionModel(gWall);
+		//	gEnemy->addCollisionModel(gPlayer);
+		//	gEnemy->addCollisionModel(gStage);
+		//	gEnemy->addCollisionModel(gWall);
+		//	gMechaInfo = new MechaInfo;
+		//	gFrontEnd = new FrontEnd(gMechaInfo);
+		//	++gCounter;
+		//	// 设置光源,模拟太阳东升西落
+		//	gLight = new Light(gLightDir, gLightColor, gAmbient);
+
+		//}
+		//// 更新
+		//// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
+		//Matrix44 vr = gCamera->getViewRotation();
+		//gPlayer->update(vr); // 玩家和敌人共用一套逻辑
+		//gEnemy->update(vr);
+		//gCamera->update(gPlayer);
+		//// 绘制
+		//Matrix44 pv = gCamera->getViewProjectionMatrix();
+		//gFrontEnd->update(dynamic_cast<Mecha*>(gPlayer), dynamic_cast<Mecha*>(gEnemy), dynamic_cast<Stage*>(gStage), gCamera);
+		//// 光处理
+		//double theta = gCounter * PI / 180.0;
+		//double t = 1.0*gCounter / FRAMES/6;
+		//gLight->updateLight({cos(t)*cos(t),cos(t)*sin(t)*sin(t),sin(t)});
+
+		//gStage->draw(pv, gLight);
+		//gWall->draw(pv, gLight);
+		//gAxis->draw(pv, gLight);
+		//gPlayer->draw(pv, gLight);
+		//gEnemy->draw(pv, gLight);
+		//for (int i = 0; i < gEnemyCnt; i++) {
+		//	gEnemys[i]->draw(pv, gLight);
+		//}
+		//gFrontEnd->draw();
+		//
+		//if (!dynamic_cast<Mecha*>(gEnemy)->isAlive() || ++gCounter>=MAX_TIME) {
+		//	drawDebugString(1, 0, "Game Over!");
+		//	sleep(1000);
+		//	deleteAll();
+		//	firstFrame = true;
+		//	gCounter = 0;
+		//}
+		//if (k.isOn('q'))
+		//	GameLib::Framework::instance().requestEnd();
+		//if (isEndRequested()) {
+		//	deleteAll();
+		//}
+		//gCounter++;
+		solarSystemV2();
 	}
 }
