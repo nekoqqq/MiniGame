@@ -18,8 +18,6 @@ TransformTree::TransformTree(const Element* e, Resource* resource) {
 	GameLib::cout << "create transform tree: " << name.c_str() << GameLib::endl;
 }
 TransformNode* TransformTree::getNode(const string& name) {
-	if (!root_)
-		return nullptr;
 	stack<TransformNode*> st;
 	st.push(root_);
 	while (!st.empty()) {
@@ -51,7 +49,6 @@ TransformNode* TransformTree::buildTree(const Element* e, Resource* resource) {
 	}
 	return node;
 }
-
 void TransformTree::setAnimation(AnimationTree* animation_tree)
 {
 	auto f = [&](TransformNode* cur) {
@@ -61,7 +58,6 @@ void TransformTree::setAnimation(AnimationTree* animation_tree)
 	preOrder(f);
 	timer_ = 0; // 重置计时器
 }
-
 void TransformTree::update()
 {
 	auto f = [&](TransformNode* cur) {

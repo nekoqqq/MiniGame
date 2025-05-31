@@ -245,6 +245,7 @@ namespace GameLib {
 		double t = 1.0 * gCounter / FRAMES / 6;
 		gLight->updateLight({ cos(t) * cos(t),cos(t) * sin(t) * sin(t),sin(t) });
 
+
 		gSolarSystem->update();
 
 		gStage->draw(pv, gLight);
