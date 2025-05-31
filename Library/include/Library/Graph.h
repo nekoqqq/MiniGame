@@ -7,6 +7,8 @@
 #include "Math.h"
 #include "Xml.h"
 #include "Collision.h"
+#include "AnimationTree.h"
+#include "AnimationNode.h"
 using std::min;
 using std::max;
 
@@ -299,7 +301,20 @@ public:
 	TransformNode(const Painter* painter) {
 		painter_ = painter;
 		scale_ = { 1,1,1 };
+		animation_node_ = nullptr;
 	}
+	void setAnimationNode(AnimationNode *animation_node) {
+		animation_node_ = animation_node;
+	}
+	const AnimationNode* getAnimationNode()const {
+		return animation_node_;
+	}
+	void update(double time) {
+		if (animation_node_==nullptr)
+			return;
+		animation_node_->update(translation_,rotation_,scale_,time);
+	}
+
 	void draw(const Matrix44&pv,const Matrix44& parent_m,Light*light){
 		Matrix44 m;
 		m.setTranslation(translation_);
@@ -349,4 +364,5 @@ private:
 	Vector3 translation_;
 	Vector3 scale_;
 	const Painter* painter_;
+	AnimationNode* animation_node_;
 };

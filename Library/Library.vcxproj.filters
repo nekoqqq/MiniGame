@@ -54,6 +54,15 @@
     <ClInclude Include="include\Library\TransformTree.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\Library\Curve.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Library\AnimationNode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Library\AnimationTree.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Library.cpp">
@@ -69,6 +78,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="TransformTree.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Curve.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationNode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationTree.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

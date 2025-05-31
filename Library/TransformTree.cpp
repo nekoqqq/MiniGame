@@ -2,7 +2,13 @@
 #include "include/Library/TransformTree.h"
 #include "include/Library/Resource.h"
 #include "include/Library/Math.h"
+#include "include/Library/Curve.h"
+#include "include/Library/AnimationTree.h"
+#include "include/Library/AnimationNode.h"
+#include <stack>
 #include <cassert>
+
+using std::stack;
 
 TransformTree::TransformTree(const Element* e, Resource* resource) {
 	assert(e->getTagName() == "TransformTree");
@@ -44,4 +50,35 @@ TransformNode* TransformTree::buildTree(const Element* e, Resource* resource) {
 		node->addChild(buildTree(child, resource));
 	}
 	return node;
+}
+
+void TransformTree::setAnimation(AnimationTree* animation_tree)
+{
+	auto f = [&](TransformNode* cur) {
+		cur->setAnimationNode(animation_tree->getNode(cur->getName()));
+		};
+
+	preOrder(f);
+	timer_ = 0; // 重置计时器
+}
+
+void TransformTree::update()
+{
+	auto f = [&](TransformNode* cur) {
+		cur->update(timer_);
+	};
+	preOrder(f);
+	timer_++;
+}
+void TransformTree::preOrder(function<void(TransformNode*)> func) {
+	stack<TransformNode*> st;
+	st.push(root_);
+	while (!st.empty()) {
+		TransformNode* cur = st.top();
+		func(cur);
+		st.pop();
+		for (int i = 0; i < cur->getChildren().size(); i++) {
+			st.push(cur->getChild(i));
+		}
+	}
 }

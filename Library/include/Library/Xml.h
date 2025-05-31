@@ -122,6 +122,13 @@ public:
 		iss >> std::hex >> res;
 		return res;
 	}
+	static double convertToDouble(const string& s) {
+		std::istringstream iss(s);
+		double res;
+		iss >> res;
+		return res;
+	}
+
 private:
 	int level; // 在树中的层次 0 为根节点
 	string tag_name;

@@ -4,6 +4,7 @@
 #include "Mecha.h"
 #include "Camera.h"
 #include "TransformTree.h"
+#include "AnimationTree.h"
 extern const int MAX_TIME;
 using std::pair;
 class Resource
@@ -26,6 +27,9 @@ public:
 			}
 			else if (tag_name == "Texture") {
 				textures[name] = new Texture(child);
+			}
+			else if (tag_name == "Animation") {
+				animation_trees_[name] = new AnimationTree(child);
 			}
 		}
 		// Painter依赖他们
@@ -110,11 +114,20 @@ public:
 		}
 		return nullptr;
 	}
+	AnimationTree* getAnimation(const string& name)const {
+		auto it = animation_trees_.find(name);
+		if (it != animation_trees_.end()) {
+			return it->second;
+		}
+		return nullptr;
+	}
+
 private:
 	unordered_map<string, VertexBuffer*> vbs;
 	unordered_map<string, IndexBuffer*> ibs;
 	unordered_map<string, Texture*> textures;
 	unordered_map<string, Painter*> painters;
+	unordered_map<string, AnimationTree*> animation_trees_;
 	unordered_map<string, TransformTree*> transform_trees_;
 	unordered_map<string, Vector3*> origins; // 各个物体位于世界坐标系中的坐标
 };
@@ -155,7 +168,6 @@ struct MechaInfo
 		//Framework::instance().drawDebugString(10, 10, oss.str().c_str(),0xffff0000);
 	}
 };
-
 class FrontEnd
 {
 public:

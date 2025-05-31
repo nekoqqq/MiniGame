@@ -152,8 +152,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Library\AnimationNode.h" />
+    <ClInclude Include="include\Library\AnimationTree.h" />
     <ClInclude Include="include\Library\Camera.h" />
     <ClInclude Include="include\Library\Collision.h" />
+    <ClInclude Include="include\Library\Curve.h" />
     <ClInclude Include="include\Library\Globals.h" />
     <ClInclude Include="include\Library\Graph.h" />
     <ClInclude Include="include\Library\Math.h" />
@@ -167,6 +170,9 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AnimationNode.cpp" />
+    <ClCompile Include="AnimationTree.cpp" />
+    <ClCompile Include="Curve.cpp" />
     <ClCompile Include="Library.cpp" />
     <ClCompile Include="Mecha.cpp" />
     <ClCompile Include="Missle.cpp" />

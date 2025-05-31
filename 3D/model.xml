@@ -216,4 +216,31 @@
 			</Node>
 		</Node>
 	</TransformTree>
+	
+	<Animation name="SolarSystem">
+		<Node name="SunRotation">
+			<Curve type="rotation_y" interpolation="linear">
+				<Data time="0" value="0"></Data>
+				<Data time="120" value="120"></Data>
+				<Data time="240" value="240"></Data>
+				<Data time="360" value="360"></Data>
+			</Curve>
+		</Node>
+		<Node name="MoonRotation">
+			<Curve type="rotation_y" interpolation="linear">
+				<Data time="0" value="0"></Data>
+				<Data time="10" value="120"></Data>
+				<Data time="20" value="240"></Data>
+				<Data time="30" value="360"></Data>
+			</Curve>
+		</Node>
+		<Node name="EarthRotation">
+			<Curve type="rotation_y" interpolation="linear">
+				<Data time="0" value="0"></Data>
+				<Data time="1" value="120"></Data>
+				<Data time="2" value="240"></Data>
+				<Data time="3" value="360"></Data>
+			</Curve>
+		</Node>
+	</Animation>
 </root>
