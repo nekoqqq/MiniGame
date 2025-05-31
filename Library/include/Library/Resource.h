@@ -2,6 +2,8 @@
 #include "Model.h"
 #include "Missle.h"
 #include "Mecha.h"
+#include "Camera.h"
+#include "TransformTree.h"
 extern const int MAX_TIME;
 using std::pair;
 class Resource
@@ -42,6 +44,7 @@ public:
 					blend_mode = Framework::BLEND_ADDITIVE;
 				bool is_ztest = true;
 				Painter* painter = new Painter(vbs[vb_name], ibs[ib_name], textures[texture_name], is_ztest, blend_mode);
+				painter->setName(name);
 				painters[name] = painter;
 				const string& origin = child->getAttr("origin");
 				vector<double> origin_array = Element::converToArray<double>(origin);
@@ -51,6 +54,18 @@ public:
 				origins[name] = new Vector3(origin_array[0], origin_array[1], origin_array[2]);
 			}
 		}
+
+		// TransformTree依赖painter
+		for (auto& child : root->getChildren()) {
+			const string& tag_name = child->getTagName();
+			const string& name = child->getAttr("name");
+			if (name == "") // 没有name的被忽略了
+				continue;
+			else if (tag_name == "TransformTree") {
+				transform_trees_[name] = new TransformTree(child, this);
+			}
+		}
+
 	}
 	~Resource() {
 		for (auto& kv : vbs)
@@ -63,6 +78,12 @@ public:
 			delete kv.second;
 		for (auto& kv : origins)
 			delete kv.second;
+	}
+	TransformTree* createTransformTree(const string& name)const{
+		auto it = transform_trees_.find(name);
+		if (it != transform_trees_.end())
+			return it->second;
+		return nullptr;
 	}
 	Model* createModel(Model::Type type, CollisionModel::Type collision_type, const string& name) {
 		Model* new_model = nullptr;
@@ -82,7 +103,7 @@ public:
 		}
 		return new_model;
 	}
-	const Painter* getPainter(const string& name)const {
+	Painter* getPainter(const string& name)const {
 		auto it = painters.find(name);
 		if (it!=painters.end()) {
 			return it->second;
@@ -94,6 +115,7 @@ private:
 	unordered_map<string, IndexBuffer*> ibs;
 	unordered_map<string, Texture*> textures;
 	unordered_map<string, Painter*> painters;
+	unordered_map<string, TransformTree*> transform_trees_;
 	unordered_map<string, Vector3*> origins; // 各个物体位于世界坐标系中的坐标
 };
 struct MechaInfo

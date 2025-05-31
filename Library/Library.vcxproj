@@ -161,6 +161,7 @@
     <ClInclude Include="include\Library\Missle.h" />
     <ClInclude Include="include\Library\Model.h" />
     <ClInclude Include="include\Library\Resource.h" />
+    <ClInclude Include="include\Library\TransformTree.h" />
     <ClInclude Include="include\Library\Xml.h" />
     <ClInclude Include="include\Library\ZBuffer.h" />
     <ClInclude Include="pch.h" />
@@ -175,6 +176,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="TransformTree.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -42,12 +42,33 @@
     <ClInclude Include="include\Library\Camera.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\Library\Mecha.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Library\Missle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Library\Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Library\TransformTree.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Library.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Mecha.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Missle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TransformTree.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

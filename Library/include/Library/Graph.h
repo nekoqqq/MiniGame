@@ -17,7 +17,6 @@ using std::array;
 namespace GameLib {
 	class Texture;
 }
-
 enum Color {
 	WHITE = 0xffffffff,
 	RED = 0xffff0000,
@@ -30,7 +29,6 @@ enum Color {
 	Q1 = 0xff004f00,
 	Q2 = 0xff00004f
 };
-
 struct Light
 {
 	Light(const Vector3& light_dir, const Vector3& light_color,const Vector3&ambient)
@@ -143,7 +141,6 @@ private:
 	vector<array<double, 2>> uvs_;
 	vector<Color> colors_;
 };
-
 class IndexBuffer {
 public:
 	IndexBuffer() {}
@@ -183,7 +180,6 @@ private:
 	string name;
 	vector<array<unsigned, 3>> indices;
 };
-
 class Texture {
 public:
 	Texture(const Element* e) {
@@ -203,7 +199,6 @@ private:
 	string name;
 	GameLib::Texture* texture;
 };
-
 class Painter {
 public:
 	Painter(VertexBuffer* vb, IndexBuffer* ib, Texture* t, bool isZTest, GameLib::Framework::BlendMode mode) :vb_(vb), ib_(ib), texture_(t), isZTest_(isZTest), blend_mode_(mode) {
@@ -221,6 +216,9 @@ public:
 	}
 	const string& getName()const {
 		return name;
+	}
+	void setName(const string& name) {
+		this->name = name;
 	}
 	vector<Triangle> getTriangles()const {
 		vector<Triangle> res;
@@ -294,12 +292,11 @@ private:
 	GameLib::Framework::BlendMode blend_mode_;
 	vector<Vector3> norms_; // 法线贴图
 };
-
 // 实现物体之间的相对运动
-class TransformDraw {
+class TransformNode {
 public:
-	TransformDraw():TransformDraw(nullptr) {}
-	TransformDraw(const Painter* painter) {
+	TransformNode():TransformNode(nullptr) {}
+	TransformNode(const Painter* painter) {
 		painter_ = painter;
 		scale_ = { 1,1,1 };
 	}
@@ -316,12 +313,24 @@ public:
 		for (int i = 0; i < children_.size(); i++)
 			children_[i]->draw(pv, m, light);
 	}
-	TransformDraw* getChild(int i) {
+	vector<TransformNode*> getChildren()const {
+		return children_;
+	}
+	TransformNode* getChild(int i) {
 		return children_[i];
 	}
-	void setChild(int i, TransformDraw* child) {
+	void setChild(int i, TransformNode* child) {
 		children_.resize(i+1);
 		children_[i]=child;
+	}
+	void setName(const string& name) {
+		name_ = name;
+	}
+	const string& getName()const {
+		return name_;
+	}
+	void setPainter(const Painter* painter) {
+		painter_ = painter;
 	}
 	void setTranslation(const Vector3& v) {
 		translation_ = v;
@@ -329,12 +338,13 @@ public:
 	void setRotation(const Vector3& v) {
 		rotation_ = v;
 	}
-	TransformDraw* addChild(TransformDraw* child) {
+	TransformNode* addChild(TransformNode* child) {
 		children_.push_back(child);
 		return this;
 	}
 private:
-	vector<TransformDraw*> children_;
+	string name_;
+	vector<TransformNode*> children_;
 	Vector3 rotation_;
 	Vector3 translation_;
 	Vector3 scale_;

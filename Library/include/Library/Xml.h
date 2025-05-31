@@ -98,6 +98,23 @@ public:
 		}
 		return res;
 	}
+	static Vector3 converToVector(const string& s) {
+		if (s.empty())
+			return Vector3();
+		std::istringstream iss(s);
+		vector<double> res;
+		string tmp;
+		while (std::getline(iss, tmp))
+		{
+			istringstream iss2(tmp);
+			double t;
+			while (iss2 >> t) {
+				res.push_back(t);
+				iss2.ignore(tmp.size(), ',');
+			}
+		}
+		return { res[0],res[1],res[2] };
+	}
 
 	static unsigned convertHexToUnsigned(const string& s) {
 		std::istringstream iss(s);

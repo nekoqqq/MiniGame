@@ -205,4 +205,15 @@
 
 	<Painter name="axis" vertexBuffer="axis" indexBuffer="axis" texture="axis" blend="opaque"></Painter>
 	<Painter name="missle" vertexBuffer="missle" indexBuffer="missle" texture="" blend="opaque"></Painter>
+
+	<TransformTree name="SolarSystem">
+		<Node name="SunRotation" painter="player">
+			<Node name="EarthTranslation" translation="100.0,0.0,0.0">
+				<Node name="EarthRotation" painter="player"></Node>
+				<Node name="MoonRotation">
+					<Node name="MoonTranslation" painter="player" translation="30.0,0.0,0.0"></Node>
+				</Node>
+			</Node>
+		</Node>
+	</TransformTree>
 </root>

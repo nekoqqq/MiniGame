@@ -14,7 +14,7 @@ const int WIDTH = 640;
 const int HEIGHT = 480;
 
 // 游戏
-const int FRAMES = 60;
+const int FRAMES = 180;
 const int MAX_TIME = 120 * FRAMES; // 最大对局时间
 // 动物
 Model* gPlayer;
@@ -51,12 +51,17 @@ Light* gLight = nullptr;
 Model* gSun;
 Model* gEarth;
 Model* gMoon;
-TransformDraw* gSunRotation;
-TransformDraw* gSunTranslation;
-TransformDraw* gEarthRotation;
-TransformDraw* gEarthTranslation;
-TransformDraw* gMoonRotation;
-TransformDraw* gMoonTranslation;
+TransformNode* gSunRotation;
+TransformNode* gSunTranslation;
+TransformNode* gEarthRotation;
+TransformNode* gEarthTranslation;
+TransformNode* gMoonRotation;
+TransformNode* gMoonTranslation;
+// 太阳系v3模拟
+TransformTree* gSolarSystem;
+TransformNode* gTSun;
+TransformNode* gTEarth;
+TransformNode* gTMoon;
 namespace GameLib {
 	bool firstFrame = true;
 	void deleteAll() {
@@ -136,11 +141,11 @@ namespace GameLib {
 			gResource = new Resource("model.xml");
 			gStage = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "stage");
 
-			gSunRotation = new TransformDraw(gResource->getPainter("player"));
-			gEarthRotation = new TransformDraw(gResource->getPainter("player"));
-			gEarthTranslation = new TransformDraw();
-			gMoonRotation = new TransformDraw();
-			gMoonTranslation = new TransformDraw(gResource->getPainter("player"));
+			gSunRotation = new TransformNode(gResource->getPainter("player"));
+			gEarthRotation = new TransformNode(gResource->getPainter("player"));
+			gEarthTranslation = new TransformNode();
+			gMoonRotation = new TransformNode();
+			gMoonTranslation = new TransformNode(gResource->getPainter("player"));
 
 			gSunRotation->addChild(gEarthTranslation);
 			gEarthTranslation->addChild(gEarthRotation);
@@ -171,6 +176,44 @@ namespace GameLib {
 		gSunRotation->draw(pv, Matrix44::identity(), gLight);
 
 		gStage->draw(pv, gLight);
+		if (k.isOn('q'))
+			GameLib::Framework::instance().requestEnd();
+		gCounter++;
+	}
+	void solarSystemV3() {
+		Keyboard k = Manager::instance().keyboard();
+		Mouse m = Manager::instance().mouse();
+		if (firstFrame) {
+			gEyePos.set(0, 200, 100);
+			gTargetPos.set(0, 0, 0);
+			gEyeUp.set(0., 1., 0.); // 一般是向上
+			Framework::instance().setFrameRate(FRAMES);
+			firstFrame = false;
+			gResource = new Resource("model.xml");
+			gStage = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "stage");
+			gSolarSystem =  gResource->createTransformTree("SolarSystem");
+			gTSun = gSolarSystem->getNode("SunRotation");
+			gTEarth = gSolarSystem->getNode("EarthRotation");
+			gTMoon = gSolarSystem->getNode("MoonRotation");
+			// 设置光源,模拟太阳东升西落
+			gLight = new Light(gLightDir, gLightColor, gAmbient);
+			gCamera = new Camera(gEyePos, gTargetPos, gEyeUp, fov_y, near, far, aspec_ratio);
+		}
+		// 更新
+		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
+		Matrix44 vr = gCamera->getViewRotation();
+		// 绘制
+		Matrix44 pv = gCamera->getViewProjectionMatrix();
+		// 光处理
+		double theta = gCounter * PI / 180.0;
+		double t = 1.0 * gCounter / FRAMES / 6;
+		gLight->updateLight({ cos(t) * cos(t),cos(t) * sin(t) * sin(t),sin(t) });
+
+		gStage->draw(pv, gLight);
+		gTSun->setRotation({ 0.0, -gCounter * 10.0 / 365.0, 0.0 });
+		gTEarth->setRotation({ 0.0, -gCounter * 10.0 / 1.0, 0.0 });
+		gTMoon->setRotation({ 0.0, -gCounter * 10.0 / 30.0, 0.0 });
+		gSolarSystem->draw(pv,Matrix44::identity(),gLight);
 		if (k.isOn('q'))
 			GameLib::Framework::instance().requestEnd();
 		gCounter++;
