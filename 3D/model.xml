@@ -219,7 +219,7 @@
 	
 	<Animation name="SolarSystem">
 		<Node name="SunRotation">
-			<Curve type="rotation_y" interpolation="linear">
+			<Curve type="rotation_y" interpolation="cubic">
 				<Data time="0" value="0"></Data>
 				<Data time="1200" value="-120"></Data>
 				<Data time="2400" value="-240"></Data>
@@ -227,7 +227,7 @@
 			</Curve>
 		</Node>
 		<Node name="MoonRotation">
-			<Curve type="rotation_y" interpolation="linear">
+			<Curve type="rotation_y" interpolation="cubic">
 				<Data time="0" value="0"></Data>
 				<Data time="100" value="-120"></Data>
 				<Data time="200" value="-240"></Data>
@@ -235,7 +235,7 @@
 			</Curve>
 		</Node>
 		<Node name="EarthRotation">
-			<Curve type="rotation_y" interpolation="linear">
+			<Curve type="rotation_y" interpolation="cubic">
 				<Data time="0" value="0"></Data>
 				<Data time="10" value="-120"></Data>
 				<Data time="20" value="-240"></Data>

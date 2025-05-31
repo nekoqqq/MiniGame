@@ -29,6 +29,8 @@ private:
 	struct Data {
 		double time;
 		double value;
+		double left_slope_;
+		double right_slope_;
 	};
 	Type type_;
 	Interpolation_Type interpolation_type_;

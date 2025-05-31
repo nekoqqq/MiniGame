@@ -70,7 +70,35 @@ double Curve::get(double time) const {
 		}
 		break;
 	case Curve::CUBIC:
-		// 三次贝塞尔曲线插值
+	{
+		int beg = 0;
+		int end = 0;
+		for ( end = 0; end < datas_.size(); end++) {
+			if (datas_[end]->time > time)
+				break;
+			beg = end;
+		}
+		double t0 = datas_[beg]->time;
+		double t1 = datas_[end]->time;
+		double p0 = datas_[beg]->value;
+		double p1 = datas_[end]->value;
+		double v0 = datas_[beg]->right_slope_;
+		double v1 = datas_[end]->left_slope_;
+		time = (time - t0) / (t1 - t0); // 归一化时间
+		double a = 2.0 * (p0 - p1) + v0 + v1;
+		double b = 3.0 * (p1 - p0) - (2.0 * v0) - v1;
+		double r = a;
+		r *= time;
+		r += b;
+		r *= time;
+		r += v0;
+		r *= time;
+		r += p0;
+		return r;
+	}
+
+
+
 		break;
 	case Curve::HERMITE:
 		break;
