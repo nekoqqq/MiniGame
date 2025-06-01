@@ -34,8 +34,8 @@ public:
 	void update(Model* player) {
 		const Vector3& origin = player->getPos();
 		const Vector3& z_dir = player->getZDirection();
-		// 从模型的后六米看向他前面的10米位置
-		eye_pos_ = player->getModelTransform().vecMul({ 0,20,-60 });
+		// 从模型的后看
+		eye_pos_ = player->getModelTransform().vecMul({ 0,10,-15 });
 		target_pos_ = player->getModelTransform().vecMul({ 0,0,10 });
 	}
 private:

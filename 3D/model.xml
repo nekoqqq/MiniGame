@@ -1,40 +1,40 @@
 <root>
 	<VertexBuffer name="player">
 		<!-- +Z面 (法线方向 0,0,1) -->
-		<Vertex position="10,10,10" uv="0.0,0.0" color="0xFFFF0000"></Vertex>
-		<Vertex position="-10,10,10" uv="1.0,0.0" color="0xFFFF0000"></Vertex>
-		<Vertex position="-10,0,10" uv="1.0,1.0" color="0xFFFF0000"></Vertex>
-		<Vertex position="10,0,10" uv="0.0,1.0" color="0xFFFF0000"></Vertex>
+		<Vertex position="1,2,1" uv="0.0,0.0" color="0xFFFF0000"></Vertex>
+		<Vertex position="-1,2,1" uv="1.0,0.0" color="0xFFFF0000"></Vertex>
+		<Vertex position="-1,0,1" uv="1.0,1.0" color="0xFFFF0000"></Vertex>
+		<Vertex position="1,0,1" uv="0.0,1.0" color="0xFFFF0000"></Vertex>
 
 		<!-- -Z面 (法线方向 0,0,-1) -->
-		<Vertex position="-10,10,-10" uv="0.0,0.0" color="0xFF00FF00"></Vertex>
-		<Vertex position="10,10,-10" uv="1.0,0.0" color="0xFF00FF00"></Vertex>
-		<Vertex position="10,0,-10" uv="1.0,1.0" color="0xFF00FF00"></Vertex>
-		<Vertex position="-10,0,-10" uv="0.0,1.0" color="0xFF00FF00"></Vertex>
+		<Vertex position="-1,2,-1" uv="0.0,0.0" color="0xFF00FF00"></Vertex>
+		<Vertex position="1,2,-1" uv="1.0,0.0" color="0xFF00FF00"></Vertex>
+		<Vertex position="1,0,-1" uv="1.0,1.0" color="0xFF00FF00"></Vertex>
+		<Vertex position="-1,0,-1" uv="0.0,1.0" color="0xFF00FF00"></Vertex>
 
 		<!-- -X面 (法线方向 -1,0,0) -->
-		<Vertex position="-10,10,10" uv="0.0,0.0" color="0xFF0000FF"></Vertex>
-		<Vertex position="-10,10,-10" uv="1.0,0.0" color="0xFF0000FF"></Vertex>
-		<Vertex position="-10,0,-10" uv="1.0,1.0" color="0xFF0000FF"></Vertex>
-		<Vertex position="-10,0,10" uv="0.0,1.0" color="0xFF0000FF"></Vertex>
+		<Vertex position="-1,2,1" uv="0.0,0.0" color="0xFF0000FF"></Vertex>
+		<Vertex position="-1,2,-1" uv="1.0,0.0" color="0xFF0000FF"></Vertex>
+		<Vertex position="-1,0,-1" uv="1.0,1.0" color="0xFF0000FF"></Vertex>
+		<Vertex position="-1,0,1" uv="0.0,1.0" color="0xFF0000FF"></Vertex>
 
 		<!-- +X面 (法线方向 1,0,0) -->
-		<Vertex position="10,10,-10" uv="0.0,0.0" color="0xFFFFFFFF"></Vertex>
-		<Vertex position="10,10,10" uv="1.0,0.0" color="0xFFFFFFFF"></Vertex>
-		<Vertex position="10,0,10" uv="1.0,1.0" color="0xFFFFFFFF"></Vertex>
-		<Vertex position="10,0,-10" uv="0.0,1.0" color="0xFFFFFFFF"></Vertex>
+		<Vertex position="1,2,-1" uv="0.0,0.0" color="0xFFFFFFFF"></Vertex>
+		<Vertex position="1,2,1" uv="1.0,0.0" color="0xFFFFFFFF"></Vertex>
+		<Vertex position="1,0,1" uv="1.0,1.0" color="0xFFFFFFFF"></Vertex>
+		<Vertex position="1,0,-1" uv="0.0,1.0" color="0xFFFFFFFF"></Vertex>
 
 		<!-- +Y面 (法线方向 0,1,0) -->
-		<Vertex position="-10,10,10" uv="0.0,0.0" color="0xFF4F0000"></Vertex>
-		<Vertex position="10,10,10" uv="1.0,0.0" color="0xFF4F0000"></Vertex>
-		<Vertex position="10,10,-10" uv="1.0,1.0" color="0xFF00004F"></Vertex>
-		<Vertex position="-10,10,-10" uv="0.0,1.0" color="0xFF00004F"></Vertex>
+		<Vertex position="-1,2,1" uv="0.0,0.0" color="0xFF4F0000"></Vertex>
+		<Vertex position="1,2,1" uv="1.0,0.0" color="0xFF4F0000"></Vertex>
+		<Vertex position="1,2,-1" uv="1.0,1.0" color="0xFF00004F"></Vertex>
+		<Vertex position="-1,2,-1" uv="0.0,1.0" color="0xFF00004F"></Vertex>
 
 		<!-- -Y面 (法线方向 0,-1,0) -->
-		<Vertex position="10,0,10" uv="0.0,0.0" color="0xFF000000"></Vertex>
-		<Vertex position="-10,0,10" uv="1.0,0.0" color="0xFF000000"></Vertex>
-		<Vertex position="-10,0,-10" uv="1.0,1.0" color="0xFF000000"></Vertex>
-		<Vertex position="10,0,-10" uv="0.0,1.0" color="0xFF000000"></Vertex>
+		<Vertex position="1,0,1" uv="0.0,0.0" color="0xFF000000"></Vertex>
+		<Vertex position="-1,0,1" uv="1.0,0.0" color="0xFF000000"></Vertex>
+		<Vertex position="-1,0,-1" uv="1.0,1.0" color="0xFF000000"></Vertex>
+		<Vertex position="1,0,-1" uv="0.0,1.0" color="0xFF000000"></Vertex>
 	</VertexBuffer>
 
 
@@ -250,162 +250,185 @@
 	</Animation>
 
 	<TransformTree name="player">
-		<Node name="head" translation="0.0,10.0,0.0" scale="0.3,0.5,0.2" painter="player"></Node>
-		<Node name="body" translation="0.0,10.0,0.0" painter="player">
-			<Node name="left_shoulder" translation="-10,0.0,0.0">
-				<Node name="left_arm" translation="-1.0,0.0,0.0" scale="0.1,0.3,0.5" painter="player"></Node>
+	<Node name="root" translation="0,0,0">
+		<Node name="body" translation="0.0,0.0,0.0" scale="1.0,1.0,0.5" painter="player">
+			<Node name="head" translation="0.0,2.0,0.0" scale="0.6,0.6,0.6" painter="player"></Node>
+
+			<Node name="left_shoulder" translation="-1.5,4.0,0.0">
+				<Node name="left_arm" translation="0.0,-3.5,0.0" scale="0.3,0.8,0.3" painter="player"></Node>
 			</Node>
-			<Node name="right_shoulder" translation="10,0.0,0.0">
-				<Node name="right_arm" translation="1.0,3.0,0.0" scale="0.1,0.3,0.5" painter="player"></Node>
+
+			<Node name="right_shoulder" translation="1.5,4.0,0.0">
+				<Node name="right_arm" translation="0.0,-3.5,0.0" scale="0.3,0.8,0.3" painter="player"></Node>
 			</Node>
-			<Node name="left_hip" translation="-5,0.0,0.0">
-				<Node name="left_foot" translation="0.0,-5,0.0" scale="0.2,1.0,1.0" painter="player"></Node>
+
+			<Node name="left_hip" translation="-0.8,0.0,0.0">
+				<Node name="left_leg" translation="0.0,-2.1,0.0" scale="0.3,1.0,0.3" painter="player">
+					<Node name="left_foot" translation="0.0,-0.5,0.5" scale="0.4,0.2,1.0" painter="player"></Node>
+				</Node>
 			</Node>
-			<Node name="right_hip" translation="5,0.0,0.0">
-				<Node name="right_foot" translation="0.0,-5,0.0" scale="0.2,1.0,1.0" painter="player"></Node>
+
+			<Node name="right_hip" translation="0.8,0.0,0.0">
+				<Node name="right_leg" translation="0.0,-2.1,0.0" scale="0.3,1.0,0.3" painter="player">
+					<Node name="right_foot" translation="0.0,-0.5,0.5" scale="0.4,0.2,1.0" painter="player"></Node>
+				</Node>
 			</Node>
 		</Node>
+	</Node>
 	</TransformTree>
-
-	<Animation name="standing">
+	<!-- 优化后的动画 (时间单位: 1/180秒) -->
+	<Animation name="standing" loop="true">
+		<!-- 站立呼吸动画 (1秒循环) -->
 		<Node name="body">
 			<Curve type="translation_y" interporation="cubic">
-				<Data time="0" value="1.6"></Data>
-				<Data time="30" value="1.4"></Data>
-				<Data time="60" value="1.6"></Data>
+				<Data time="0" value="5.0"></Data>
+				<Data time="45" value="5.1"></Data>
+				<!-- 轻微起伏 -->
+				<Data time="90" value="5.0"></Data>
+				<Data time="135" value="5.05"></Data>
+				<Data time="180" value="5.0"></Data>
 			</Curve>
 		</Node>
 		<Node name="left_shoulder">
 			<Curve type="rotation_z" interporation="cubic">
-				<Data time="0" value="-75"></Data>
-				<Data time="30" value="-60"></Data>
-				<Data time="60" value="-75"></Data>
+				<Data time="0" value="-5"></Data>
+				<Data time="90" value="-7"></Data>
+				<Data time="180" value="-5"></Data>
 			</Curve>
 		</Node>
 		<Node name="right_shoulder">
 			<Curve type="rotation_z" interporation="cubic">
-				<Data time="0" value="75"></Data>
-				<Data time="30" value="60"></Data>
-				<Data time="60" value="75"></Data>
+				<Data time="0" value="5"></Data>
+				<Data time="90" value="7"></Data>
+				<Data time="180" value="5"></Data>
+			</Curve>
+		</Node>
+	</Animation>
+	<Animation name="walking" loop="true">
+		<!-- 行走动画 (1秒循环) -->
+		<Node name="body">
+			<Curve type="translation_y" interporation="cubic">
+				<Data time="0" value="5.0"></Data>
+				<Data time="45" value="4.8"></Data>
+				<!-- 脚步落地时下沉 -->
+				<Data time="90" value="5.0"></Data>
+				<Data time="135" value="4.8"></Data>
+				<Data time="180" value="5.0"></Data>
+			</Curve>
+		</Node>
+		<Node name="left_shoulder">
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="-20"></Data>
+				<Data time="45" value="10"></Data>
+				<!-- 手臂前后摆动 -->
+				<Data time="135" value="-30"></Data>
+				<Data time="180" value="-20"></Data>
+			</Curve>
+		</Node>
+		<Node name="right_shoulder">
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="20"></Data>
+				<Data time="45" value="-10"></Data>
+				<Data time="135" value="30"></Data>
+				<Data time="180" value="20"></Data>
 			</Curve>
 		</Node>
 		<Node name="left_hip">
 			<Curve type="rotation_x" interporation="cubic">
-				<Data time="0" value="10"></Data>
-			</Curve>
-			<Curve type="rotation_z" interporation="cubic">
-				<Data time="0" value="10"></Data>
+				<Data time="0" value="-20"></Data>
+				<Data time="90" value="0"></Data>
+				<!-- 腿部前后摆动 -->
+				<Data time="180" value="20"></Data>
 			</Curve>
 		</Node>
 		<Node name="right_hip">
 			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="20"></Data>
+				<Data time="90" value="0"></Data>
+				<Data time="180" value="-20"></Data>
+			</Curve>
+		</Node>
+		<Node name="left_leg">
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="-10"></Data>
+				<Data time="90" value="0"></Data>
+				<!-- 膝盖弯曲 -->
+				<Data time="180" value="10"></Data>
+			</Curve>
+		</Node>
+		<Node name="right_leg">
+			<Curve type="rotation_x" interporation="cubic">
 				<Data time="0" value="10"></Data>
-			</Curve>
-			<Curve type="rotation_z" interporation="cubic">
-				<Data time="0" value="10"></Data>
-			</Curve>
-		</Node>
-	</Animation>
-	<Animation name="walking">
-		<Node name="body">
-			<Curve type="translation_y" interporation="cubic">
-				<Data time="0" value="1.6"></Data>
-				<Data time="20" value="1.4"></Data>
-				<Data time="40" value="1.6"></Data>
-			</Curve>
-		</Node>
-		<Node name="left_arm">
-			<Curve type="rotation_z" interporation="cubic">
-				<Data time="0" value="-75"></Data>
-			</Curve>
-			<Curve type="rotation_x" interporation="cubic">
-				<Data time="0" value="-30"></Data>
-				<Data time="20" value="30"></Data>
-				<Data time="40" value="-30"></Data>
-			</Curve>
-		</Node>
-		<Node name="right_arm">
-			<Curve type="rotation_z" interporation="cubic">
-				<Data time="0" value="75"></Data>
-			</Curve>
-			<Curve type="rotation_x" interporation="cubic">
-				<Data time="0" value="30"></Data>
-				<Data time="20" value="-30"></Data>
-				<Data time="40" value="30"></Data>
-			</Curve>
-		</Node>
-		<Node name="left_foot">
-			<Curve type="rotation_x" interporation="cubic">
-				<Data time="0" value="30"></Data>
-				<Data time="20" value="-30"></Data>
-				<Data time="40" value="30"></Data>
-			</Curve>
-			<Curve type="rotation_z" interporation="cubic">
-				<Data time="0" value="0"></Data>
-			</Curve>
-		</Node>
-		<Node name="right_foot">
-			<Curve type="rotation_x" interporation="cubic">
-				<Data time="0" value="-30"></Data>
-				<Data time="20" value="30"></Data>
-				<Data time="40" value="-30"></Data>
-			</Curve>
-			<Curve type="rotation_z" interporation="cubic">
-				<Data time="0" value="0"></Data>
+				<Data time="90" value="0"></Data>
+				<Data time="180" value="-10"></Data>
 			</Curve>
 		</Node>
 	</Animation>
 	<Animation name="jumping">
-		<Node name="body">
+		<!-- 跳跃动画 (0.5秒) -->
+		<Node name="root">
 			<Curve type="translation_y" interporation="cubic">
-				<Data time="0" value="1.6"></Data>
-				<!-- 起始位置 -->
-				<Data time="10" value="2.5"></Data>
-				<!-- 跳跃顶点 -->
-				<Data time="20" value="1.7"></Data>
+				<Data time="0" value="0"></Data>
+				<!-- 起跳 -->
+				<Data time="30" value="3.0"></Data>
+				<!-- 顶点 (0.17秒) -->
+				<Data time="60" value="0"></Data>
+				<!-- 落地 (0.33秒) -->
+				<Data time="90" value="0"></Data>
+				<!-- 恢复 -->
+			</Curve>
+		</Node>
+		<Node name="body">
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="0"></Data>
+				<Data time="30" value="-15"></Data>
+				<!-- 空中前倾 -->
+				<Data time="60" value="10"></Data>
 				<!-- 落地缓冲 -->
-				<Data time="30" value="1.6"></Data>
-				<!-- 恢复站立 -->
+				<Data time="90" value="0"></Data>
+				<!-- 恢复 -->
 			</Curve>
 		</Node>
 		<Node name="left_arm">
 			<Curve type="rotation_x" interporation="cubic">
 				<Data time="0" value="0"></Data>
-				<!-- 准备阶段 -->
-				<Data time="5" value="-60"></Data>
-					<!-- 向上挥臂 -->
-				<Data time="15" value="20"></Data>
-					<!-- 下落时伸展 -->
-				<Data time="30" value="0"></Data>
-					<!-- 恢复 -->
+				<Data time="15" value="-70"></Data>
+				<!-- 起跳挥臂 -->
+				<Data time="30" value="-40"></Data>
+				<Data time="60" value="20"></Data>
+				<!-- 落地平衡 -->
+				<Data time="90" value="0"></Data>
 			</Curve>
 		</Node>
 		<Node name="right_arm">
 			<Curve type="rotation_x" interporation="cubic">
 				<Data time="0" value="0"></Data>
-				<Data time="5" value="-60"></Data>
-				<Data time="15" value="20"></Data>
-				<Data time="30" value="0"></Data>
+				<Data time="15" value="-70"></Data>
+				<Data time="30" value="-40"></Data>
+				<Data time="60" value="20"></Data>
+				<Data time="90" value="0"></Data>
 			</Curve>
 		</Node>
-		<Node name="left_foot">
+		<Node name="left_leg">
 			<Curve type="rotation_x" interporation="cubic">
 				<Data time="0" value="0"></Data>
-				<!-- 站立 -->
-				<Data time="5" value="-50"></Data>
-				<!-- 起跳弯曲 -->
-				<Data time="25" value="30"></Data>
-					<!-- 落地缓冲 -->
-				<Data time="30" value="0"></Data>
+				<Data time="15" value="80"></Data>
+				<!-- 起跳蹬腿 -->
+				<Data time="30" value="40"></Data>
+				<!-- 空中收腿 -->
+				<Data time="60" value="-30"></Data>
+				<!-- 落地弯曲 -->
+				<Data time="90" value="0"></Data>
 				<!-- 恢复 -->
 			</Curve>
 		</Node>
-		<Node name="right_foot">
+		<Node name="right_leg">
 			<Curve type="rotation_x" interporation="cubic">
 				<Data time="0" value="0"></Data>
-				<Data time="5" value="-50"></Data>
-				<Data time="25" value="30"></Data>
-				<Data time="30" value="0"></Data>
+				<Data time="15" value="80"></Data>
+				<Data time="30" value="40"></Data>
+				<Data time="60" value="-30"></Data>
+				<Data time="90" value="0"></Data>
 			</Curve>
 		</Node>
 	</Animation>

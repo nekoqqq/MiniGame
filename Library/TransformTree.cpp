@@ -7,9 +7,7 @@
 #include "include/Library/AnimationNode.h"
 #include <stack>
 #include <cassert>
-
 using std::stack;
-
 TransformTree::TransformTree(const Element* e, Resource* resource) {
 	assert(e->getTagName() == "TransformTree");
 	assert(e->getChildren().size() > 0); // 支持动画里面有多个node的存在

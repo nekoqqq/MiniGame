@@ -296,7 +296,6 @@ namespace GameLib {
 			++gCounter;
 			// 设置光源,模拟太阳东升西落
 			gLight = new Light(gLightDir, gLightColor, gAmbient);
-
 		}
 		// 更新
 		// 注意，移动视点是在世界坐标系中移动，需要先算出世界坐标再减去长度，比如世界坐标1对应1m
@@ -309,10 +308,8 @@ namespace GameLib {
 		gFrontEnd->update(dynamic_cast<Mecha*>(gPlayer), dynamic_cast<Mecha*>(gEnemy), dynamic_cast<Stage*>(gStage), gCamera);
 		// 光处理
 		double theta = gCounter * PI / 180.0;
-		double t = 1.0*gCounter / FRAMES/6;
-		//gLight->updateLight({cos(t)*cos(t),cos(t)*sin(t)*sin(t),sin(t)});
-		gLight->updateLight({ 100,1000,-1000 });
-
+		double t = 1.0*gCounter / FRAMES/30;
+		gLight->updateLight({cos(t)*cos(t),cos(t)*sin(t),sin(t)});
 		gStage->draw(pv, gLight);
 		gWall->draw(pv, gLight);
 		gAxis->draw(pv, gLight);

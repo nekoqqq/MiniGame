@@ -27,7 +27,6 @@ Mecha::Mecha(Type type, const Vector3& pos, Painter* painter, CollisionModel::Ty
 	enemy_ = nullptr;
 	frame_input_ = new FrameInput;
 	transform_tree_ = gResource->createTransformTree("player");
-	//transform_tree_->setAnimation(gResource->getAnimation("player"));
 }
 
 // 下面的两个函数不能加上inline关键字,因为是public函数，内联函数的定义必须放在
@@ -246,6 +245,14 @@ void Mecha::stateTransition()
 			state_ = MOVE;
 			transform_tree_->setAnimation(gResource->getAnimation("walking"));
 		}
+		if (frame_input_->is_LEFT_ROTATE) { // 注意这里要同步更新rotation_y,不然后续不更新，按空格就没用了
+			rotateY(TURN_DEGREE);
+			rotation_y_ -= TURN_DEGREE;
+		}
+		else if (frame_input_->is_RIGHT_ROTATE) {
+			rotateY(-TURN_DEGREE);
+			rotation_y_ += TURN_DEGREE;
+		}
 		break;
 	case MOVE:
 		if (frame_input_->is_JUMP) {
@@ -313,7 +320,9 @@ void Mecha::updateVelocity(const Matrix44& vr)
 		move.x = 1.0;
 	}
 	// 仅保留水平分量 |v|cos t * a/|a|  = v.dot(a) / |a|^2 *a
-	Vector3 viewMove = vr.vecMul(move);
+	// 剔除掉相机的z分量
+	Vector3 viewMove = vr.vecMul(move); 
+
 	double cur_speed = velocity_.norm();
 	if (viewMove.x == 0 && viewMove.z == 0 && cur_speed > FRAME_SPEED_ACC || velocity_.dot(viewMove) < 0) { // 修复反向的时候速度还是不减少的问题
 		velocity_ = velocity_.normalize() * (cur_speed - FRAME_SPEED_ACC);
@@ -363,10 +372,6 @@ void Mecha::AI()
 	if (enemy->frame_input_->is_JUMP) // 玩家跳跃则攻击
 	{
 		frame_input_->is_FIRE = true;
-	}
-	if (enemy->frame_input_->is_FIRE) // 玩家攻击则跳跃
-	{
-		frame_input_->is_JUMP = true;
 	}
 	int up = rand() % 2;
 	int left = rand() % 2;
