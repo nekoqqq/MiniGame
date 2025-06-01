@@ -69,9 +69,7 @@ public:
 		test_collision_models.clear();
 	}
 	virtual void draw(const Matrix44 &pv, const Light* light)=0 {
-		Matrix44 model_transform = getModelTransform();
-		Matrix44 pvm = pv.matMul(model_transform);
-		painter_->draw(pvm, getModelTransform(), light);
+		painter_->draw(pv, getModelTransform(), light);
 	}
 	virtual void update(const Matrix44& vr) = 0;
 	void initCollisionModel(const Vector3&cuboid_origin,const Vector3 & half,const Vector3& sphere_origin,double r) {
