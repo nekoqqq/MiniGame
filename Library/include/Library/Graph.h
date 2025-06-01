@@ -353,6 +353,14 @@ public:
 	void setRotation(const Vector3& v) {
 		rotation_ = v;
 	}
+	void setScale(const Vector3& v) {
+		if (v.x == 0 && v.y == 0 && v.z == 0) {
+			// 不能设置为0
+			scale_ = { 1,1,1 };
+			return;
+		}
+		scale_ = v;
+	}
 	TransformNode* addChild(TransformNode* child) {
 		children_.push_back(child);
 		return this;

@@ -3,6 +3,7 @@
 
 #include "Model.h"
 #include "Missle.h"
+class TransformTree;
 struct FrameInput
 {
 	FrameInput():is_UP(false),is_LEFT(false),is_DOWN(false),is_RIGHT(false),is_JUMP(false),is_FIRE(false),is_LEFT_ROTATE(false),is_RIGHT_ROTATE(false){}
@@ -56,6 +57,7 @@ public:
 	{
 		SAFE_DELETE(frame_input_);
 	}
+	void setTransformTree(TransformTree* tree);
 	void update(const Matrix44& vr)override;
 	void addMissle(Model& missle);
 	void addEnemy(Model* enemy);
@@ -76,6 +78,7 @@ private:
 	bool lock_on_; // 是否锁定了敌人
 	Model* enemy_; // 敌人
 	FrameInput* frame_input_; // 当前帧的输入
+	TransformTree* transform_tree_;
 protected:
 	void printDebugInfo()const ;
 	void collisionTest();

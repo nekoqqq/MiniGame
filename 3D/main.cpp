@@ -62,6 +62,7 @@ TransformTree* gSolarSystem;
 TransformNode* gTSun;
 TransformNode* gTEarth;
 TransformNode* gTMoon;
+TransformTree* gPlayerTransformTree;
 namespace GameLib {
 	bool firstFrame = true;
 	void deleteAll() {
@@ -261,7 +262,9 @@ namespace GameLib {
 			setFrameRate(FRAMES);
 			firstFrame = false;
 			gResource = new Resource("model.xml");
+			gPlayerTransformTree = gResource->createTransformTree("player");
 			gPlayer = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");
+			dynamic_cast<Mecha*>(gPlayer)->setTransformTree(gPlayerTransformTree);
 			for (int i = 0; i < MAX_MISSLES; i++) {
 				Model * missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "missle");
 				dynamic_cast<Mecha*>(gPlayer)->addMissle(*missle);

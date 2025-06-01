@@ -243,4 +243,21 @@
 			</Curve>
 		</Node>
 	</Animation>
+
+	<TransformTree name="player">
+		<Node name="body" translation="0.0,10.0,0.0" painter="player">
+			<Node name="left_shoulder" translation="-5,0.0,0.0">
+				<Node name="left_arm" translation="-1.0,3.0,0.0" scale="1.0,0.2,1.0" painter="player"></Node>
+			</Node>
+			<Node name="right_shoulder" translation="5,0.0,0.0">
+				<Node name="right_arm" translation="1.0,3.0,0.0" scale="1.0,0.2,1.0" painter="player"></Node>
+			</Node>
+			<Node name="left_hip" translation="-5,0.0,0.0">
+				<Node name="left_foot" translation="0.0,-5,0.0" scale="0.2,1.0,1.0" painter="player"></Node>
+			</Node>
+			<Node name="right_hip" translation="5,0.0,0.0">
+				<Node name="right_foot" translation="0.0,-5,0.0" scale="0.2,1.0,1.0" painter="player"></Node>
+			</Node>
+		</Node>
+	</TransformTree>
 </root>

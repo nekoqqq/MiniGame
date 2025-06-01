@@ -40,7 +40,9 @@ TransformNode* TransformTree::buildTree(const Element* e, Resource* resource) {
 	string painter = e->getAttr("painter");
 	Vector3 translation = Element::converToVector(e->getAttr("translation"));
 	Vector3 rotation = Element::converToVector(e->getAttr("rotation"));
+	Vector3 scale = Element::converToVector(e->getAttr("scale"));
 	node->setName(name);
+	node->setScale(scale);
 	node->setTranslation(translation);
 	node->setRotation(rotation);
 	node->setPainter(resource->getPainter(painter));

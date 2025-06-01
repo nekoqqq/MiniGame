@@ -3,6 +3,7 @@
 #include <GameLib/Input/Manager.h>
 #include "include/Library/Model.h"
 #include "include/Library/Missle.h"
+#include "include/Library/TransformTree.h"
 // 移动速度
 const double MAX_SPEED = 4.0;
 const double ACC_DURATION = 2.0; // 单位秒
@@ -25,6 +26,10 @@ Mecha::Mecha(Type type, const Vector3& pos, Painter* painter, CollisionModel::Ty
 	frame_input_ = new FrameInput;
 }
 
+void Mecha::setTransformTree(TransformTree* tree)
+{
+	transform_tree_ = tree;
+}
 // 下面的两个函数不能加上inline关键字,因为是public函数，内联函数的定义必须放在
 void Mecha::update(const Matrix44& vr)
 {
@@ -44,6 +49,8 @@ void Mecha::update(const Matrix44& vr)
 	setEnemyTheta();
 	lockOn();
 	printDebugInfo();
+	if(transform_tree_)
+		transform_tree_->update();
 }
 void Mecha::addMissle(Model& missle)
 {
@@ -55,7 +62,8 @@ void Mecha::addEnemy(Model* enemy)
 }
 void Mecha::draw(const Matrix44& pv, const Light* light)
 {
-	Model::draw(pv, light);
+	if (transform_tree_)
+		transform_tree_->draw(pv, getModelTransform(), const_cast<Light*>(light));
 	for (int i = 0; i < missles_.size(); i++) {
 		missles_[i].draw(pv, light);
 	}
