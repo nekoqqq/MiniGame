@@ -12,7 +12,7 @@ using std::stack;
 
 TransformTree::TransformTree(const Element* e, Resource* resource) {
 	assert(e->getTagName() == "TransformTree");
-	assert(e->getChildren().size() == 1);
+	assert(e->getChildren().size() > 0); // 支持动画里面有多个node的存在
 	root_ = buildTree(e, resource);
 	this->name = e->getAttr("name");
 	GameLib::cout << "create transform tree: " << name.c_str() << GameLib::endl;

@@ -110,6 +110,11 @@
 	</VertexBuffer>
 
 
+	<VertexBuffer name="unit_sphere">
+		
+		
+	</VertexBuffer>
+	
 	<IndexBuffer name="player">
 		<!-- +Z面 -->
 		<Triangle indices="0,1,2"></Triangle>
@@ -245,12 +250,13 @@
 	</Animation>
 
 	<TransformTree name="player">
+		<Node name="head" translation="0.0,10.0,0.0" scale="0.3,0.5,0.2" painter="player"></Node>
 		<Node name="body" translation="0.0,10.0,0.0" painter="player">
-			<Node name="left_shoulder" translation="-5,0.0,0.0">
-				<Node name="left_arm" translation="-1.0,3.0,0.0" scale="1.0,0.2,1.0" painter="player"></Node>
+			<Node name="left_shoulder" translation="-10,0.0,0.0">
+				<Node name="left_arm" translation="-1.0,0.0,0.0" scale="0.1,0.3,0.5" painter="player"></Node>
 			</Node>
-			<Node name="right_shoulder" translation="5,0.0,0.0">
-				<Node name="right_arm" translation="1.0,3.0,0.0" scale="1.0,0.2,1.0" painter="player"></Node>
+			<Node name="right_shoulder" translation="10,0.0,0.0">
+				<Node name="right_arm" translation="1.0,3.0,0.0" scale="0.1,0.3,0.5" painter="player"></Node>
 			</Node>
 			<Node name="left_hip" translation="-5,0.0,0.0">
 				<Node name="left_foot" translation="0.0,-5,0.0" scale="0.2,1.0,1.0" painter="player"></Node>
@@ -260,4 +266,147 @@
 			</Node>
 		</Node>
 	</TransformTree>
+
+	<Animation name="standing">
+		<Node name="body">
+			<Curve type="translation_y" interporation="cubic">
+				<Data time="0" value="1.6"></Data>
+				<Data time="30" value="1.4"></Data>
+				<Data time="60" value="1.6"></Data>
+			</Curve>
+		</Node>
+		<Node name="left_shoulder">
+			<Curve type="rotation_z" interporation="cubic">
+				<Data time="0" value="-75"></Data>
+				<Data time="30" value="-60"></Data>
+				<Data time="60" value="-75"></Data>
+			</Curve>
+		</Node>
+		<Node name="right_shoulder">
+			<Curve type="rotation_z" interporation="cubic">
+				<Data time="0" value="75"></Data>
+				<Data time="30" value="60"></Data>
+				<Data time="60" value="75"></Data>
+			</Curve>
+		</Node>
+		<Node name="left_hip">
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="10"></Data>
+			</Curve>
+			<Curve type="rotation_z" interporation="cubic">
+				<Data time="0" value="10"></Data>
+			</Curve>
+		</Node>
+		<Node name="right_hip">
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="10"></Data>
+			</Curve>
+			<Curve type="rotation_z" interporation="cubic">
+				<Data time="0" value="10"></Data>
+			</Curve>
+		</Node>
+	</Animation>
+	<Animation name="walking">
+		<Node name="body">
+			<Curve type="translation_y" interporation="cubic">
+				<Data time="0" value="1.6"></Data>
+				<Data time="20" value="1.4"></Data>
+				<Data time="40" value="1.6"></Data>
+			</Curve>
+		</Node>
+		<Node name="left_arm">
+			<Curve type="rotation_z" interporation="cubic">
+				<Data time="0" value="-75"></Data>
+			</Curve>
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="-30"></Data>
+				<Data time="20" value="30"></Data>
+				<Data time="40" value="-30"></Data>
+			</Curve>
+		</Node>
+		<Node name="right_arm">
+			<Curve type="rotation_z" interporation="cubic">
+				<Data time="0" value="75"></Data>
+			</Curve>
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="30"></Data>
+				<Data time="20" value="-30"></Data>
+				<Data time="40" value="30"></Data>
+			</Curve>
+		</Node>
+		<Node name="left_foot">
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="30"></Data>
+				<Data time="20" value="-30"></Data>
+				<Data time="40" value="30"></Data>
+			</Curve>
+			<Curve type="rotation_z" interporation="cubic">
+				<Data time="0" value="0"></Data>
+			</Curve>
+		</Node>
+		<Node name="right_foot">
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="-30"></Data>
+				<Data time="20" value="30"></Data>
+				<Data time="40" value="-30"></Data>
+			</Curve>
+			<Curve type="rotation_z" interporation="cubic">
+				<Data time="0" value="0"></Data>
+			</Curve>
+		</Node>
+	</Animation>
+	<Animation name="jumping">
+		<Node name="body">
+			<Curve type="translation_y" interporation="cubic">
+				<Data time="0" value="1.6"></Data>
+				<!-- 起始位置 -->
+				<Data time="10" value="2.5"></Data>
+				<!-- 跳跃顶点 -->
+				<Data time="20" value="1.7"></Data>
+				<!-- 落地缓冲 -->
+				<Data time="30" value="1.6"></Data>
+				<!-- 恢复站立 -->
+			</Curve>
+		</Node>
+		<Node name="left_arm">
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="0"></Data>
+				<!-- 准备阶段 -->
+				<Data time="5" value="-60"></Data>
+					<!-- 向上挥臂 -->
+				<Data time="15" value="20"></Data>
+					<!-- 下落时伸展 -->
+				<Data time="30" value="0"></Data>
+					<!-- 恢复 -->
+			</Curve>
+		</Node>
+		<Node name="right_arm">
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="0"></Data>
+				<Data time="5" value="-60"></Data>
+				<Data time="15" value="20"></Data>
+				<Data time="30" value="0"></Data>
+			</Curve>
+		</Node>
+		<Node name="left_foot">
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="0"></Data>
+				<!-- 站立 -->
+				<Data time="5" value="-50"></Data>
+				<!-- 起跳弯曲 -->
+				<Data time="25" value="30"></Data>
+					<!-- 落地缓冲 -->
+				<Data time="30" value="0"></Data>
+				<!-- 恢复 -->
+			</Curve>
+		</Node>
+		<Node name="right_foot">
+			<Curve type="rotation_x" interporation="cubic">
+				<Data time="0" value="0"></Data>
+				<Data time="5" value="-50"></Data>
+				<Data time="25" value="30"></Data>
+				<Data time="30" value="0"></Data>
+			</Curve>
+		</Node>
+	</Animation>
 </root>

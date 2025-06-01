@@ -4,6 +4,7 @@
 #include "Model.h"
 #include "Missle.h"
 class TransformTree;
+class Resource;
 struct FrameInput
 {
 	FrameInput():is_UP(false),is_LEFT(false),is_DOWN(false),is_RIGHT(false),is_JUMP(false),is_FIRE(false),is_LEFT_ROTATE(false),is_RIGHT_ROTATE(false){}
@@ -30,6 +31,9 @@ struct FrameInput
 		is_LEFT_ROTATE = k.isOn('i');
 		is_RIGHT_ROTATE = k.isOn('u');
 	}
+	bool isMove()const {
+		return is_UP || is_LEFT || is_DOWN || is_RIGHT || is_JUMP;
+	}
 	bool is_UP;
 	bool is_LEFT;
 	bool is_DOWN;
@@ -43,6 +47,7 @@ class Mecha :public Model {
 public:
 	friend class MechaInfo; //TODO 这里最好不要用友元类实现
 	enum State {
+		STANDING, // 静止
 		MOVE,
 		JUMP_UP,
 		JUMP_STAY,

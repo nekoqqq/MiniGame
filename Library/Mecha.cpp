@@ -4,10 +4,12 @@
 #include "include/Library/Model.h"
 #include "include/Library/Missle.h"
 #include "include/Library/TransformTree.h"
+#include "include/Library/Resource.h"
 // 移动速度
 const double MAX_SPEED = 4.0;
 const double ACC_DURATION = 2.0; // 单位秒
 double FRAME_SPEED_ACC = MAX_SPEED / (ACC_DURATION * FRAMES);
+extern Resource* gResource;
 
 Mecha::Mecha(Type type, const Vector3& pos, Painter* painter, CollisionModel::Type collision_type, const Matrix44& m):Model(type, pos, painter, collision_type, m)
 {
@@ -24,12 +26,10 @@ Mecha::Mecha(Type type, const Vector3& pos, Painter* painter, CollisionModel::Ty
 	lock_on_ = false;
 	enemy_ = nullptr;
 	frame_input_ = new FrameInput;
+	transform_tree_ = gResource->createTransformTree("player");
+	//transform_tree_->setAnimation(gResource->getAnimation("player"));
 }
 
-void Mecha::setTransformTree(TransformTree* tree)
-{
-	transform_tree_ = tree;
-}
 // 下面的两个函数不能加上inline关键字,因为是public函数，内联函数的定义必须放在
 void Mecha::update(const Matrix44& vr)
 {
@@ -49,8 +49,7 @@ void Mecha::update(const Matrix44& vr)
 	setEnemyTheta();
 	lockOn();
 	printDebugInfo();
-	if(transform_tree_)
-		transform_tree_->update();
+	transform_tree_->update();
 }
 void Mecha::addMissle(Model& missle)
 {
@@ -62,8 +61,7 @@ void Mecha::addEnemy(Model* enemy)
 }
 void Mecha::draw(const Matrix44& pv, const Light* light)
 {
-	if (transform_tree_)
-		transform_tree_->draw(pv, getModelTransform(), const_cast<Light*>(light));
+	transform_tree_->draw(pv, getModelTransform(), const_cast<Light*>(light));
 	for (int i = 0; i < missles_.size(); i++) {
 		missles_[i].draw(pv, light);
 	}
@@ -243,6 +241,12 @@ void Mecha::stateTransition()
 	velocity_.y = -1.0; // 重力作用
 	switch (state_)
 	{
+	case STANDING:
+		if (frame_input_->isMove()) {
+			state_ = MOVE;
+			transform_tree_->setAnimation(gResource->getAnimation("walking"));
+		}
+		break;
 	case MOVE:
 		if (frame_input_->is_JUMP) {
 			velocity_.y = 1.0;
@@ -250,12 +254,16 @@ void Mecha::stateTransition()
 			jump_count_ = 1;
 			setRotationSpeed();
 			incrRotationSpeed();
+			transform_tree_->setAnimation(gResource->getAnimation("jumping"));
+		}
+		if (!frame_input_->isMove()) {
+			state_ = STANDING;
+			transform_tree_->setAnimation(gResource->getAnimation("standing"));
 		}
 		if (frame_input_->is_LEFT_ROTATE) { // 注意这里要同步更新rotation_y,不然后续不更新，按空格就没用了
 			rotateY(TURN_DEGREE);
 			rotation_y_ -= TURN_DEGREE;
 		}
-
 		else if (frame_input_->is_RIGHT_ROTATE) {
 			rotateY(-TURN_DEGREE);
 			rotation_y_ += TURN_DEGREE;
@@ -283,7 +291,8 @@ void Mecha::stateTransition()
 	case JUMP_FALL:
 		incrRotationSpeed();
 		if (jump_count_++ == JUMP_UP_DURATION + SKY_STAY + FALL_DURATION) {
-			state_ = MOVE;
+			state_ = STANDING;
+			transform_tree_->setAnimation(gResource->getAnimation("standing"));
 		}
 		break;
 	}
