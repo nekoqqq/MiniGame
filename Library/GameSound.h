@@ -9,7 +9,6 @@
 #include <iostream>
 using namespace std;
 using namespace GameLib::Sound;
-using namespace GameLib;
 
 class GameSound {
 public:

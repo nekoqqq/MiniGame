@@ -46,7 +46,7 @@ const int MAX_LOCK_ON = 10; // 锁定人物的角度范围
 const int MIN_LOCK_OFF = 20; // 人物跳出范围的角度,也就是说锁定后在0-60的范围内都算作锁定
 
 inline Vector3 getCuboidHalf() {
-	return { 10.0,5.0,10.0 };
+	return { 1.0,1.0,1.0 };
 }
 class Model {
 public:

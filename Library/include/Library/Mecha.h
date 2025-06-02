@@ -7,7 +7,7 @@ class TransformTree;
 class Resource;
 struct FrameInput
 {
-	FrameInput():is_UP(false),is_LEFT(false),is_DOWN(false),is_RIGHT(false),is_JUMP(false),is_FIRE(false),is_LEFT_ROTATE(false),is_RIGHT_ROTATE(false){}
+	FrameInput():is_UP(false),is_LEFT(false),is_DOWN(false),is_RIGHT(false),is_JUMP(false),is_FIRE(false),is_LEFT_ROTATE(false),is_RIGHT_ROTATE(false),is_LOCK(false){}
 	void reset()
 	{
 		is_UP = false;
@@ -18,10 +18,11 @@ struct FrameInput
 		is_FIRE = false;
 		is_LEFT_ROTATE = false;
 		is_RIGHT_ROTATE = false;
+		is_LOCK = false;
 	}
 	void update()
 	{
-		Keyboard k = Manager::instance().keyboard();
+		Keyboard k = GameLib::Input::Manager::instance().keyboard();
 		is_UP = k.isOn('w');
 		is_LEFT = k.isOn('a');
 		is_DOWN = k.isOn('s');

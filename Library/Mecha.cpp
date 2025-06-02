@@ -28,7 +28,10 @@ Mecha::Mecha(Type type, const Vector3& pos, Painter* painter, CollisionModel::Ty
 	lock_on_ = false;
 	enemy_ = nullptr;
 	frame_input_ = new FrameInput;
-	transform_tree_ = gResource->createTransformTree("player");
+	if(type==PLAYER)
+		transform_tree_ = gResource->createTransformTree("player");
+	else if(type==ENEMY)
+		transform_tree_ = gResource->createTransformTree("enemy");
 	//GameSound::instance().playBGM(GameSound::MECHA_THEME);
 
 }
@@ -397,5 +400,5 @@ void Mecha::AI()
 	frame_input_->is_LEFT = left;
 	frame_input_->is_RIGHT= right;
 	frame_input_->is_DOWN = down;
-	frame_input_->is_FIRE = rand() % 1000==0;
+	frame_input_->is_FIRE = rand() % 100==0;
 }

@@ -59,7 +59,6 @@ TransformTree* gSolarSystem;
 TransformNode* gTSun;
 TransformNode* gTEarth;
 TransformNode* gTMoon;
-AnimationTree* gPlayerAnimation;
 namespace GameLib {
 	bool firstFrame = true;
 	void deleteAll() {
@@ -256,13 +255,12 @@ namespace GameLib {
 			setFrameRate(FRAMES);
 			firstFrame = false;
 			gResource = new Resource("model.xml");
-			gPlayerAnimation = gResource->getAnimation("player");
 			gPlayer = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");
 			for (int i = 0; i < MAX_MISSLES; i++) {
 				Model * missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "player_missle");
 				dynamic_cast<Mecha*>(gPlayer)->addMissle(*missle);
 			}
-			gEnemy = gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy"));
+			gEnemy = gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, "enemy");
 			for (int i= 0;i<MAX_MISSLES;i++)
 			{
 				Model* missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "enemy_missle");
