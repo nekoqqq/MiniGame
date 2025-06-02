@@ -28,7 +28,6 @@ Mecha::Mecha(Type type, const Vector3& pos, Painter* painter, CollisionModel::Ty
 	frame_input_ = new FrameInput;
 	transform_tree_ = gResource->createTransformTree("player");
 }
-
 // 下面的两个函数不能加上inline关键字,因为是public函数，内联函数的定义必须放在
 void Mecha::update(const Matrix44& vr)
 {
@@ -253,6 +252,10 @@ void Mecha::stateTransition()
 			rotateY(-TURN_DEGREE);
 			rotation_y_ += TURN_DEGREE;
 		}
+		else if (frame_input_->is_LOCK) {
+			rotateY(enemy_theta_ + rotation_y_);
+			rotation_y_ -= enemy_theta_ + rotation_y_;
+		}
 		break;
 	case MOVE:
 		if (frame_input_->is_JUMP) {
@@ -347,7 +350,7 @@ void Mecha::lockOn()
 
 	double theta = acos(enemy_dir.dot(z_dir) / enemy_dir.norm()) * 180.0 / PI;
 	using std::to_string;
-	GameLib::Framework::instance().drawDebugString(1, 8, to_string(theta).c_str());
+	GameLib::Framework::instance().drawDebugString(1, 8, to_string((int)theta).c_str());
 	if (theta > MIN_LOCK_OFF && lock_on_)
 		lock_on_ = false;
 	else if (theta <= MAX_LOCK_ON && !lock_on_)

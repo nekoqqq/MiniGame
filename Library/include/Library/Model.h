@@ -23,11 +23,11 @@ namespace GameLib {
 extern int gCounter;
 extern const int FRAMES;
 extern const double PI;
-const int JUMP_UP_DURATION = 1*FRAMES;
-const int SKY_STAY = 0.5*FRAMES; // 滞空时间
-const int FALL_DURATION = 1 * FRAMES;
+const int JUMP_UP_DURATION = 0.4*FRAMES;
+const int SKY_STAY = 0.2*FRAMES; // 滞空时间
+const int FALL_DURATION = 0.4 * FRAMES;
 
-const int MAX_MISSLES = 100;
+const int MAX_MISSLES = 10;
 const int MISSLE_TTL = 5*FRAMES; // 5秒
 
 // 转身
@@ -42,8 +42,8 @@ const int MISSLE_ENGEY_COST = 25; // 每个导弹消耗的能量值
 
 // 人物
 const int ENEGY_RECOVER = 180/ FRAMES; // 每秒恢复的能量
-const int MAX_LOCK_ON = 30; // 锁定人物的角度范围
-const int MIN_LOCK_OFF = 40; // 人物跳出范围的角度,也就是说锁定后在0-60的范围内都算作锁定
+const int MAX_LOCK_ON = 10; // 锁定人物的角度范围
+const int MIN_LOCK_OFF = 20; // 人物跳出范围的角度,也就是说锁定后在0-60的范围内都算作锁定
 
 
 

@@ -6,23 +6,19 @@ bool Missle::isShoot() const
 {
 	return 0 < ttl_ && ttl_ < MISSLE_TTL; // 5秒
 }
-
 void Missle::draw(const Matrix44& pv, const Light* light)
 {
 	if (isShoot()) {
 		Model::draw(pv, light);
 	}
 }
-
 void Missle::update(const Matrix44& vr){}
-
 void Missle::reset(const Vector3& pos, const Vector3& enemy_pos)
 {
 	setPos(pos);
 	rotation.x = 45.0;
 	ttl_ = 1;
 }
-
 void Missle::update( Model*enemy)
 {
 	if (!isShoot())
@@ -39,7 +35,6 @@ void Missle::update( Model*enemy)
 	if (++ttl_ >= MISSLE_TTL) // 子弹消失
 		ttl_ = 0;
 }
-
 void Missle::updateVelocity(const Vector3&dir, double rotation_speed)
 {
 	// 旧的代码

@@ -34,7 +34,7 @@ Vector3 gEyeUp(0., 1., 0.); // 一般是向上
 const double fov_y = PI / 3;
 const double aspec_ratio = 1.0 * WIDTH / HEIGHT;
 const double near = 1.0;
-const double far = 1000.0;
+const double far = 10000.0;
 int gCounter = 0;
 // 资源类
 Resource* gResource;
@@ -300,7 +300,7 @@ namespace GameLib {
 		// 光处理
 		double theta = gCounter * PI / 180.0;
 		double t = 1.0*gCounter / FRAMES/30;
-		gLight->updateLight({cos(t)*cos(t),cos(t)*sin(t),sin(t)});
+		gLight->updateLight({1,1,-1});
 		gStage->draw(pv, gLight);
 		gWall->draw(pv, gLight);
 		gAxis->draw(pv, gLight);

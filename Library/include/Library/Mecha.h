@@ -30,6 +30,7 @@ struct FrameInput
 		is_FIRE = k.isTriggered('j');
 		is_LEFT_ROTATE = k.isOn('i');
 		is_RIGHT_ROTATE = k.isOn('u');
+		is_LOCK = k.isOn('c');
 	}
 	bool isMove()const {
 		return is_UP || is_LEFT || is_DOWN || is_RIGHT || is_JUMP;
@@ -42,6 +43,7 @@ struct FrameInput
 	bool is_FIRE;
 	bool is_LEFT_ROTATE;
 	bool is_RIGHT_ROTATE;
+	bool is_LOCK;
 };
 class Mecha :public Model {
 public:

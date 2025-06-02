@@ -83,15 +83,10 @@
 		<Vertex position="-200, 0, 200" uv="0, 1"></Vertex>
 		<Vertex position="-200, 150, 200" uv="1, 0"></Vertex>
 		<Vertex position="-200, 150, -200" uv="1, 1"></Vertex>
-
 		<Vertex position="-100, 0, -100" uv="0, 0"></Vertex>
 		<Vertex position="-100, 0, 300" uv="0, 1"></Vertex>
 		<Vertex position="-100, 150, 300" uv="1, 0"></Vertex>
 		<Vertex position="-100, 150, -100" uv="1, 1"></Vertex>
-
-
-
-
 	</VertexBuffer>
 	<VertexBuffer name="missle">
 		<Vertex position="0, 0, 0" uv="0.5,0.5" color="0xFFFF3300"></Vertex>
@@ -103,8 +98,6 @@
 		<Vertex position="-0.8, -0.8, -30" uv="0.2,0.8" color="0xFFFF5500"></Vertex>
 		<Vertex position="0.8, -0.8, -30" uv="0.8,0.8" color="0xFFFF5500"></Vertex>
 	</VertexBuffer>
-
-
 	<VertexBuffer name="unit_sphere">
 		
 		
@@ -161,9 +154,6 @@
 		<!-- -z面 -->
 		<Triangle indices="4, 5, 6"></Triangle>
 		<Triangle indices="7, 6, 4"></Triangle>
-
-
-
 	</IndexBuffer>
 	<IndexBuffer name="missle">
 		<Triangle indices="0,1,3"></Triangle>
@@ -180,23 +170,10 @@
 	<Texture name="player" file_name="player.tga"></Texture>
 	<Texture name="stage" file_name="stage.tga"></Texture>
 
-
 	<Painter name="player" vertexBuffer="player" indexBuffer="player" texture="" blend="opaque" origin="0.0,0.1,0.0"></Painter>
 	<Painter name="enemy" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="20.0,50.0,30.0"></Painter>
-	<Painter name="enemy_1" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,30.0"></Painter>
-	<Painter name="enemy_2" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,20.0"></Painter>
-	<Painter name="enemy_3" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,30.0"></Painter>
-	<Painter name="enemy_4" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,40.0"></Painter>
-	<Painter name="enemy_5" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,50.0"></Painter>
-	<Painter name="enemy_6" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,60.0"></Painter>
-	<Painter name="enemy_7" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,70.0"></Painter>
-	<Painter name="enemy_8" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,80.0"></Painter>
-	<Painter name="enemy_9" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,90.0"></Painter>
-	<Painter name="enemy_10" vertexBuffer="player" indexBuffer="player" blend="opaque" origin="0.0,0.0,100.0"></Painter>
-
 	<Painter name="stage" vertexBuffer="stage" indexBuffer="stage" texture="stage" blend="opaque"></Painter>
 	<Painter name="wall" vertexBuffer="wall" indexBuffer="wall" texture="stage" blend="opaque"></Painter>
-
 	<Painter name="axis" vertexBuffer="axis" indexBuffer="axis" texture="axis" blend="opaque"></Painter>
 	<Painter name="missle" vertexBuffer="missle" indexBuffer="missle" texture="" blend="opaque"></Painter>
 
@@ -210,7 +187,6 @@
 			</Node>
 		</Node>
 	</TransformTree>
-	
 	<Animation name="SolarSystem">
 		<Node name="SunRotation">
 			<Curve type="rotation_y" interpolation="cubic">
@@ -237,33 +213,32 @@
 			</Curve>
 		</Node>
 	</Animation>
-
 	<TransformTree name="player">
-	<Node name="root" translation="0,0,0">
-		<Node name="body" translation="0.0,0.0,0.0" scale="1.0,1.0,0.5" painter="player">
-			<Node name="head" translation="0.0,2.0,0.0" scale="0.6,0.6,0.6" painter="player"></Node>
+		<Node name="root" translation="0,0,0">
+			<Node name="body" translation="0.0,0.0,0.0" scale="1.0,1.0,0.5" painter="player">
+				<Node name="head" translation="0.0,2.0,0.0" scale="0.6,0.6,0.6" painter="player"></Node>
 
-			<Node name="left_shoulder" translation="-1.5,4.0,0.0">
-				<Node name="left_arm" translation="0.0,-3.5,0.0" scale="0.3,0.8,0.3" painter="player"></Node>
-			</Node>
-
-			<Node name="right_shoulder" translation="1.5,4.0,0.0">
-				<Node name="right_arm" translation="0.0,-3.5,0.0" scale="0.3,0.8,0.3" painter="player"></Node>
-			</Node>
-
-			<Node name="left_hip" translation="-0.8,0.0,0.0">
-				<Node name="left_leg" translation="0.0,-2.1,0.0" scale="0.3,1.0,0.3" painter="player">
-					<Node name="left_foot" translation="0.0,-0.5,0.5" scale="0.4,0.2,1.0" painter="player"></Node>
+				<Node name="left_shoulder" translation="-1.5,4.0,0.0">
+					<Node name="left_arm" translation="0.0,-3.5,0.0" scale="0.3,0.8,0.3" painter="player"></Node>
 				</Node>
-			</Node>
 
-			<Node name="right_hip" translation="0.8,0.0,0.0">
-				<Node name="right_leg" translation="0.0,-2.1,0.0" scale="0.3,1.0,0.3" painter="player">
-					<Node name="right_foot" translation="0.0,-0.5,0.5" scale="0.4,0.2,1.0" painter="player"></Node>
+				<Node name="right_shoulder" translation="1.5,4.0,0.0">
+					<Node name="right_arm" translation="0.0,-3.5,0.0" scale="0.3,0.8,0.3" painter="player"></Node>
+				</Node>
+
+				<Node name="left_hip" translation="-0.8,0.0,0.0">
+					<Node name="left_leg" translation="0.0,-2.1,0.0" scale="0.3,1.0,0.3" painter="player">
+						<Node name="left_foot" translation="0.0,-0.5,0.5" scale="0.4,0.2,1.0" painter="player"></Node>
+					</Node>
+				</Node>
+
+				<Node name="right_hip" translation="0.8,0.0,0.0">
+					<Node name="right_leg" translation="0.0,-2.1,0.0" scale="0.3,1.0,0.3" painter="player">
+						<Node name="right_foot" translation="0.0,-0.5,0.5" scale="0.4,0.2,1.0" painter="player"></Node>
+					</Node>
 				</Node>
 			</Node>
 		</Node>
-	</Node>
 	</TransformTree>
 	<!-- 优化后的动画 (时间单位: 1/180秒) -->
 	<Animation name="standing" loop="true">

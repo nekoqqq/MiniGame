@@ -35,7 +35,7 @@ public:
 		const Vector3& origin = player->getPos();
 		const Vector3& z_dir = player->getZDirection();
 		// 从模型的后看
-		eye_pos_ = player->getModelTransform().vecMul({ 0,10,-15 });
+		eye_pos_ = player->getModelTransform().vecMul({ 0,10,-20 });
 		target_pos_ = player->getModelTransform().vecMul({ 0,0,10 });
 	}
 private:

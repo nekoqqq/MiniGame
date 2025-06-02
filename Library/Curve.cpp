@@ -26,7 +26,6 @@ Curve::Curve(const Element* e) {
 		type_ = SCALE_Z;
 	else
 		assert(false && "Unknown curve type");
-
 	string interpolation_type = e->getAttr("interpolation");
 	if (interpolation_type == "none" ||interpolation_type =="")
 		interpolation_type_ = NONE;
@@ -96,9 +95,6 @@ double Curve::get(double time) const {
 		r += p0;
 		return r;
 	}
-
-
-
 		break;
 	case Curve::HERMITE:
 		break;

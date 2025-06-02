@@ -158,14 +158,8 @@ struct MechaInfo
 		map_half = stage->getHalf();
 		player_pos = player->getPos();
 		enemy_pos = enemy->getPos();
-
-		Vector3 enemy_pvm = camera->getViewProjectionMatrix().matMul(enemy->getModelTransform()).vecMul(enemy_pos);
+		Vector3 enemy_pvm = camera->getViewProjectionMatrix().matMul(enemy->getModelTransform()).vecMul(enemy_pos-player_pos); //TODO 不清楚这里为什么减去player的坐标之后这个就正确了，可能是因为相机的坐标是按照人物的位置设置的
 		enemy_nvi_pos = { enemy_pvm.x/enemy_pvm.w,enemy_pvm.y/enemy_pvm.w };
-		// TODO 这里对动态的物体就会失效锁定功能
-		//ostringstream oss;
-		//oss << enemy_pvm <<","<<"\n"<<enemy_nvi_pos<<"\n";
-		//oss << enemy->getModelTransform();
-		//Framework::instance().drawDebugString(10, 10, oss.str().c_str(),0xffff0000);
 	}
 };
 class FrontEnd
@@ -211,7 +205,7 @@ public:
 		unsigned c1 = 0xffffffff;
 		unsigned c2 = 0xffffffff;
 		double rate = 1.0 * mecha_info_->player_hp / MAX_HP;
-		drawProgerss(background, rate, raw_c1, raw_c2, c1, c2, { {2,1},"MY HP" });
+		drawProgerss(background, rate, raw_c1, raw_c2, c1, c2, { {2,1},"HP" });
 	}
 	void drawEnemyHp()
 	{
@@ -227,7 +221,7 @@ public:
 		unsigned c1 = 0xffffffff;
 		unsigned c2 = 0xffffffff;
 		double rate = 1.0 * mecha_info_->enemy_hp / MAX_HP;
-		drawProgerss(background, rate, raw_c1, raw_c2, c1, c2, { {2,40},"YOUR HP" });
+		drawProgerss(background, rate, raw_c1, raw_c2, c1, c2, { {2,40},"ENEMY HP" });
 		
 	}
 	void drawHP()
@@ -321,11 +315,11 @@ public:
 			return;
 		Framework::instance().setBlendMode(Framework::BLEND_ADDITIVE);
 
-		double a_half = 0.3; // 宽
-		double b_half = 0.5; // 长
+		double a_half = 0.05; // 宽
+		double b_half = 0.1; // 长
 
 		double r_a = 0.01; // 宽的一半
-		double r_b = 0.2; // 长的一半
+		double r_b = 0.02; // 长的一半
 		vector<Vector2D> left = {
 			{mecha_info_->enemy_nvi_pos.x-a_half - r_b,mecha_info_->enemy_nvi_pos.y + r_a},
 			{mecha_info_->enemy_nvi_pos.x-a_half - r_b,mecha_info_->enemy_nvi_pos.y  - r_a},
@@ -351,7 +345,7 @@ public:
 			{mecha_info_->enemy_nvi_pos.x + r_a,mecha_info_->enemy_nvi_pos.y + b_half + r_b},
 		};
 
-		unsigned c1 = 0xff00ff0f;
+		unsigned c1 = 0xffff000f;
 		unsigned c2 = c1;
 		drawRect(left, c1, c2);
 		drawRect(right, c1, c2);
