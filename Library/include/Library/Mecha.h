@@ -64,7 +64,6 @@ public:
 	{
 		SAFE_DELETE(frame_input_);
 	}
-	void setTransformTree(TransformTree* tree);
 	void update(const Matrix44& vr)override;
 	void addMissle(Model& missle);
 	void addEnemy(Model* enemy);
