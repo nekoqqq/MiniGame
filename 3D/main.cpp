@@ -19,8 +19,6 @@ const int MAX_TIME = 120 * FRAMES; // 最大对局时间
 // 动物
 Model* gPlayer;
 Model* gEnemy;
-vector<Model*>gEnemys;
-const int gEnemyCnt = 1;
 // 静物
 Model* gStage;
 Model* gWall;
@@ -68,9 +66,6 @@ namespace GameLib {
 	void deleteAll() {
 		SAFE_DELETE(gPlayer);
 		SAFE_DELETE(gEnemy);
-		for (int i = 0; i < gEnemyCnt; i++)
-			SAFE_DELETE(gEnemys[i]);
-		gEnemys.clear();
 		SAFE_DELETE(gStage);
 		SAFE_DELETE(gWall);
 	}
@@ -274,9 +269,6 @@ namespace GameLib {
 				Model* missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "missle");
 				dynamic_cast<Mecha*>(gEnemy)->addMissle(*missle);
 			}
-			for (int i = 0; i < gEnemyCnt; i++) {
-				gEnemys.push_back(gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy_") + to_string(i+1)));
-			}
 			dynamic_cast<Mecha*>(gPlayer)->addEnemy(gEnemy);
 			dynamic_cast<Mecha*>(gEnemy)->addEnemy(gPlayer);
 			gStage = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "stage");
@@ -284,7 +276,6 @@ namespace GameLib {
 			gAxis = gResource->createModel(Model::AXIS, CollisionModel::SPHERE, "axis");
 			gCamera = new Camera(gEyePos, gTargetPos, gEyeUp, fov_y, near, far, aspec_ratio);
 			// 设置碰撞物体
-			gPlayer->setCollisionModels(gEnemys);
 			gPlayer->addCollisionModel(gEnemy);
 			gPlayer->addCollisionModel(gStage);
 			gPlayer->addCollisionModel(gWall);
@@ -315,9 +306,6 @@ namespace GameLib {
 		gAxis->draw(pv, gLight);
 		gPlayer->draw(pv, gLight);
 		gEnemy->draw(pv, gLight);
-		for (int i = 0; i < gEnemyCnt; i++) {
-			gEnemys[i]->draw(pv, gLight);
-		}
 		gFrontEnd->draw();
 		
 		if (!dynamic_cast<Mecha*>(gEnemy)->isAlive() || ++gCounter>=MAX_TIME) {

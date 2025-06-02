@@ -27,7 +27,7 @@ struct FrameInput
 		is_DOWN = k.isOn('s');
 		is_RIGHT = k.isOn('d');
 		is_JUMP = k.isOn(' ');
-		is_FIRE = k.isOn('j');
+		is_FIRE = k.isTriggered('j');
 		is_LEFT_ROTATE = k.isOn('i');
 		is_RIGHT_ROTATE = k.isOn('u');
 	}

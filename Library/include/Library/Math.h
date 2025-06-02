@@ -29,6 +29,9 @@ struct Vector3 {
 		this->y = y;
 		this->z = z;
 	}
+	bool operator==(const Vector3& other)const {
+		return fabs(x - other.x) < eps && fabs(y - other.y) < eps && fabs(z - other.z) < eps;
+	}
 	Vector3 operator-() const{
 		return Vector3(-x, -y, -z);
 	}
