@@ -297,7 +297,7 @@ namespace GameLib {
 		gFrontEnd->update(dynamic_cast<Mecha*>(gPlayer), dynamic_cast<Mecha*>(gEnemy), dynamic_cast<Stage*>(gStage), gCamera);
 		// 光处理
 		double theta = gCounter * PI / 180.0;
-		double t = 1.0*gCounter / FRAMES/6;
+		double t = 1.0*gCounter / FRAMES/100+1;
 		gLight->updateLight({cos(t)*cos(t),cos(t)*sin(t),-sin(t)});
 		gStage->draw(pv, gLight);
 		gWall->draw(pv, gLight);

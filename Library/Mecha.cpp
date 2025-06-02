@@ -397,5 +397,5 @@ void Mecha::AI()
 	frame_input_->is_LEFT = left;
 	frame_input_->is_RIGHT= right;
 	frame_input_->is_DOWN = down;
-	frame_input_->is_FIRE = rand()%1000==0;
+	frame_input_->is_FIRE = rand() % 1000==0;
 }

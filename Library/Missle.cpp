@@ -15,9 +15,10 @@ void Missle::draw(const Matrix44& pv, const Light* light)
 void Missle::update(const Matrix44& vr){}
 void Missle::reset(const Vector3& pos, const Vector3& enemy_pos)
 {
-	setPos(pos);
+	setPos(pos+Vector3(0,1,0));
 	rotation.x = 45.0;
 	ttl_ = 1;
+	velocity_ = Vector3();
 }
 void Missle::update( Model*enemy)
 {
@@ -25,7 +26,7 @@ void Missle::update( Model*enemy)
 		return;
 	// 初始速度v0，方向向量d,v0和d有一定的夹角，
 	Vector3 dir = enemy->getPos() - getPos();
-	if (dir.norm() < 5.0) {
+	if (dir.norm() < 2.0) {
 		ttl_ = 0;
 		dynamic_cast<Mecha*>(enemy)->getDamage();
 		return;
@@ -38,7 +39,7 @@ void Missle::update( Model*enemy)
 void Missle::updateVelocity(const Vector3&dir, double rotation_speed)
 {
 	// 旧的代码
-		 //velocity_ = (velocity_ * 0.95 + dir * 0.05).normalize() * 1.0;
+		 //velocity_ = (velocity_ * 0.95 + dir * 0.05).normalize() ;
 		 //rotateZ(MISSLE_ROTATION_SPEED); // 旧的代码，绕着自身的速度方向旋转
 
 		// 可以按照先x再y的顺序，也可以按照先y再x的顺序，但是两次的角度是不一样的
@@ -68,5 +69,5 @@ void Missle::updateVelocity(const Vector3&dir, double rotation_speed)
 	setRotationY(rotation.y);
 	rotateX(-rotation.x);
 	rotateZ(rotation.z);
-	velocity_ = getModelRotation().vecMul({ 0,0,1 });
+	velocity_ = getModelRotation().vecMul({ 0,0,0.5 });
 }
