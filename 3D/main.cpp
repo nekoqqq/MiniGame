@@ -22,7 +22,6 @@ Model* gEnemy;
 // 静物
 Model* gStage;
 Model* gWall;
-Model* gAxis;
 // 变换矩阵
 Matrix44 gProjectionTransform;
 Matrix44 gViewTransform;
@@ -273,7 +272,6 @@ namespace GameLib {
 			dynamic_cast<Mecha*>(gEnemy)->addEnemy(gPlayer);
 			gStage = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "stage");
 			gWall = gResource->createModel(Model::STAGE, CollisionModel::TRIANGLE, "wall");
-			gAxis = gResource->createModel(Model::AXIS, CollisionModel::SPHERE, "axis");
 			gCamera = new Camera(gEyePos, gTargetPos, gEyeUp, fov_y, near, far, aspec_ratio);
 			// 设置碰撞物体
 			gPlayer->addCollisionModel(gEnemy);
@@ -299,15 +297,13 @@ namespace GameLib {
 		gFrontEnd->update(dynamic_cast<Mecha*>(gPlayer), dynamic_cast<Mecha*>(gEnemy), dynamic_cast<Stage*>(gStage), gCamera);
 		// 光处理
 		double theta = gCounter * PI / 180.0;
-		double t = 1.0*gCounter / FRAMES/30;
-		gLight->updateLight({1,1,-1});
+		double t = 1.0*gCounter / FRAMES/6;
+		gLight->updateLight({cos(t)*cos(t),cos(t)*sin(t),-sin(t)});
 		gStage->draw(pv, gLight);
 		gWall->draw(pv, gLight);
-		gAxis->draw(pv, gLight);
 		gPlayer->draw(pv, gLight);
 		gEnemy->draw(pv, gLight);
 		gFrontEnd->draw();
-		
 		if (!dynamic_cast<Mecha*>(gEnemy)->isAlive() || ++gCounter>=MAX_TIME) {
 			drawDebugString(1, 0, "Game Over!");
 			sleep(1000);
