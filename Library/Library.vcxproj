@@ -152,12 +152,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="GameSound.h" />
     <ClInclude Include="include\Library\AnimationNode.h" />
     <ClInclude Include="include\Library\AnimationTree.h" />
     <ClInclude Include="include\Library\Camera.h" />
     <ClInclude Include="include\Library\Collision.h" />
     <ClInclude Include="include\Library\Curve.h" />
+    <ClInclude Include="include\Library\GameSound.h" />
     <ClInclude Include="include\Library\Globals.h" />
     <ClInclude Include="include\Library\Graph.h" />
     <ClInclude Include="include\Library\Math.h" />

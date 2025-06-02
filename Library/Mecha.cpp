@@ -5,7 +5,7 @@
 #include "include/Library/Missle.h"
 #include "include/Library/TransformTree.h"
 #include "include/Library/Resource.h"
-#include "GameSound.h"
+#include "include/Library/GameSound.h"
 
 // 移动速度
 const double MAX_SPEED = 4.0;
@@ -357,7 +357,6 @@ void Mecha::lockOn()
 
 	double theta = acos(enemy_dir.dot(z_dir) / enemy_dir.norm()) * 180.0 / PI;
 	using std::to_string;
-	GameLib::Framework::instance().drawDebugString(1, 8, to_string((int)theta).c_str());
 	if (theta > MIN_LOCK_OFF && lock_on_)
 		lock_on_ = false;
 	else if (theta <= MAX_LOCK_ON && !lock_on_)

@@ -63,7 +63,7 @@
     <ClInclude Include="include\Library\AnimationTree.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="GameSound.h">
+    <ClInclude Include="include\Library\GameSound.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
