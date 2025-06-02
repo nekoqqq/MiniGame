@@ -61,6 +61,7 @@ TransformNode* gTEarth;
 TransformNode* gTMoon;
 namespace GameLib {
 	bool firstFrame = true;
+	bool gameEND = false;
 	void deleteAll() {
 		SAFE_DELETE(gPlayer);
 		SAFE_DELETE(gEnemy);
@@ -303,11 +304,15 @@ namespace GameLib {
 		gEnemy->draw(pv, gLight);
 		gFrontEnd->draw();
 		if (!dynamic_cast<Mecha*>(gEnemy)->isAlive() || ++gCounter>=MAX_TIME) {
-			drawDebugString(1, 0, "Game Over!");
-			sleep(1000);
-			deleteAll();
-			firstFrame = true;
-			gCounter = 0;
+			static int end_count = 0;
+			if(end_count++<FRAMES)
+				drawDebugString(16, 16, "Game Over, YOU WIN!");
+			else {
+				deleteAll();
+				firstFrame = true;
+				gCounter = 0;
+				end_count = 0;
+			}
 		}
 		if (k.isOn('q'))
 			GameLib::Framework::instance().requestEnd();

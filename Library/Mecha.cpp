@@ -32,7 +32,7 @@ Mecha::Mecha(Type type, const Vector3& pos, Painter* painter, CollisionModel::Ty
 		transform_tree_ = gResource->createTransformTree("player");
 	else if(type==ENEMY)
 		transform_tree_ = gResource->createTransformTree("enemy");
-	//GameSound::instance().playBGM(GameSound::MECHA_THEME);
+	GameSound::instance().playBGM(GameSound::MECHA_THEME);
 
 }
 // 下面的两个函数不能加上inline关键字,因为是public函数，内联函数的定义必须放在

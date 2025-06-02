@@ -27,8 +27,8 @@ const int JUMP_UP_DURATION = 0.4*FRAMES;
 const int SKY_STAY = 0.2*FRAMES; // 滞空时间
 const int FALL_DURATION = 0.4 * FRAMES;
 
-const int MAX_MISSLES = 10;
-const int MISSLE_TTL = 5*FRAMES; // 5秒
+const int MAX_MISSLES = 3;
+const int MISSLE_TTL = 3*FRAMES; // 5秒
 
 // 转身
 const double ZOOM_DURATION = (JUMP_UP_DURATION+SKY_STAY+FALL_DURATION)/3; // 持续多少帧

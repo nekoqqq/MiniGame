@@ -18,7 +18,7 @@ void Missle::reset(const Vector3& pos, const Vector3& enemy_pos)
 	setPos(pos+Vector3(0,1,0));
 	rotation.x = 45.0;
 	ttl_ = 1;
-	velocity_ = Vector3();
+	velocity_ = (enemy_pos-pos).normalize();
 }
 void Missle::update( Model*enemy)
 {
