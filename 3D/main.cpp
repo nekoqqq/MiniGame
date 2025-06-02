@@ -259,13 +259,13 @@ namespace GameLib {
 			gPlayerAnimation = gResource->getAnimation("player");
 			gPlayer = gResource->createModel(Model::PLAYER, CollisionModel::SPHERE, "player");
 			for (int i = 0; i < MAX_MISSLES; i++) {
-				Model * missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "missle");
+				Model * missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "player_missle");
 				dynamic_cast<Mecha*>(gPlayer)->addMissle(*missle);
 			}
 			gEnemy = gResource->createModel(Model::ENEMY, CollisionModel::SPHERE, string("enemy"));
 			for (int i= 0;i<MAX_MISSLES;i++)
 			{
-				Model* missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "missle");
+				Model* missle = gResource->createModel(Model::MISSLE, CollisionModel::SPHERE, "enemy_missle");
 				dynamic_cast<Mecha*>(gEnemy)->addMissle(*missle);
 			}
 			dynamic_cast<Mecha*>(gPlayer)->addEnemy(gEnemy);

@@ -5,6 +5,8 @@
 #include "include/Library/Missle.h"
 #include "include/Library/TransformTree.h"
 #include "include/Library/Resource.h"
+#include "GameSound.h"
+
 // 移动速度
 const double MAX_SPEED = 4.0;
 const double ACC_DURATION = 2.0; // 单位秒
@@ -27,6 +29,8 @@ Mecha::Mecha(Type type, const Vector3& pos, Painter* painter, CollisionModel::Ty
 	enemy_ = nullptr;
 	frame_input_ = new FrameInput;
 	transform_tree_ = gResource->createTransformTree("player");
+	//GameSound::instance().playBGM(GameSound::MECHA_THEME);
+
 }
 // 下面的两个函数不能加上inline关键字,因为是public函数，内联函数的定义必须放在
 void Mecha::update(const Matrix44& vr)
