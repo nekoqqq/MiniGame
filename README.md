@@ -4,7 +4,7 @@
 
 参照【游戏开发：世嘉新人培训教材】一书，基于C++开发的控制台、2D和3D游戏演示项目，实现了完整的绘图系统、碰撞系统、光照和游戏玩法系统的游戏demo。
 
-<video src="https://github.com/user-attachments/assets/e1e550b9-a3da-44ab-ba46-e47a2ac91fff">
+<video src="https://github.com/user-attachments/assets/e1e550b9-a3da-44ab-ba46-e47a2ac91fff"/>
 
 ### **特点**：
 
