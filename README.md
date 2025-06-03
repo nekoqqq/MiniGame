@@ -200,7 +200,8 @@ struct Light
 
 ```cpp
 // 动画插值示例
-double Curve::get(double time) const {
+class Curve{
+double get(double time) const {
 	time = fmod(time, datas_.back()->time); // 确保时间在循环范围内
 	switch (interpolation_type_)
 	{
@@ -257,6 +258,7 @@ double Curve::get(double time) const {
 	default:
 		break;
 	}
+}
 }
 ```
 
