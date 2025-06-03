@@ -13,7 +13,7 @@ https://github.com/user-attachments/assets/55b77249-ff9f-400d-aef0-f191623fa360
 - 高效的矩阵变换和数学运算库
 - 模块化架构设计，易于扩展新游戏状态
 
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/game-engine-demo?style=social)](https://github.com/nekoqqq/MiniGame)
+[![GitHub stars](https://img.shields.io/github/stars/nekoqqq/MiniGame?style=social)](https://github.com/nekoqqq/MiniGame)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 系统简介
